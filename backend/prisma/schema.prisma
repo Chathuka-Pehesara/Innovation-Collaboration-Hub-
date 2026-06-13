@@ -1,0 +1,70 @@
+// datasource db
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Model schemas commented as per requirements:
+//
+// model User {
+//   id             String       @id @default(uuid())
+//   email          String       @unique
+//   password       String
+//   name           String
+//   specialization String       // IT, Cybersecurity, AI, Networking
+//   xp             Int          @default(0)
+//   badges         String[]
+//   projects       Project[]    @relation("ProjectMembers")
+//   createdTeams   Team[]       @relation("TeamOwner")
+//   teams          Team[]       @relation("TeamMembers")
+//   messages       Message[]
+//   createdAt      DateTime     @default(now())
+// }
+//
+// model Project {
+//   id          String       @id @default(uuid())
+//   title       String
+//   description String
+//   ownerId     String
+//   teamId      String?      @unique
+//   team        Team?        @relation(fields: [teamId], references: [id])
+//   members     User[]       @relation("ProjectMembers")
+//   milestones  Milestone[]
+//   createdAt   DateTime     @default(now())
+// }
+//
+// model Team {
+//   id        String    @id @default(uuid())
+//   name      String
+//   ownerId   String
+//   owner     User      @relation("TeamOwner", fields: [ownerId], references: [id])
+//   members   User[]    @relation("TeamMembers")
+//   project   Project?
+//   messages  Message[]
+//   createdAt DateTime  @default(now())
+// }
+//
+// model Message {
+//   id        String   @id @default(uuid())
+//   content   String
+//   senderId  String
+//   sender    User     @relation(fields: [senderId], references: [id])
+//   teamId    String
+//   team      Team     @relation(fields: [teamId], references: [id])
+//   createdAt DateTime @default(now())
+// }
+//
+// model Milestone {
+//   id          String   @id @default(uuid())
+//   title       String
+//   description String
+//   dueDate     DateTime
+//   status      String   // PENDING, COMPLETED, OVERDUE
+//   projectId   String
+//   project     Project  @relation(fields: [projectId], references: [id])
+//   createdAt   DateTime @default(now())
+// }

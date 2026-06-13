@@ -1,0 +1,79 @@
+# docker-compose.yml
+# Owner: Networking Team
+# Description: Multi-container orchestration configuration for the Innovation & Collaboration Hub services.
+# Depends: frontend, backend, ai-service, postgres, redis
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ih-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: innovation_hub
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for Caching and Bull Queues
+  redis:
+    image: redis:7-alpine
+    container_name: ih-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Express Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ih-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/innovation_hub?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=supersecretjwtkey123!
+      - AI_SERVICE_URL=http://ai-service:8000
+    depends_on:
+      - postgres
+      - redis
+
+  # Python FastAPI AI Microservice
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: ih-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/innovation_hub?schema=public
+      - GEMINI_API_KEY=your_gemini_api_key_here
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - postgres
+
+  # Next.js Frontend App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ih-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
