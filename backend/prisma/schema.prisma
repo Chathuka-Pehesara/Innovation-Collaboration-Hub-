@@ -1,70 +1,138 @@
-// datasource db
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// Model schemas commented as per requirements:
-//
-// model User {
-//   id             String       @id @default(uuid())
-//   email          String       @unique
-//   password       String
-//   name           String
-//   specialization String       // IT, Cybersecurity, AI, Networking
-//   xp             Int          @default(0)
-//   badges         String[]
-//   projects       Project[]    @relation("ProjectMembers")
-//   createdTeams   Team[]       @relation("TeamOwner")
-//   teams          Team[]       @relation("TeamMembers")
-//   messages       Message[]
-//   createdAt      DateTime     @default(now())
-// }
-//
-// model Project {
-//   id          String       @id @default(uuid())
-//   title       String
-//   description String
-//   ownerId     String
-//   teamId      String?      @unique
-//   team        Team?        @relation(fields: [teamId], references: [id])
-//   members     User[]       @relation("ProjectMembers")
-//   milestones  Milestone[]
-//   createdAt   DateTime     @default(now())
-// }
-//
-// model Team {
-//   id        String    @id @default(uuid())
-//   name      String
-//   ownerId   String
-//   owner     User      @relation("TeamOwner", fields: [ownerId], references: [id])
-//   members   User[]    @relation("TeamMembers")
-//   project   Project?
-//   messages  Message[]
-//   createdAt DateTime  @default(now())
-// }
-//
-// model Message {
-//   id        String   @id @default(uuid())
-//   content   String
-//   senderId  String
-//   sender    User     @relation(fields: [senderId], references: [id])
-//   teamId    String
-//   team      Team     @relation(fields: [teamId], references: [id])
-//   createdAt DateTime @default(now())
-// }
-//
-// model Milestone {
-//   id          String   @id @default(uuid())
-//   title       String
-//   description String
-//   dueDate     DateTime
-//   status      String   // PENDING, COMPLETED, OVERDUE
-//   projectId   String
-//   project     Project  @relation(fields: [projectId], references: [id])
-//   createdAt   DateTime @default(now())
-// }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  projects Project[]
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String       @unique
+  projects ProjectTag[]
+}
+
+model Skill {
+  id       String         @id @default(uuid())
+  name     String         @unique
+  projects ProjectSkill[]
+}
+
+model Project {
+  id          String         @id @default(uuid())
+  title       String
+  description String
+  status      String         @default("Draft")
+  categoryId  String?
+  category    Category?      @relation(fields: [categoryId], references: [id])
+  ownerId     String
+  teamSize    Int            @default(1)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  tags        ProjectTag[]
+  skills      ProjectSkill[]
+  aiResult    AIResult?
+  team        Team?
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+}
+
+model ProjectSkill {
+  projectId String
+  skillId   String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+}
+
+model AIResult {
+  id          String   @id @default(uuid())
+  projectId   String   @unique
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  score       Int
+  suggestions String   // Can store JSON array of strings
+}
+
+model Team {
+  id          String         @id @default(uuid())
+  projectId   String         @unique
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  members     TeamMember[]
+  invites     TeamInvite[]
+  tasks       Task[]
+  resources   Resource[]
+  activities  Activity[]
+}
+
+model TeamMember {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String   
+  role        String   @default("MEMBER") // LEAD, MEMBER
+  joinedAt    DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvite {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String   
+  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  type        String   @default("INVITE") // INVITE, APPLICATION
+  createdAt   DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
+  assigneeId  String?  // User ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  uploadedBy  String   // User ID
+  createdAt   DateTime @default(now())
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  action      String
+  userId      String   // User who performed the action
+  createdAt   DateTime @default(now())
+}
