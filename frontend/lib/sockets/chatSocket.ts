@@ -5,12 +5,14 @@ import { useNotificationStore } from '../store/notificationStore';
 let socket: Socket | null = null;
 let pollingInterval: NodeJS.Timeout | null = null;
 
+// Local mapping from userId to username to handle typing:stop events which only contain userId
+const userIdToUsername = new Map<string, string>();
+
 const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
 
 export const initSocket = (userId: string) => {
   if (socket) return socket;
 
-  // Initialize socket client with query parameters for authentication
   socket = io(SOCKET_SERVER_URL, {
     query: { userId },
     autoConnect: true,
@@ -24,7 +26,6 @@ export const initSocket = (userId: string) => {
     useChatStore.getState().setSocketConnected(true);
     stopPollingFallback();
 
-    // Re-join active chat if one is selected
     const activeChatId = useChatStore.getState().activeChatId;
     if (activeChatId) {
       socket?.emit('join:chat', { chatId: activeChatId });
@@ -32,7 +33,7 @@ export const initSocket = (userId: string) => {
   });
 
   socket.on('disconnect', () => {
-    console.warn('Socket client: Disconnected from server. Initiating polling fallback.');
+    console.warn('Socket client: Disconnected. Initiating polling.');
     useChatStore.getState().setSocketConnected(false);
     startPollingFallback(userId);
   });
@@ -46,12 +47,14 @@ export const initSocket = (userId: string) => {
     useChatStore.getState().markMessagesAsReadLocal(chatId, readerUserId);
   });
 
-  socket.on('typing:start', ({ chatId, userId: typistId }) => {
-    useChatStore.getState().setTypingStatus(chatId, typistId, true);
+  socket.on('typing:start', ({ chatId, userId: typistId, username }) => {
+    userIdToUsername.set(typistId, username);
+    useChatStore.getState().addTypingUser(chatId, username);
   });
 
   socket.on('typing:stop', ({ chatId, userId: typistId }) => {
-    useChatStore.getState().setTypingStatus(chatId, typistId, false);
+    const username = userIdToUsername.get(typistId) || typistId;
+    useChatStore.getState().removeTypingUser(chatId, username);
   });
 
   socket.on('notification:new', (notification) => {
@@ -65,11 +68,9 @@ export const initSocket = (userId: string) => {
   return socket;
 };
 
-// Polling fallback to keep message stream and notifications synced when WS is down
 const startPollingFallback = (userId: string) => {
   if (pollingInterval) return;
 
-  console.log('Starting 5-second HTTP polling fallback...');
   pollingInterval = setInterval(async () => {
     const { activeChatId, fetchMessages } = useChatStore.getState();
     const { fetchNotifications } = useNotificationStore.getState();
@@ -80,14 +81,13 @@ const startPollingFallback = (userId: string) => {
       }
       await fetchNotifications(userId);
     } catch (error) {
-      console.error('Polling fallback fetch error:', error);
+      console.error('Polling fallback error:', error);
     }
   }, 5000);
 };
 
 const stopPollingFallback = () => {
   if (pollingInterval) {
-    console.log('Stopping HTTP polling fallback.');
     clearInterval(pollingInterval);
     pollingInterval = null;
   }
@@ -102,9 +102,9 @@ export const disconnectSocket = () => {
 };
 
 // Emit Events
-export const emitTypingStart = (chatId: string, userId: string) => {
+export const emitTypingStart = (chatId: string, userId: string, username: string) => {
   if (socket?.connected) {
-    socket.emit('typing:start', { chatId, userId });
+    socket.emit('typing:start', { chatId, userId, username });
   }
 };
 

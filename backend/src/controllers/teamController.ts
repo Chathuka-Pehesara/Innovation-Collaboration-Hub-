@@ -218,25 +218,25 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
 // Upload resource (Local storage placeholder)
 export const uploadResource = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) {
+    if (!(req as any).file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
     }
     
     const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
     // req.file path is provided by multer middleware
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = `/uploads/${(req as any).file.filename}`;
 
     const resource = await prisma.resource.create({
       data: {
         teamId: req.params.id,
-        fileName: req.file.originalname,
+        fileName: (req as any).file.originalname,
         fileUrl,
         uploadedBy: userId
       }
     });
 
-    await logActivity(req.params.id, `Uploaded resource: ${req.file.originalname}`, userId);
+    await logActivity(req.params.id, `Uploaded resource: ${(req as any).file.originalname}`, userId);
     res.status(201).json(resource);
   } catch (error) {
     next(error);

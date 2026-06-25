@@ -89,14 +89,14 @@ export const uploadChatFile = async (req: Request, res: Response, next: NextFunc
     const userId = getUserId(req);
     const { chatId } = req.params;
 
-    if (!req.file) {
+    if (!(req as any).file) {
       res.status(400).json({ error: 'No file uploaded' });
       return;
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
-    const fileName = req.file.originalname;
-    const fileType = req.file.mimetype;
+    const fileUrl = `/uploads/${(req as any).file.filename}`;
+    const fileName = (req as any).file.originalname;
+    const fileType = (req as any).file.mimetype;
 
     const message = await chatService.saveChatFile(chatId, userId, fileUrl, fileName, fileType);
     res.status(201).json(message);

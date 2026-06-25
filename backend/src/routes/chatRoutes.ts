@@ -20,10 +20,10 @@ if (!fs.existsSync(uploadDir)) {
 
 // Multer storage config
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: function (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
+  filename: function (req: express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + '-' + file.originalname);
   }

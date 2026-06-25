@@ -7,7 +7,7 @@ interface ChatState {
   activeChatId: string | null;
   messages: Message[];
   onlineUsers: Set<string>;
-  typingUsers: [string, string][]; // Array of [chatId, userId]
+  typingUsers: Record<string, string[]>; // chatId -> username[]
   isLoading: boolean;
   isSocketConnected: boolean;
 
@@ -18,7 +18,9 @@ interface ChatState {
   sendAttachment: (chatId: string, userId: string, file: File) => Promise<void>;
   receiveMessage: (message: Message) => void;
   setSocketConnected: (connected: boolean) => void;
-  setTypingStatus: (chatId: string, userId: string, isTyping: boolean) => void;
+  addTypingUser: (chatId: string, username: string) => void;
+  removeTypingUser: (chatId: string, username: string) => void;
+  clearTypingUsers: (chatId: string) => void;
   setOnlineUsers: (users: string[]) => void;
   updateUserOnlineStatus: (userId: string, isOnline: boolean) => void;
   markMessagesAsReadLocal: (chatId: string, userId: string) => void;
@@ -29,19 +31,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeChatId: null,
   messages: [],
   onlineUsers: new Set(),
-  typingUsers: [],
+  typingUsers: {},
   isLoading: false,
   isSocketConnected: true,
 
   fetchConversations: async (userId: string) => {
     set({ isLoading: true });
     try {
-      // Build list of chats dynamically. Since there's no backend conversation listing,
-      // we load active user conversations from local cache + add default Team chats.
       const cachedChats = localStorage.getItem(`chats_${userId}`);
       let chats: Chat[] = cachedChats ? JSON.parse(cachedChats) : [];
 
-      // Always ensure a default Team Chat is present for testing
       const defaultTeamId = 'team_123';
       const hasDefaultTeam = chats.some(c => c.teamId === defaultTeamId);
       if (!hasDefaultTeam) {
@@ -67,14 +66,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setActiveChatId: (chatId) => {
     set({ activeChatId: chatId });
     
-    // Clear unread counts for this chat
     if (chatId) {
       set((state) => {
         const nextConversations = state.conversations.map(c => 
           c.id === chatId ? { ...c, unreadCount: 0 } : c
         );
         
-        // Save to cache
         const userId = localStorage.getItem('userId') || 'user_123';
         localStorage.setItem(`chats_${userId}`, JSON.stringify(nextConversations));
 
@@ -115,14 +112,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         message = await chatApi.sendTeamMessage(chatId, userId, content);
       }
 
-      // Optimistically append message locally if websocket hasn't broadcast it yet
       set((state) => {
         const exists = state.messages.some(m => m.id === message.id);
         if (exists) return {};
         return { messages: [...state.messages, message] };
       });
 
-      // Track DM target user inside local conversations list
       if (chatId.startsWith('dm_')) {
         const targetUserId = chatId.replace('dm_', '');
         set((state) => {
@@ -167,21 +162,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
                            (activeChatId?.startsWith('dm_') && message.chatId === activeChatId);
 
     if (isForActiveChat) {
-      // Append message
       set((state) => {
         const exists = state.messages.some(m => m.id === message.id);
         if (exists) return {};
         return { messages: [...state.messages, message] };
       });
     } else {
-      // Increment unread count in conversations sidebar
       set((state) => {
         let chatExists = state.conversations.some(c => c.id === message.chatId);
-        
         let nextConversations = [...state.conversations];
         
         if (!chatExists) {
-          // If DM, create conversation card dynamically
           const isDM = !message.chatId.startsWith('team_') && message.senderId !== 'user_123';
           nextConversations.push({
             id: message.chatId,
@@ -212,16 +203,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isSocketConnected: connected });
   },
 
-  setTypingStatus: (chatId, userId, isTyping) => {
+  addTypingUser: (chatId, username) => {
     set((state) => {
-      let nextTyping = [...state.typingUsers];
-      if (isTyping) {
-        const exists = nextTyping.some(([c, u]) => c === chatId && u === userId);
-        if (!exists) nextTyping.push([chatId, userId]);
-      } else {
-        nextTyping = nextTyping.filter(([c, u]) => !(c === chatId && u === userId));
+      const list = state.typingUsers[chatId] || [];
+      if (!list.includes(username)) {
+        return {
+          typingUsers: {
+            ...state.typingUsers,
+            [chatId]: [...list, username]
+          }
+        };
       }
-      return { typingUsers: nextTyping };
+      return {};
+    });
+  },
+
+  removeTypingUser: (chatId, username) => {
+    set((state) => {
+      const list = state.typingUsers[chatId] || [];
+      const filtered = list.filter(u => u !== username);
+      return {
+        typingUsers: {
+          ...state.typingUsers,
+          [chatId]: filtered
+        }
+      };
+    });
+  },
+
+  clearTypingUsers: (chatId) => {
+    set((state) => {
+      return {
+        typingUsers: {
+          ...state.typingUsers,
+          [chatId]: []
+        }
+      };
     });
   },
 

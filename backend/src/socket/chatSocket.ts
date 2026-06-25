@@ -1,9 +1,8 @@
 import { Server, Socket } from 'socket.io';
-import * as chatService from '../services/chatService';
 
 let ioInstance: Server | null = null;
 
-// Track online users directly via socket connections or room memberships
+// Track online users directly via socket connections
 export const setIo = (io: Server) => {
   ioInstance = io;
 };
@@ -12,7 +11,7 @@ export const getIo = (): Server | null => {
   return ioInstance;
 };
 
-// Check if a user is online by looking if their private room exists and is not empty
+// Check if a user is online
 export const isUserOnline = (userId: string): boolean => {
   if (!ioInstance) return false;
   const room = ioInstance.sockets.adapter.rooms.get(userId);
@@ -23,64 +22,54 @@ export const initChatSocket = (io: Server) => {
   ioInstance = io;
 
   io.on('connection', (socket: Socket) => {
-    // Read userId from handshake query
-    const userId = socket.handshake.query.userId as string;
-    
-    if (userId) {
-      // Join a private room unique to this user (e.g. for notifications and targeting)
-      socket.join(userId);
-      console.log(`Socket connection: User "${userId}" connected (Socket ID: ${socket.id})`);
+    const userId = socket.handshake.query.userId as string || socket.data.userId;
 
-      // Broadcast to all clients that this user is online
+    if (userId) {
+      socket.join(userId);
+      console.log(`[Socket] User "${userId}" joined private room`);
       io.emit('user:status', { userId, status: 'online' });
     }
 
-    // Handle joining a specific chat channel/room
+    // Handle joining a specific chat channel
     socket.on('join:chat', ({ chatId }) => {
       if (chatId) {
+        // Users join room: chat:{chatId}
+        socket.join(`chat:${chatId}`);
+        // Keep standard room too just in case messages depend on it
         socket.join(chatId);
-        console.log(`Socket ID ${socket.id} joined chat room: ${chatId}`);
+        console.log(`[Socket] Socket ${socket.id} joined rooms: chat:${chatId} and ${chatId}`);
       }
     });
 
-    // Handle leaving a specific chat channel/room
+    // Handle leaving a specific chat channel
     socket.on('leave:chat', ({ chatId }) => {
       if (chatId) {
+        socket.leave(`chat:${chatId}`);
         socket.leave(chatId);
-        console.log(`Socket ID ${socket.id} left chat room: ${chatId}`);
+        console.log(`[Socket] Socket ${socket.id} left rooms: chat:${chatId} and ${chatId}`);
       }
     });
 
-    // Typing Indicators
-    socket.on('typing:start', ({ chatId, userId: typingUserId }) => {
+    // Listen for typing:start
+    socket.on('typing:start', (data: { chatId: string; userId: string; username: string }) => {
+      const { chatId } = data;
       if (chatId) {
-        socket.to(chatId).emit('typing:start', { chatId, userId: typingUserId });
+        // Broadcast to other users only in the same room
+        socket.to(`chat:${chatId}`).emit('typing:start', data);
       }
     });
 
-    socket.on('typing:stop', ({ chatId, userId: typingUserId }) => {
+    // Listen for typing:stop
+    socket.on('typing:stop', (data: { chatId: string; userId: string }) => {
+      const { chatId } = data;
       if (chatId) {
-        socket.to(chatId).emit('typing:stop', { chatId, userId: typingUserId });
+        // Broadcast to other users only in the same room
+        socket.to(`chat:${chatId}`).emit('typing:stop', data);
       }
     });
 
-    // Read Receipts
-    socket.on('message:read', async ({ chatId, userId: readerUserId }) => {
-      try {
-        if (chatId && readerUserId) {
-          // Update DB and broadcast event to room inside service
-          await chatService.markChatAsRead(chatId, readerUserId);
-        }
-      } catch (error) {
-        console.error('Error handling message:read event:', error);
-      }
-    });
-
-    // Disconnect
     socket.on('disconnect', () => {
       if (userId) {
-        console.log(`Socket connection: User "${userId}" disconnected`);
-        // Wait a short duration to verify if this was just a refresh
         setTimeout(() => {
           if (!isUserOnline(userId)) {
             io.emit('user:status', { userId, status: 'offline' });
@@ -90,3 +79,4 @@ export const initChatSocket = (io: Server) => {
     });
   });
 };
+export default initChatSocket;

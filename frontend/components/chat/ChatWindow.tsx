@@ -53,7 +53,7 @@ export default function ChatWindow({ activeUserId }: ChatWindowProps) {
 
     if (!isTyping) {
       setIsTyping(true);
-      emitTypingStart(activeChatId, activeUserId);
+      emitTypingStart(activeChatId, activeUserId, activeUserId);
     }
 
     if (typingTimeoutRef.current) {
@@ -109,9 +109,13 @@ export default function ChatWindow({ activeUserId }: ChatWindowProps) {
   }
 
   // Get active typing users in this specific chat (excluding self)
-  const activeTypists = Array.from(typingUsers)
-    .filter(([cId, uId]) => cId === activeChatId && uId !== activeUserId)
-    .map(([_, uId]) => uId);
+  const typists = (typingUsers[activeChatId] || []).filter(u => u !== activeUserId);
+  let typingText = '';
+  if (typists.length === 1) {
+    typingText = `${typists[0]} is typing...`;
+  } else if (typists.length > 1) {
+    typingText = `${typists.length} people are typing...`;
+  }
 
   return (
     <div className="flex flex-1 flex-col h-full bg-white dark:bg-slate-900 overflow-hidden relative">
@@ -161,12 +165,10 @@ export default function ChatWindow({ activeUserId }: ChatWindowProps) {
         )}
 
         {/* Dynamic Typing Indicators */}
-        {activeTypists.length > 0 && (
+        {typists.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 py-1">
             <TypingIndicator />
-            <span>
-              {activeTypists.join(', ')} {activeTypists.length === 1 ? 'is' : 'are'} typing...
-            </span>
+            <span>{typingText}</span>
           </div>
         )}
         <div ref={messagesEndRef} />
