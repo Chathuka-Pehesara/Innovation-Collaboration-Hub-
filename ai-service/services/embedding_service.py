@@ -1,7 +1,9 @@
 """
-File:        embedding_service.py
-Owner:       AI Team
-Description: NLP vector embedder transforming text segments to array vectors.
-Depends:     None
-TODO:        Configure localized caching modules storing computed vectors indexes.
+Embedding service stub for AI team integration.
+Other teams will implement their own embedding services as needed.
+This file serves as a template/interface for semantic operations.
 """
+
+import logging
+
+logger = logging.getLogger(__name__)
