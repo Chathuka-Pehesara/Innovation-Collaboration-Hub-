@@ -81,6 +81,7 @@ model Team {
   tasks       Task[]
   resources   Resource[]
   activities  Activity[]
+  chat        Chat?
 }
 
 model TeamMember {
@@ -134,5 +135,61 @@ model Activity {
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   action      String
   userId      String   // User who performed the action
+  createdAt   DateTime @default(now())
+}
+
+model Chat {
+  id           String            @id @default(uuid())
+  name         String?
+  isGroup      Boolean           @default(false)
+  teamId       String?           @unique
+  team         Team?             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  messages     Message[]
+  participants ChatParticipant[]
+}
+
+model ChatParticipant {
+  id       String   @id @default(uuid())
+  chatId   String
+  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId   String
+  joinedAt DateTime @default(now())
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id        String           @id @default(uuid())
+  chatId    String
+  chat      Chat             @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String
+  content   String?
+  fileUrl   String?
+  fileName  String?
+  fileType  String?
+  createdAt DateTime         @default(now())
+  receipts  MessageReceipt[]
+}
+
+model MessageReceipt {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // "TEAM_MESSAGE", "DM_MESSAGE", "SYSTEM"
+  title       String
+  message     String
+  referenceId String?  // ID of the Chat/Team related to the notification
+  isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
