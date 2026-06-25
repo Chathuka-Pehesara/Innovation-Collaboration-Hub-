@@ -1,7 +1,18 @@
 import Link from 'next/link';
 import StatusBadge from './StatusBadge';
 
-export default function ProjectCard({ project, index = 0 }) {
+type ProjectLike = {
+  id: string | number;
+  title: string;
+  status: string;
+  description: string;
+  category?: { name: string } | null;
+  createdAt: string | Date;
+  tags?: Array<{ tagId: string | number; tag: { name: string } }>;
+  skills?: Array<{ skillId: string | number; skill: { name: string } }>;
+};
+
+export default function ProjectCard({ project, index = 0 }: { project: ProjectLike; index?: number }) {
   const delayClass = `delay-${(index % 3 + 1) * 100}`;
   return (
     <div className={`glass-card overflow-hidden fade-in-up ${delayClass}`}>
