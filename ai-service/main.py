@@ -11,10 +11,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
+# Load env vars FIRST so routers/services can read them at import time
 load_dotenv()
+
+from routers.skills import router as skills_router
+from routers.matching import router as matching_router
+from routers.evaluation import router as evaluation_router
+from utils.db import check_db_health, close_db
+
 
 # Configure logging
 logging.basicConfig(
@@ -72,16 +79,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-from routers.skills import router as skills_router
 app.include_router(skills_router)
-logger.info("Skills router loaded")
+app.include_router(matching_router)
+app.include_router(evaluation_router)
+logger.info("Skills, Matching, and Evaluation routers registered")
 
 @app.on_event("startup")
 async def startup():
     """Initialize on startup."""
     logger.info("Application starting up")
     try:
-        from utils.db import check_db_health
         if check_db_health():
             logger.info("Database connection verified")
     except Exception as e:
@@ -92,7 +99,6 @@ async def shutdown():
     """Cleanup on shutdown."""
     logger.info("Application shutting down")
     try:
-        from utils.db import close_db
         close_db()
     except Exception:
         pass
@@ -112,7 +118,7 @@ def root():
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @app.get("/version")

@@ -4,19 +4,21 @@ import os
 from sqlalchemy import create_engine, event, Engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
+from typing import Generator
 from dotenv import load_dotenv
 import logging
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:password@localhost:5432/innovation_hub"
-)
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set")
+    # Fall back to local default but warn loudly
+    DATABASE_URL = "postgresql://postgres:password@localhost:5432/innovation_hub"
+    logger.warning(
+        "DATABASE_URL not set — using default local connection. "
+        "Set DATABASE_URL in your .env file for production."
+    )
 
 # SQLAlchemy Engine Configuration
 engine = create_engine(
@@ -43,7 +45,7 @@ def receive_checkin(dbapi_conn, connection_record):
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """Get database session for FastAPI dependency injection."""
     db = SessionLocal()
     try:

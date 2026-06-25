@@ -5,11 +5,11 @@ Skills management endpoints for skill validation, categorization, and team match
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import List, Optional
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.schemas import (
     SkillValidationRequest, SkillValidationResponse,
-    UserSkillRequest, UserSkillResponse, SkillListResponse,
+    UserSkill, UserSkillRequest, UserSkillResponse, SkillListResponse,
     SkillCategoryResponse, SkillCategoriesListResponse,
     SkillMatchingResponse, SkillMatch,
     SkillRecommendationsResponse, SkillRecommendation,
@@ -117,15 +117,14 @@ async def add_user_skill(user_id: str, request: UserSkillRequest) -> UserSkillRe
         category = request.category or categorize_skill(normalized_name)
         
         # TODO: Persist to database via backend ORM
-        from models.schemas import UserSkill
         user_skill = UserSkill(
             id=f"{user_id}_{normalized_name.replace(' ', '_').lower()}",
             name=normalized_name,
             category=category,
             proficiency_level=request.proficiency_level,
             endorsements_count=0,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         
         logger.info(f"User {user_id} added skill: {normalized_name} ({request.proficiency_level})")
@@ -149,13 +148,12 @@ async def get_user_skills(
         raise HTTPException(status_code=400, detail="Invalid user ID")
     
     # TODO: Query from database
-    from models.schemas import UserSkill
     mock_skills = [
         UserSkill(
             id=f"{user_id}_python",
             name="Python", category=SkillCategory.PROGRAMMING_LANGUAGE,
             proficiency_level=ProficiencyLevel.ADVANCED, endorsements_count=5,
-            created_at=datetime.utcnow(), updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc),
         ),
     ]
     
@@ -272,6 +270,6 @@ async def health_check() -> dict:
     return {
         "status": "healthy",
         "service": "Skills Engine",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 

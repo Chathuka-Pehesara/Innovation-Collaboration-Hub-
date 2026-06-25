@@ -6,6 +6,7 @@ from typing import List, Tuple, Optional, Dict
 from utils.constants import (
     PREDEFINED_SKILLS_LOWERCASE, ProficiencyLevel, SkillCategory,
     SKILL_NAME_PATTERN, MAX_SKILL_NAME_LENGTH, MIN_SKILL_NAME_LENGTH,
+    SKILL_DISPLAY_NAMES,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,9 +25,14 @@ def normalize_skill_name(skill_name: str) -> str:
     if not re.match(SKILL_NAME_PATTERN, normalized):
         raise ValueError("Invalid characters in skill name")
     
+    lookup = normalized.lower()
+    if lookup in SKILL_DISPLAY_NAMES:
+        return SKILL_DISPLAY_NAMES[lookup]
+        
     words = normalized.split()
     words = [w.title() if not any(c in w for c in ["+", "#", "."]) else w for w in words]
     return " ".join(words)
+
 
 
 def find_predefined_skill(skill_name: str) -> Optional[Tuple[str, Dict]]:
@@ -61,7 +67,7 @@ def categorize_skill(skill_name: str) -> Optional[SkillCategory]:
     return SkillCategory.OTHER
 
 
-def calculate_skill_match(skills1: List[str], skills2: List[str], weights: Dict[str, float] = None) -> float:
+def calculate_skill_match(skills1: List[str], skills2: List[str]) -> float:
     """Calculate Jaccard similarity between two skill sets (0-1)."""
     if not skills1 or not skills2:
         return 0.0
@@ -132,12 +138,14 @@ def extract_skills_from_text(text: str, max_skills: int = 10) -> List[str]:
             if len(extracted) >= max_skills:
                 break
     
-    try:
-        extracted = [normalize_skill_name(s) for s in extracted]
-    except ValueError:
-        pass
-    
-    return extracted[:max_skills]
+    normalized: List[str] = []
+    for s in extracted:
+        try:
+            normalized.append(normalize_skill_name(s))
+        except ValueError:
+            logger.debug(f"Skipped skill with invalid name during normalization: '{s}'")
+
+    return normalized[:max_skills]
 
 
 def clean_text(text: str) -> str:

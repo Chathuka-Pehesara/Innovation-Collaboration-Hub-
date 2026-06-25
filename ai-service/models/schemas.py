@@ -1,8 +1,8 @@
 """Pydantic schemas for request/response validation."""
 
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
-from datetime import datetime
+from typing import List, Optional, Dict
+from datetime import datetime, timezone
 from utils.constants import ProficiencyLevel, SkillCategory, MAX_SKILL_NAME_LENGTH, MIN_SKILL_NAME_LENGTH
 
 class IdeaEvaluationRequest(BaseModel):
@@ -137,7 +137,7 @@ class SkillMatchingResponse(BaseModel):
         description="Overall skill similarity score (0-1)"
     )
     matching_skills: List[SkillMatch] = Field(..., description="Detailed skill matches")
-    complementary_skills: dict = Field(
+    complementary_skills: Dict[str, List[str]] = Field(
         ...,
         description="Skills user1 has but user2 lacks and vice versa"
     )
@@ -165,4 +165,7 @@ class ErrorResponse(BaseModel):
     """Standard error response."""
     detail: str = Field(..., description="Error message")
     error_code: Optional[str] = Field(None, description="Machine-readable error code")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="When error occurred")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="When error occurred"
+    )
