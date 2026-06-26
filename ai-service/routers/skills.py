@@ -3,7 +3,7 @@ Skills management endpoints for skill validation, categorization, and team match
 """
 
 from fastapi import APIRouter, HTTPException, Query, status
-from typing import List, Optional
+from typing import Optional
 import logging
 from datetime import datetime, timezone
 
@@ -17,11 +17,11 @@ from models.schemas import (
 from utils.helpers import (
     normalize_skill_name, find_predefined_skill, categorize_skill,
     calculate_skill_match, calculate_complementary_skills,
-    calculate_proficiency_alignment, extract_skills_from_text,
+    calculate_proficiency_alignment,
 )
 from utils.constants import (
     SkillCategory, ProficiencyLevel,
-    SKILL_CATEGORY_DESCRIPTIONS, PREDEFINED_SKILLS, MAX_SKILLS_PER_USER,
+    SKILL_CATEGORY_DESCRIPTIONS, PREDEFINED_SKILLS,
 )
 
 logger = logging.getLogger(__name__)

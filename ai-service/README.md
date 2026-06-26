@@ -23,11 +23,11 @@ A comprehensive skill management system for validating, categorizing, and matchi
 **Key Endpoints:**
 - `POST /skills/validate` - Validate and normalize skill names
 - `GET /skills/categories` - List all skill categories
-- `POST /profile/{user_id}/skills` - Add user skills
-- `GET /profile/{user_id}/skills` - Retrieve user skills
-- `DELETE /profile/{user_id}/skills/{skill_name}` - Remove skill
-- `POST /skills/match/{user1_id}/{user2_id}` - Calculate skill match for team matching
-- `GET /profile/{user_id}/recommendations` - Get skill recommendations
+- `POST /skills/profile/{user_id}/skills` - Add user skills (MVP: mock response, no persistence)
+- `GET /skills/profile/{user_id}/skills` - Retrieve user skills (MVP: mock data)
+- `DELETE /skills/profile/{user_id}/skills/{skill_name}` - Remove skill (MVP: mock, no persistence)
+- `POST /skills/match/{user1_id}/{user2_id}` - Calculate skill match for team matching (MVP: mock skill sets)
+- `GET /skills/profile/{user_id}/recommendations` - Get skill recommendations (MVP: mock data)
 
 **Key Components:**
 - `routers/skills.py` - API endpoints
@@ -42,12 +42,16 @@ routers/matching.py + utils/helpers.py (Jaccard skill match, complementary skill
 ```
 Implemented MVP endpoints use the Skills Engine helpers directly. See `MATCHING_API_DOCUMENTATION.md`.
 
+**MVP:** Matching endpoints use hardcoded mock users (`user1`–`user4`) and teams (`team1`, `team2`); communication/timezone fields in duo compatibility are deterministic placeholders.
+
 `services/similarity_service.py` and `services/embedding_service.py` are **standalone utilities** for free-text similarity and batch ranking — not part of the current matching algorithm. Matching scores normalized skill names only; embeddings are reserved for future semantic features (e.g. project-description similarity).
 
 ### **Idea Evaluation**
 ```
 routers/evaluation.py + services/provider_factory.py
 ```
+`POST /ideas/evaluate` and `POST /ideas/batch-evaluate` call the configured AI provider.  
+`GET /ideas/{idea_id}/suggestions` and `GET /ideas/{idea_id}/required-skills` use **mock idea content** in MVP (no database lookup by `idea_id`).
 
 ### **AI Mentor & Description Generator**
 ```
@@ -353,15 +357,24 @@ CREATE TABLE skill_taxonomy (
 
 ## API Error Handling
 
-All endpoints return consistent error responses:
+Validation errors (422) return:
 
 ```json
 {
-  "detail": "Error message describing the issue",
-  "error_code": "INVALID_SKILL_NAME",
-  "timestamp": "2026-06-24T18:32:00"
+  "detail": "Request validation failed",
+  "errors": [ ... ]
 }
 ```
+
+HTTP errors (400, 404, 500) return FastAPI's standard shape:
+
+```json
+{
+  "detail": "Error message describing the issue"
+}
+```
+
+The `ErrorResponse` schema in `models/schemas.py` is reserved for future structured errors.
 
 **Status Codes:**
 - `200` - Successful GET/POST
@@ -450,9 +463,10 @@ Check service health:
 ```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/skills/health
+curl http://localhost:8000/matching/health
+curl http://localhost:8000/ideas/health
 curl http://localhost:8000/mentor/health
 curl http://localhost:8000/generator/health
-curl http://localhost:8000/ideas/health
 ```
 
 AI-backed routes include provider-agnostic status fields:
@@ -538,6 +552,6 @@ This project is part of the Innovation & Collaboration Hub developed by OPMS tea
 
 ---
 
-**Last Updated:** 2026-06-24  
+**Last Updated:** 2026-06-26  
 **Version:** 1.0.0  
 **Maintainer:** AI Team

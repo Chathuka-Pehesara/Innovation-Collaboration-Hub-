@@ -2,14 +2,11 @@
 Team Matching Engine endpoints for finding complementary teammates and validating team composition.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Dict
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
-from models.schemas import (
-    UserSkill,
-)
 from utils.helpers import (
     calculate_skill_match, calculate_complementary_skills,
     calculate_proficiency_alignment, normalize_skill_name,
@@ -58,13 +55,6 @@ class FindTeammatesResponse(BaseModel):
         ..., description="List of suggested teammates ranked by compatibility"
     )
     total_suggestions: int = Field(..., description="Number of suggestions provided")
-
-
-class TeamMember(BaseModel):
-    """Team member with skills."""
-    user_id: str
-    skills: List[str]
-    proficiency_levels: Dict[str, str]
 
 
 class TeamCompositionAnalysis(BaseModel):
@@ -198,45 +188,6 @@ def _get_mock_user_skills(user_id: str) -> Dict[str, str]:
     return mock_data.get(user_id, {})
 
 
-def _calculate_proficiency_balance_score(
-    skills: List[UserSkill],
-) -> float:
-    """Calculate team balance based on proficiency distribution."""
-    if not skills:
-        return 0.5
-
-    proficiency_levels = [
-        ProficiencyLevel.BEGINNER,
-        ProficiencyLevel.INTERMEDIATE,
-        ProficiencyLevel.ADVANCED,
-        ProficiencyLevel.EXPERT,
-    ]
-
-    proficiency_counts = {level: 0 for level in proficiency_levels}
-    for skill in skills:
-        proficiency_counts[skill.proficiency_level] += 1
-
-    total = len(skills)
-    if total == 0:
-        return 0.5
-
-    ideal_distribution = {
-        ProficiencyLevel.BEGINNER: 0.15,
-        ProficiencyLevel.INTERMEDIATE: 0.35,
-        ProficiencyLevel.ADVANCED: 0.35,
-        ProficiencyLevel.EXPERT: 0.15,
-    }
-
-    score = 0.0
-    for level in proficiency_levels:
-        actual_ratio = proficiency_counts[level] / total
-        ideal_ratio = ideal_distribution[level]
-        diff = abs(actual_ratio - ideal_ratio)
-        score += (1.0 - diff)
-
-    return min(1.0, max(0.0, score / len(proficiency_levels)))
-
-
 def _get_skill_gaps_for_team(team_members: List[Dict]) -> List[SkillGap]:
     """Identify missing expertise in a team."""
     all_team_skills = set()
@@ -289,7 +240,8 @@ async def find_teammates(
     - Skill overlap (Jaccard similarity)
     - Complementary skills (unique skills each offers)
     - Proficiency balance (teams need junior/senior mix)
-    - Semantic job role matching
+
+    MVP: uses hardcoded mock user profiles (`user1`–`user4`); no database lookup.
     """
     if not user_id or not user_id.strip():
         raise HTTPException(status_code=400, detail="Invalid user ID")
@@ -325,8 +277,10 @@ async def find_teammates(
 
             # Calculate complementary skills
             complementary = calculate_complementary_skills(user_skill_list, candidate_skill_list)
-            complementary_value = len(complementary.get("user2_unique", [])) / max(
-                len(candidate_skill_list), 1
+            unique_for_user = len(complementary.get("user1_unique", []))
+            unique_for_candidate = len(complementary.get("user2_unique", []))
+            complementary_value = (unique_for_user + unique_for_candidate) / max(
+                len(user_skill_list) + len(candidate_skill_list), 1
             )
 
             # Calculate proficiency balance
@@ -714,5 +668,5 @@ async def health_check() -> dict:
     return {
         "status": "healthy",
         "service": "Team Matching Engine",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

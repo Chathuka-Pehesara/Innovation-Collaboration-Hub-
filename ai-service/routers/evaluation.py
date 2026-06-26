@@ -3,7 +3,6 @@ Endpoints for evaluating project ideas with AI-powered analysis.
 Integrates the configured AI provider, embeddings, and skills engine validation.
 """
 
-import os
 import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
@@ -175,7 +174,7 @@ async def get_improvement_suggestions(
                 "feasibility_score": evaluation.get("feasibility_score", 50),
                 "complexity": "medium" if evaluation.get("feasibility_score", 50) < 70 else "low"
             },
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
         logger.info(f"Suggestions generated for idea '{idea_id}'")
@@ -249,7 +248,7 @@ async def get_required_skills(
             "required_skills": validated_skills,
             "total_count": len(validated_skills),
             "by_category": _group_skills_by_category(validated_skills),
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:

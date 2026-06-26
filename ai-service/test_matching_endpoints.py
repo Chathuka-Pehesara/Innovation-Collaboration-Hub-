@@ -127,7 +127,6 @@ def test_helper_functions():
     try:
         from routers.matching import (
             _get_mock_user_skills,
-            _calculate_proficiency_balance_score,
             _get_skill_gaps_for_team,
         )
 
@@ -135,12 +134,6 @@ def test_helper_functions():
         skills = _get_mock_user_skills("user1")
         assert len(skills) > 0, "No skills returned for user1"
         print(f"✓ Mock skills retrieved for user1: {len(skills)} skills")
-
-        # Test proficiency balance
-        skills_empty = []
-        score = _calculate_proficiency_balance_score(skills_empty)
-        assert 0 <= score <= 1, "Score out of range"
-        print(f"✓ Proficiency balance score calculated: {score}")
 
         # Test skill gaps
         team = [{"skills": ["Python", "React"]}, {"skills": ["Java"]}]
