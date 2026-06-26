@@ -7,6 +7,9 @@ import requests
 import json
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 BASE_URL = "http://localhost:8000"
 
 def run_verification():
@@ -41,7 +44,9 @@ def run_verification():
         data = response.json()
         print(f"   Response Mode: {data.get('mode')}")
         print(f"   Topic: {data.get('topic')}")
-        print(f"   AI Reply Snippet:\n   \"\"\"\n{data.get('reply')[:250]}...\n   \"\"\"")
+        reply = data.get("reply") or ""
+        print(f"   AI Reply Snippet:\n   \"\"\"\n{reply[:250]}...\n   \"\"\"")
+        print(f"   Suggestions: {data.get('suggestions')}")
         print(f"   Follow-up Questions: {data.get('follow_up_questions')}")
     else:
         print(f"   ❌ Error Response: {response.text}")
@@ -49,13 +54,17 @@ def run_verification():
     # 3. Test Mentor Quick Tip
     print("\n3. Testing POST /mentor/quick-tip")
     tip_payload = {
-        "topic": "project_planning"
+        "topic": "technical_planning",
+        "project_title": "Student Collaboration Hub",
     }
     response = requests.post(f"{BASE_URL}/mentor/quick-tip", json=tip_payload)
     print(f"   Status: {response.status_code}")
     if response.status_code == 200:
         data = response.json()
-        print(f"   AI Tip Snippet:\n   \"\"\"\n{data.get('reply')[:200]}...\n   \"\"\"")
+        tip = data.get("tip") or ""
+        print(f"   Topic: {data.get('topic')}")
+        print(f"   AI Tip Snippet:\n   \"\"\"\n{tip[:200]}...\n   \"\"\"")
+        print(f"   Related Actions: {data.get('related_actions')}")
     else:
         print(f"   ❌ Error Response: {response.text}")
 
@@ -66,7 +75,7 @@ def run_verification():
     print(f"   Response: {json.dumps(response.json(), indent=2)}")
 
     # 5. Test Description Generation
-    print("\n5. Testing POST /generator/generate")
+    print("\n5. Testing POST /generator/description")
     gen_payload = {
         "title": "Smart Parking App",
         "brief_concept": "An app that helps users find available parking spots in crowded university parking spaces using real-time sensors.",
@@ -74,7 +83,7 @@ def run_verification():
         "target_audience": "University students and staff",
         "template": "technical"
     }
-    response = requests.post(f"{BASE_URL}/generator/generate", json=gen_payload)
+    response = requests.post(f"{BASE_URL}/generator/description", json=gen_payload)
     print(f"   Status: {response.status_code}")
     if response.status_code == 200:
         data = response.json()

@@ -1,4 +1,13 @@
-"""Deterministic text embedding fallback for AI service features."""
+"""Deterministic text embedding fallback for AI service features.
+
+Not wired into ``routers/matching.py``. Team matching uses normalized skill-name
+Jaccard similarity via ``utils.helpers`` (see ``MATCHING_API_DOCUMENTATION.md``).
+
+This module is kept for **free-text** similarity (bios, project descriptions,
+interest blurbs) through ``SimilarityService.text_similarity``. Future features
+such as semantic project–profile matching can call it without changing the
+production skill-based matching algorithm.
+"""
 
 import hashlib
 import logging

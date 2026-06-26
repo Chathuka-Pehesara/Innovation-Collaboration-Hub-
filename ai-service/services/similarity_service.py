@@ -1,4 +1,18 @@
-"""Similarity scoring helpers for profiles, skills, and free text."""
+"""Similarity scoring helpers for profiles, skills, and free text.
+
+Not wired into ``routers/matching.py``. The Team Matching Engine scores
+compatibility with ``calculate_skill_match``, ``calculate_complementary_skills``,
+and ``calculate_proficiency_alignment`` from ``utils.helpers`` — the same Jaccard
+logic that ``skill_similarity`` wraps here.
+
+Remain standalone because:
+- Skill matching is intentionally exact-name Jaccard on the predefined taxonomy.
+- ``text_similarity`` / ``EmbeddingService`` target unstructured text, not skill lists.
+- ``ranked_candidates`` is a reusable helper for future endpoints (e.g. bulk ranking).
+
+Integrate when a matching endpoint needs text-based or batch ranking; the current
+MVP algorithm does not.
+"""
 
 from typing import Iterable, List
 

@@ -38,9 +38,11 @@ A comprehensive skill management system for validating, categorizing, and matchi
 
 ### **Team Matching Engine**
 ```
-routers/matching.py + services/similarity_service.py + services/embedding_service.py
+routers/matching.py + utils/helpers.py (Jaccard skill match, complementary skills, proficiency alignment)
 ```
-(To be implemented - will use Skills Engine for compatibility assessment)
+Implemented MVP endpoints use the Skills Engine helpers directly. See `MATCHING_API_DOCUMENTATION.md`.
+
+`services/similarity_service.py` and `services/embedding_service.py` are **standalone utilities** for free-text similarity and batch ranking — not part of the current matching algorithm. Matching scores normalized skill names only; embeddings are reserved for future semantic features (e.g. project-description similarity).
 
 ### **Idea Evaluation**
 ```
@@ -385,16 +387,16 @@ ai-service/
 │
 ├── routers/
 │   ├── skills.py                    # Skills Engine endpoints ✅
-│   ├── matching.py                  # Team matching endpoints (TODO)
-│   ├── evaluation.py                # Idea evaluation endpoints (TODO)
-│   ├── mentor.py                    # Mentor chatbot endpoints (TODO)
-│   └── generator.py                 # Description generator endpoints (TODO)
+│   ├── matching.py                  # Team matching endpoints
+│   ├── evaluation.py                # Idea evaluation endpoints
+│   ├── mentor.py                    # Mentor chatbot endpoints
+│   └── generator.py                 # Description generator endpoints
 │
 ├── services/
 │   ├── provider_factory.py          # AI provider selection & fallback
 │   ├── providers/                     # mock, ollama, optional gemini
-│   ├── similarity_service.py        # Skill/interest similarity
-│   └── embedding_service.py         # Skill embeddings
+│   ├── similarity_service.py        # Standalone similarity helpers (not used by matching MVP)
+│   └── embedding_service.py         # Standalone text embeddings (not used by matching MVP)
 │
 └── utils/
     ├── constants.py                 # Skill taxonomy & enums ✅

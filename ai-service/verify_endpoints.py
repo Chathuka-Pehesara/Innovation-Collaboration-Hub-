@@ -6,6 +6,10 @@ Run this to verify all endpoints are working correctly.
 
 import requests
 import json
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 BASE_URL = "http://localhost:8000"
 
