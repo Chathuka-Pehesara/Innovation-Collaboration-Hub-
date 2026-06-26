@@ -1,6 +1,6 @@
 """
 AI Mentor chatbot endpoints for idea refinement and team management guidance.
-Integrates with Gemini for conversational mentoring with optional project context.
+Integrates with the configured AI provider for conversational mentoring with optional project context.
 """
 
 import logging
@@ -10,12 +10,12 @@ from typing import List, Optional, Dict, Any, Literal
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from services.gemini_service import GeminiService
+from services.provider_factory import get_ai_provider, get_provider_health_fields
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/mentor", tags=["mentor"])
 
-gemini_service = GeminiService()
+ai_provider = get_ai_provider()
 
 
 # ============================================================================
@@ -114,13 +114,13 @@ async def mentor_chat(request: MentorChatRequest) -> MentorChatResponse:
             f"history_turns={len(history)}, has_context={bool(context)}"
         )
 
-        result = gemini_service.mentor_chat(
+        result = ai_provider.mentor_chat(
             message=request.message.strip(),
             conversation_history=history,
             context=context,
         )
 
-        mode = result.get("mode", "live" if gemini_service.is_configured else "mock")
+        mode = result.get("mode", "live" if ai_provider.is_configured else "mock")
 
         return MentorChatResponse(
             reply=result.get("reply", "I'm here to help with your project. Could you tell me more?"),
@@ -156,12 +156,12 @@ async def get_quick_tip(request: QuickTipRequest) -> QuickTipResponse:
     message = topic_prompts.get(request.topic, topic_prompts["general"]) + project_note
 
     try:
-        result = gemini_service.mentor_chat(
+        result = ai_provider.mentor_chat(
             message=message,
             conversation_history=[],
             context={"project_title": request.project_title} if request.project_title else {},
         )
-        mode = result.get("mode", "live" if gemini_service.is_configured else "mock")
+        mode = result.get("mode", "live" if ai_provider.is_configured else "mock")
 
         return QuickTipResponse(
             topic=request.topic,
@@ -183,7 +183,7 @@ async def mentor_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "service": "AI Mentor Chatbot",
-        "gemini_configured": gemini_service.is_configured,
+        **get_provider_health_fields(),
         "endpoints": ["/mentor/chat", "/mentor/quick-tip"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }

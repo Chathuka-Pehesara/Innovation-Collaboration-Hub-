@@ -1,6 +1,6 @@
 # AI Service - FastAPI Microservice
 
-This service is a FastAPI application managing Gemini model interfaces, matchmaking models, embedding logic, and skills management for the **Innovation & Collaboration Hub**.
+This service is a FastAPI application for AI-powered features — provider-backed LLM calls (mock by default, optional Ollama or Gemini), matchmaking models, embedding logic, and skills management for the **Innovation & Collaboration Hub**.
 
 ## Ownership & Responsibility
 
@@ -44,15 +44,24 @@ routers/matching.py + services/similarity_service.py + services/embedding_servic
 
 ### **Idea Evaluation**
 ```
-routers/evaluation.py + services/gemini_service.py
+routers/evaluation.py + services/provider_factory.py
 ```
-(To be implemented)
 
 ### **AI Mentor & Description Generator**
 ```
-routers/mentor.py + routers/generator.py
+routers/mentor.py + routers/generator.py + services/providers/
 ```
-(To be implemented)
+
+### **AI Providers**
+LLM features use a pluggable provider layer (`services/providers/`). **Mock** is the default and requires no external API keys.
+
+| Provider | `AI_PROVIDER` | Requirements |
+|----------|---------------|--------------|
+| Mock (default) | `mock` | None |
+| Ollama (local) | `ollama` | Running Ollama server |
+| Gemini (optional) | `gemini` | `GEMINI_API_KEY` + `pip install -r requirements-gemini.txt` |
+
+Startup and runtime fallback: if the requested provider is misconfigured or unavailable, the service falls back to `MockProvider` automatically.
 
 ## Setup Instructions
 
@@ -82,11 +91,21 @@ cp .env.example .env
 
 **Environment Variables:**
 ```
+# AI provider (mock | ollama | gemini)
+AI_PROVIDER=mock
+
+# Ollama — when AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
+# Gemini — optional; when AI_PROVIDER=gemini (also: pip install -r requirements-gemini.txt)
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+
 # Database Configuration
 DATABASE_URL=postgresql://postgres:password@localhost:5432/innovation_hub?schema=public
 
 # API Configuration
-GEMINI_API_KEY=your_gemini_api_key_here
 BACKEND_URL=http://localhost:5000
 
 # Application Configuration
@@ -372,9 +391,10 @@ ai-service/
 │   └── generator.py                 # Description generator endpoints (TODO)
 │
 ├── services/
-│   ├── similarity_service.py        # (TODO) Skill/interest similarity
-│   ├── embedding_service.py         # (TODO) Skill embeddings
-│   └── gemini_service.py            # (TODO) Gemini API integration
+│   ├── provider_factory.py          # AI provider selection & fallback
+│   ├── providers/                     # mock, ollama, optional gemini
+│   ├── similarity_service.py        # Skill/interest similarity
+│   └── embedding_service.py         # Skill embeddings
 │
 └── utils/
     ├── constants.py                 # Skill taxonomy & enums ✅
@@ -428,7 +448,20 @@ Check service health:
 ```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/skills/health
+curl http://localhost:8000/mentor/health
+curl http://localhost:8000/generator/health
+curl http://localhost:8000/ideas/health
 ```
+
+AI-backed routes include provider-agnostic status fields:
+
+| Field | Meaning |
+|-------|---------|
+| `requested_provider` | Value of `AI_PROVIDER` (`mock`, `ollama`, or `gemini`) |
+| `active_provider` | Provider currently handling LLM calls |
+| `provider_configured` | Live LLM backend is configured and reachable |
+| `provider_available` | Requested provider is active (no startup fallback to mock) |
+| `fallback_applied` | `true` when startup fell back to mock due to misconfiguration |
 
 ## Deployment
 
@@ -441,7 +474,7 @@ docker build -t innovation-hub-ai:1.0.0 .
 # Run container
 docker run -p 8000:8000 \
   -e DATABASE_URL="postgresql://user:pass@db:5432/hub" \
-  -e GEMINI_API_KEY="your-key" \
+  -e AI_PROVIDER="mock" \
   -e LOG_LEVEL="WARNING" \
   innovation-hub-ai:1.0.0
 ```

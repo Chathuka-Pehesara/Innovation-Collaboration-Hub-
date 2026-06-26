@@ -116,7 +116,7 @@ async def add_user_skill(user_id: str, request: UserSkillRequest) -> UserSkillRe
         normalized_name = normalize_skill_name(request.name)
         category = request.category or categorize_skill(normalized_name)
         
-        # TODO: Persist to database via backend ORM
+        # MVP: persist via backend ORM when database integration is enabled
         user_skill = UserSkill(
             id=f"{user_id}_{normalized_name.replace(' ', '_').lower()}",
             name=normalized_name,
@@ -147,7 +147,7 @@ async def get_user_skills(
     if not user_id or not user_id.strip():
         raise HTTPException(status_code=400, detail="Invalid user ID")
     
-    # TODO: Query from database
+    # MVP: mock data until database integration
     mock_skills = [
         UserSkill(
             id=f"{user_id}_python",
@@ -187,7 +187,7 @@ async def delete_user_skill(user_id: str, skill_name: str):
     try:
         normalized = normalize_skill_name(skill_name)
         logger.info(f"User {user_id} deleted skill: {normalized}")
-        # TODO: Delete from database
+        # MVP: mock data until database integration
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -198,7 +198,7 @@ async def match_users_by_skills(user1_id: str, user2_id: str) -> SkillMatchingRe
     if not user1_id or not user2_id:
         raise HTTPException(status_code=400, detail="Invalid user IDs")
     
-    # TODO: Fetch actual user skills from database
+    # MVP: mock data until database integration
     skills1 = ["Python", "FastAPI", "Machine Learning"]
     skills2 = ["Python", "React", "Project Management"]
     
@@ -235,7 +235,7 @@ async def get_skill_recommendations(
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid user ID")
     
-    # TODO: Use actual user skills from database
+    # MVP: mock data until database integration
     current_skills = ["Python", "FastAPI"]
     recommendations = []
     

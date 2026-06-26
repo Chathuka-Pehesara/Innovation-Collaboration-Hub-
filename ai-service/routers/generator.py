@@ -1,6 +1,6 @@
 """
 Description generator endpoints for drafting project proposals from concepts.
-Uses Gemini to produce structured descriptions, outlines, and skill suggestions.
+Uses the configured AI provider to produce structured descriptions, outlines, and skill suggestions.
 """
 
 import logging
@@ -10,13 +10,13 @@ from typing import List, Optional, Dict, Any, Literal
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 
-from services.gemini_service import GeminiService
+from services.provider_factory import get_ai_provider, get_provider_health_fields
 from utils.helpers import extract_skills_from_text, normalize_skill_name
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/generator", tags=["generator"])
 
-gemini_service = GeminiService()
+ai_provider = get_ai_provider()
 
 
 # ============================================================================
@@ -125,7 +125,7 @@ async def generate_description(request: GenerateDescriptionRequest) -> GenerateD
     try:
         logger.info(f"Generating description for: {request.title[:50]}")
 
-        result = gemini_service.generate_project_description(
+        result = ai_provider.generate_project_description(
             title=request.title.strip(),
             brief_concept=(request.brief_concept or "").strip(),
             keywords=request.keywords or [],
@@ -141,7 +141,7 @@ async def generate_description(request: GenerateDescriptionRequest) -> GenerateD
             expected_outcomes=outline_data.get("expected_outcomes", [])[:5],
         )
 
-        mode = result.get("mode", "live" if gemini_service.is_configured else "mock")
+        mode = result.get("mode", "live" if ai_provider.is_configured else "mock")
 
         return GenerateDescriptionResponse(
             title=result.get("title", request.title),
@@ -176,13 +176,13 @@ async def refine_description(request: RefineDescriptionRequest) -> RefineDescrip
     try:
         logger.info(f"Refining description for: {request.title[:50]} (focus={request.focus})")
 
-        result = gemini_service.refine_description(
+        result = ai_provider.refine_description(
             title=request.title.strip(),
             description=request.description.strip(),
             focus=request.focus,
         )
 
-        mode = "live" if gemini_service.is_configured else "mock"
+        mode = result.get("mode", "live" if ai_provider.is_configured else "mock")
 
         return RefineDescriptionResponse(
             title=result.get("title", request.title),
@@ -277,7 +277,7 @@ async def generator_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "service": "Description Generator",
-        "gemini_configured": gemini_service.is_configured,
+        **get_provider_health_fields(),
         "endpoints": [
             "/generator/description",
             "/generator/refine",

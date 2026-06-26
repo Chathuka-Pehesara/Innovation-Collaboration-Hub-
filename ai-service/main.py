@@ -17,6 +17,10 @@ import time
 # Load env vars FIRST so routers/services can read them at import time
 load_dotenv()
 
+from services.provider_factory import validate_provider_startup
+
+validate_provider_startup()
+
 from routers.skills import router as skills_router
 from routers.matching import router as matching_router
 from routers.evaluation import router as evaluation_router
@@ -91,7 +95,17 @@ logger.info("Skills, Matching, Evaluation, Mentor, and Generator routers registe
 @app.on_event("startup")
 async def startup():
     """Initialize on startup."""
+    from services.provider_factory import get_provider_status
+
+    provider_status = get_provider_status()
     logger.info("Application starting up")
+    logger.info(
+        "AI provider: requested=%s active=%s live=%s fallback=%s",
+        provider_status["requested_provider"],
+        provider_status["active_provider"],
+        provider_status["is_live"],
+        provider_status["fallback_applied"],
+    )
     try:
         if check_db_health():
             logger.info("Database connection verified")
@@ -122,7 +136,13 @@ def root():
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+    from services.provider_factory import get_provider_health_fields
+
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        **get_provider_health_fields(),
+    }
 
 
 @app.get("/version")
