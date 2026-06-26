@@ -20,6 +20,8 @@ load_dotenv()
 from routers.skills import router as skills_router
 from routers.matching import router as matching_router
 from routers.evaluation import router as evaluation_router
+from routers.mentor import router as mentor_router
+from routers.generator import router as generator_router
 from utils.db import check_db_health, close_db
 
 
@@ -82,7 +84,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.include_router(skills_router)
 app.include_router(matching_router)
 app.include_router(evaluation_router)
-logger.info("Skills, Matching, and Evaluation routers registered")
+app.include_router(mentor_router)
+app.include_router(generator_router)
+logger.info("Skills, Matching, Evaluation, Mentor, and Generator routers registered")
 
 @app.on_event("startup")
 async def startup():
