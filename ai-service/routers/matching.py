@@ -2,22 +2,18 @@
 Team Matching Engine endpoints for finding complementary teammates and validating team composition.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Dict
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
-from models.schemas import (
-    UserSkill,
-)
 from utils.helpers import (
     calculate_skill_match, calculate_complementary_skills,
     calculate_proficiency_alignment, normalize_skill_name,
 )
 from utils.constants import (
-    SkillCategory, ProficiencyLevel, PREDEFINED_SKILLS,
+    SkillCategory, ProficiencyLevel, PREDEFINED_SKILLS, PREDEFINED_SKILLS_LOWERCASE,
 )
-from services.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matching", tags=["matching"])
@@ -59,13 +55,6 @@ class FindTeammatesResponse(BaseModel):
         ..., description="List of suggested teammates ranked by compatibility"
     )
     total_suggestions: int = Field(..., description="Number of suggestions provided")
-
-
-class TeamMember(BaseModel):
-    """Team member with skills."""
-    user_id: str
-    skills: List[str]
-    proficiency_levels: Dict[str, str]
 
 
 class TeamCompositionAnalysis(BaseModel):
@@ -165,7 +154,7 @@ class DuoCompatibilityResponse(BaseModel):
 # ============================================================================
 
 def _get_mock_user_skills(user_id: str) -> Dict[str, str]:
-    """Get mock user skills for MVP. TODO: Query from database."""
+    """Get mock user skills for MVP (database integration pending)."""
     mock_data = {
         "user1": {
             "Python": "Advanced",
@@ -197,45 +186,6 @@ def _get_mock_user_skills(user_id: str) -> Dict[str, str]:
         },
     }
     return mock_data.get(user_id, {})
-
-
-def _calculate_proficiency_balance_score(
-    skills: List[UserSkill],
-) -> float:
-    """Calculate team balance based on proficiency distribution."""
-    if not skills:
-        return 0.5
-
-    proficiency_levels = [
-        ProficiencyLevel.BEGINNER,
-        ProficiencyLevel.INTERMEDIATE,
-        ProficiencyLevel.ADVANCED,
-        ProficiencyLevel.EXPERT,
-    ]
-
-    proficiency_counts = {level: 0 for level in proficiency_levels}
-    for skill in skills:
-        proficiency_counts[skill.proficiency_level] += 1
-
-    total = len(skills)
-    if total == 0:
-        return 0.5
-
-    ideal_distribution = {
-        ProficiencyLevel.BEGINNER: 0.15,
-        ProficiencyLevel.INTERMEDIATE: 0.35,
-        ProficiencyLevel.ADVANCED: 0.35,
-        ProficiencyLevel.EXPERT: 0.15,
-    }
-
-    score = 0.0
-    for level in proficiency_levels:
-        actual_ratio = proficiency_counts[level] / total
-        ideal_ratio = ideal_distribution[level]
-        diff = abs(actual_ratio - ideal_ratio)
-        score += (1.0 - diff)
-
-    return min(1.0, max(0.0, score / len(proficiency_levels)))
 
 
 def _get_skill_gaps_for_team(team_members: List[Dict]) -> List[SkillGap]:
@@ -290,13 +240,14 @@ async def find_teammates(
     - Skill overlap (Jaccard similarity)
     - Complementary skills (unique skills each offers)
     - Proficiency balance (teams need junior/senior mix)
-    - Semantic job role matching
+
+    MVP: uses hardcoded mock user profiles (`user1`–`user4`); no database lookup.
     """
     if not user_id or not user_id.strip():
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     try:
-        # TODO: Query user skills from database
+        # MVP: mock data until database integration
         user_skills = _get_mock_user_skills(user_id)
         if not user_skills:
             logger.warning(f"No skills found for user {user_id}")
@@ -314,7 +265,7 @@ async def find_teammates(
             if candidate_id == user_id:
                 continue
 
-            # TODO: Query candidate skills from database
+            # MVP: mock data until database integration
             candidate_skills = _get_mock_user_skills(candidate_id)
             candidate_skill_list = list(candidate_skills.keys())
 
@@ -326,8 +277,10 @@ async def find_teammates(
 
             # Calculate complementary skills
             complementary = calculate_complementary_skills(user_skill_list, candidate_skill_list)
-            complementary_value = len(complementary.get("user2_unique", [])) / max(
-                len(candidate_skill_list), 1
+            unique_for_user = len(complementary.get("user1_unique", []))
+            unique_for_candidate = len(complementary.get("user2_unique", []))
+            complementary_value = (unique_for_user + unique_for_candidate) / max(
+                len(user_skill_list) + len(candidate_skill_list), 1
             )
 
             # Calculate proficiency balance
@@ -418,7 +371,7 @@ async def validate_team(
         raise HTTPException(status_code=400, detail="Team cannot exceed 20 members")
 
     try:
-        # TODO: Query team member skills from database
+        # MVP: mock data until database integration
         team_members = []
         all_skills = {}
         all_skill_names = set()
@@ -453,11 +406,9 @@ async def validate_team(
         # Calculate coverage completeness
         skill_categories_covered = set()
         for skill in all_skill_names:
-            for category, skills_in_cat in PREDEFINED_SKILLS.items():
-                if skill.lower() == category.lower():
-                    skill_categories_covered.add(
-                        skills_in_cat.get("category", SkillCategory.OTHER)
-                    )
+            skill_info = PREDEFINED_SKILLS_LOWERCASE.get(skill.lower())
+            if skill_info:
+                skill_categories_covered.add(skill_info.get("category", SkillCategory.OTHER))
 
         coverage = len(skill_categories_covered) / len(SkillCategory) * 10
 
@@ -535,7 +486,7 @@ async def get_team_gaps(
         raise HTTPException(status_code=400, detail="Invalid team ID")
 
     try:
-        # TODO: Query team members from database using team_id
+        # MVP: mock data until database integration
         # For MVP, mock team with team_id
         mock_teams = {
             "team1": ["user1", "user2"],
@@ -600,7 +551,7 @@ async def get_duo_compatibility(
         raise HTTPException(status_code=400, detail="Cannot compare user with themselves")
 
     try:
-        # TODO: Query skills from database
+        # MVP: mock data until database integration
         user1_skills = _get_mock_user_skills(user1_id)
         user2_skills = _get_mock_user_skills(user2_id)
 
@@ -627,15 +578,15 @@ async def get_duo_compatibility(
         # Category breakdown
         category_breakdown: List[CompatibilityBreakdown] = []
 
+        def _skills_in_category(skill_list: List[str], category: SkillCategory) -> List[str]:
+            return [
+                skill for skill in skill_list
+                if PREDEFINED_SKILLS_LOWERCASE.get(skill.lower(), {}).get("category") == category
+            ]
+
         for category in SkillCategory:
-            category_skills1 = [
-                s for s in user1_skill_list
-                if s.lower() in [sk.lower() for sk in PREDEFINED_SKILLS.keys()]
-            ]
-            category_skills2 = [
-                s for s in user2_skill_list
-                if s.lower() in [sk.lower() for sk in PREDEFINED_SKILLS.keys()]
-            ]
+            category_skills1 = _skills_in_category(user1_skill_list, category)
+            category_skills2 = _skills_in_category(user2_skill_list, category)
 
             matching_in_cat = len(
                 set(category_skills1) & set(category_skills2)
@@ -676,7 +627,6 @@ async def get_duo_compatibility(
             "Limited overlap (3+ hours difference)",
         ]
 
-        import random
         communication_style = communication_styles[
             hash(user1_id + user2_id) % len(communication_styles)
         ]
@@ -718,5 +668,5 @@ async def health_check() -> dict:
     return {
         "status": "healthy",
         "service": "Team Matching Engine",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

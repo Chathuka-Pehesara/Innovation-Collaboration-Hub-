@@ -1,24 +1,22 @@
 """
 Endpoints for evaluating project ideas with AI-powered analysis.
-Integrates Gemini API, embeddings, and skills engine validation.
+Integrates the configured AI provider, embeddings, and skills engine validation.
 """
 
-import os
 import logging
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, status, Path, Query
 from models.schemas import IdeaEvaluationRequest, IdeaEvaluationResponse
-from services.gemini_service import GeminiService
-from services.embedding_service import EmbeddingService
-from utils.helpers import extract_skills_from_text, categorize_skill, normalize_skill_name
+from services.provider_factory import get_ai_provider, get_provider_health_fields
+from utils.helpers import extract_skills_from_text, normalize_skill_name
 from utils.constants import PREDEFINED_SKILLS_LOWERCASE
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ideas", tags=["evaluation"])
 
-gemini_service = GeminiService()
+ai_provider = get_ai_provider()
 
 
 @router.post("/evaluate", response_model=IdeaEvaluationResponse, status_code=200)
@@ -37,7 +35,7 @@ async def evaluate_single_idea(request: IdeaEvaluationRequest) -> IdeaEvaluation
 
     try:
         logger.info(f"Evaluating idea: {request.title[:50]}")
-        result = gemini_service.evaluate_idea(request.title, request.description)
+        result = ai_provider.evaluate_idea(request.title, request.description)
         
         response = IdeaEvaluationResponse(
             overall_score=result.get("overall_score", 50),
@@ -104,7 +102,7 @@ async def batch_evaluate_ideas(requests: List[IdeaEvaluationRequest]) -> List[Di
             continue
 
         try:
-            evaluation = gemini_service.evaluate_idea(idea.title, idea.description)
+            evaluation = ai_provider.evaluate_idea(idea.title, idea.description)
             results.append({
                 "idea_index": idx,
                 "title": idea.title,
@@ -138,7 +136,7 @@ async def get_improvement_suggestions(
             detail="Invalid idea ID"
         )
 
-    # TODO: Query from database
+    # MVP: mock data until database integration
     mock_idea = {
         "id": idea_id,
         "title": "AI-Powered Collaboration Platform",
@@ -148,7 +146,7 @@ async def get_improvement_suggestions(
     logger.info(f"Fetching suggestions for idea: {idea_id}")
 
     try:
-        evaluation = gemini_service.evaluate_idea(mock_idea["title"], mock_idea["description"])
+        evaluation = ai_provider.evaluate_idea(mock_idea["title"], mock_idea["description"])
         
         suggestions = {
             "idea_id": idea_id,
@@ -176,7 +174,7 @@ async def get_improvement_suggestions(
                 "feasibility_score": evaluation.get("feasibility_score", 50),
                 "complexity": "medium" if evaluation.get("feasibility_score", 50) < 70 else "low"
             },
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
         
         logger.info(f"Suggestions generated for idea '{idea_id}'")
@@ -202,7 +200,7 @@ async def get_required_skills(
             detail="Invalid idea ID"
         )
 
-    # TODO: Query from database
+    # MVP: mock data until database integration
     mock_idea = {
         "id": idea_id,
         "title": "AI-Powered Collaboration Platform",
@@ -226,7 +224,12 @@ async def get_required_skills(
                     skill_info = PREDEFINED_SKILLS_LOWERCASE[skill_lower]
                     skill_category = skill_info.get("category")
                     
-                    if category is None or str(skill_category) == category:
+                    category_value = (
+                        skill_category.value
+                        if hasattr(skill_category, "value")
+                        else str(skill_category)
+                    )
+                    if category is None or category_value.lower() == category.lower():
                         validated_skills.append({
                             "name": normalized,
                             "category": skill_category,
@@ -245,7 +248,7 @@ async def get_required_skills(
             "required_skills": validated_skills,
             "total_count": len(validated_skills),
             "by_category": _group_skills_by_category(validated_skills),
-            "generated_at": datetime.utcnow().isoformat()
+            "generated_at": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:
@@ -273,6 +276,6 @@ async def evaluation_health() -> Dict[str, Any]:
     return {
         "status": "healthy",
         "service": "Idea Evaluation Engine",
-        "gemini_configured": gemini_service.is_configured,
-        "timestamp": datetime.utcnow().isoformat()
+        **get_provider_health_fields(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

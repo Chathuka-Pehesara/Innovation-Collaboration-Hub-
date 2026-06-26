@@ -1,0 +1,2 @@
+# Optional: install only when AI_PROVIDER=gemini
+google-genai>=1.0.0

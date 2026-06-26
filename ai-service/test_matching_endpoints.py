@@ -7,6 +7,9 @@ import sys
 import json
 from typing import Dict, Any
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Mock test requests
 test_cases = {
     "test_find_teammates_valid": {
@@ -124,7 +127,6 @@ def test_helper_functions():
     try:
         from routers.matching import (
             _get_mock_user_skills,
-            _calculate_proficiency_balance_score,
             _get_skill_gaps_for_team,
         )
 
@@ -132,12 +134,6 @@ def test_helper_functions():
         skills = _get_mock_user_skills("user1")
         assert len(skills) > 0, "No skills returned for user1"
         print(f"✓ Mock skills retrieved for user1: {len(skills)} skills")
-
-        # Test proficiency balance
-        skills_empty = []
-        score = _calculate_proficiency_balance_score(skills_empty)
-        assert 0 <= score <= 1, "Score out of range"
-        print(f"✓ Proficiency balance score calculated: {score}")
 
         # Test skill gaps
         team = [{"skills": ["Python", "React"]}, {"skills": ["Java"]}]
@@ -285,6 +281,41 @@ def test_score_ranges():
         return False
 
 
+def test_skills_engine_endpoints():
+    """Smoke-test Skills Engine via TestClient (no live server required)."""
+    print("\n=== Testing Skills Engine Endpoints ===")
+    try:
+        from fastapi.testclient import TestClient
+        from main import app
+
+        client = TestClient(app)
+
+        validate = client.post(
+            "/skills/validate",
+            json={"skill_name": "python", "suggest_category": True},
+        )
+        assert validate.status_code == 200
+        assert validate.json()["normalized_name"] == "Python"
+        print("✓ POST /skills/validate")
+
+        categories = client.get("/skills/categories")
+        assert categories.status_code == 200
+        assert categories.json()["total_categories"] >= 1
+        print("✓ GET /skills/categories")
+
+        match = client.post("/skills/match/user1/user2")
+        assert match.status_code == 200
+        assert "overall_similarity" in match.json()
+        print("✓ POST /skills/match/{user1}/{user2}")
+
+        return True
+    except Exception as e:
+        print(f"✗ Skills Engine endpoint test failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
 def main():
     """Run all tests."""
     print("=" * 60)
@@ -300,6 +331,7 @@ def main():
     test_results.append(("Endpoint Definition Tests", test_endpoint_definitions()))
     test_results.append(("Error Handling Tests", test_error_handling()))
     test_results.append(("Score Range Tests", test_score_ranges()))
+    test_results.append(("Skills Engine Endpoint Tests", test_skills_engine_endpoints()))
 
     # Print summary
     print("\n" + "=" * 60)

@@ -1,44 +1,60 @@
-"""
-Embedding service stub for AI team integration.
-Other teams will implement their own embedding services as needed.
-This file serves as a template/interface for semantic operations.
+"""Deterministic text embedding fallback for AI service features.
+
+Not wired into ``routers/matching.py``. Team matching uses normalized skill-name
+Jaccard similarity via ``utils.helpers`` (see ``MATCHING_API_DOCUMENTATION.md``).
+
+This module is kept for **free-text** similarity (bios, project descriptions,
+interest blurbs) through ``SimilarityService.text_similarity``. Future features
+such as semantic project–profile matching can call it without changing the
+production skill-based matching algorithm.
 """
 
+import hashlib
 import logging
+import math
+import re
 from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    """
-    Stub for semantic embedding operations.
-    TODO: Implement with sentence-transformers or a cloud embedding API.
-    """
+    """Generate lightweight deterministic embeddings for local similarity checks."""
 
-    def __init__(self):
-        self.is_configured = False
-        logger.info("EmbeddingService initialized (stub mode — embeddings not active)")
+    def __init__(self, vector_size: int = 64):
+        self.vector_size = vector_size
+        self.is_configured = True
+        logger.info("EmbeddingService initialized with deterministic local embeddings")
 
     def embed_text(self, text: str) -> Optional[List[float]]:
-        """
-        Generate an embedding vector for the given text.
-        Returns None until implemented.
-        """
-        logger.debug(f"EmbeddingService.embed_text called (stub): '{text[:50]}...'")
-        return None
+        """Generate a normalized hashed bag-of-words vector for text."""
+        if not isinstance(text, str) or not text.strip():
+            return None
+
+        vector = [0.0] * self.vector_size
+        tokens = re.findall(r"[a-zA-Z0-9+#.]+", text.lower())
+
+        for token in tokens:
+            digest = hashlib.sha256(token.encode("utf-8")).digest()
+            index = int.from_bytes(digest[:2], "big") % self.vector_size
+            sign = 1.0 if digest[2] % 2 == 0 else -1.0
+            vector[index] += sign
+
+        magnitude = math.sqrt(sum(value * value for value in vector))
+        if magnitude == 0:
+            return None
+
+        return [value / magnitude for value in vector]
 
     def embed_batch(self, texts: List[str]) -> List[Optional[List[float]]]:
-        """
-        Generate embedding vectors for a batch of texts.
-        Returns list of None until implemented.
-        """
-        logger.debug(f"EmbeddingService.embed_batch called (stub): {len(texts)} texts")
-        return [None] * len(texts)
+        """Generate embedding vectors for a batch of texts."""
+        return [self.embed_text(text) for text in texts]
 
     def similarity(self, vec1: List[float], vec2: List[float]) -> float:
-        """
-        Compute cosine similarity between two embedding vectors.
-        Returns 0.0 until implemented.
-        """
-        return 0.0
+        """Compute cosine similarity between two embedding vectors."""
+        if not vec1 or not vec2 or len(vec1) != len(vec2):
+            return 0.0
+
+        dot_product = sum(left * right for left, right in zip(vec1, vec2))
+        score = (dot_product + 1.0) / 2.0
+        return min(1.0, max(0.0, score))
