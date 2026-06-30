@@ -26,6 +26,7 @@ model Skill {
   id       String         @id @default(uuid())
   name     String         @unique
   projects ProjectSkill[]
+  users    UserSkill[]
 }
 
 model Project {
@@ -192,4 +193,54 @@ model Notification {
   referenceId String?  // ID of the Chat/Team related to the notification
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+// ─── Profile Management Models ──────────────────────────────────────────────
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  name            String
+  role            String         @default("student") // student, mentor, admin
+  password        String         // encrypted
+  bio             String?        @db.Text
+  specialization  String?        // AI, IT, Cybersecurity, Networking, Other
+  avatarUrl       String?
+  githubUrl       String?
+  linkedinUrl     String?
+  portfolioUrl    String?
+  twitterUrl      String?
+  availableHours  Int            @default(0) // weekly hours available
+  availableDays   String         @default("[]") // JSON array of day names
+  xp              Int            @default(0)
+  level           Int            @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  skills          UserSkill[]
+  portfolioItems  PortfolioItem[]
+}
+
+model UserSkill {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  level     String   @default("Beginner") // Beginner, Intermediate, Advanced
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, skillId])
+}
+
+model PortfolioItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  description String? @db.Text
+  url       String?
+  imageUrl  String?
+  tags      String   @default("[]") // JSON array of tag strings
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

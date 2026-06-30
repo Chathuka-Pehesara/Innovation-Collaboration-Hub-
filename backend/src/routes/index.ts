@@ -34,6 +34,8 @@ router.get('/status', (req, res) => {
  * Mount all route modules
  */
 router.use('/auth', authRoutes);
+router.use('/profile', usersRoutes); // Profile management routes
+router.use('/students', usersRoutes); // Student search under /students/search
 router.use('/users', usersRoutes);
 router.use('/projects', projectRoutes);
 router.use('/teams', teamRoutes);
