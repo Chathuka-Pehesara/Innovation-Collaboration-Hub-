@@ -3,6 +3,9 @@ Test script for Team Matching Engine endpoints.
 Tests all endpoints for correct HTTP status codes, response schemas, and algorithm correctness.
 """
 
+import os
+os.environ["DATABASE_URL"] = "sqlite:///./test_matching.db"
+
 import sys
 import json
 from typing import Dict, Any
@@ -282,14 +285,51 @@ def test_score_ranges():
 
 
 def test_skills_engine_endpoints():
-    """Smoke-test Skills Engine via TestClient (no live server required)."""
-    print("\n=== Testing Skills Engine Endpoints ===")
+    """Smoke-test Skills Engine and Team Matching Engine via TestClient."""
+    print("\n=== Testing Skills and Matching Engine Endpoints ===")
     try:
+        from utils.db import engine, SessionLocal
+        from models.db_models import Base, UserSkill as DBUserSkill, Team as DBTeam, TeamMember as DBTeamMember
+        
+        # 1. Initialize Tables
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+
+        # 2. Seed Mock Data
+        db = SessionLocal()
+        try:
+            # Seed users skills
+            user1_skills = [
+                DBUserSkill(id="u1_python", user_id="user1", skill_name="Python", skill_category="Programming Language", proficiency_level="Advanced"),
+                DBUserSkill(id="u1_fastapi", user_id="user1", skill_name="FastAPI", skill_category="Framework/Library", proficiency_level="Advanced"),
+            ]
+            user2_skills = [
+                DBUserSkill(id="u2_python", user_id="user2", skill_name="Python", skill_category="Programming Language", proficiency_level="Intermediate"),
+                DBUserSkill(id="u2_react", user_id="user2", skill_name="React", skill_category="Framework/Library", proficiency_level="Advanced"),
+            ]
+            for s in user1_skills + user2_skills:
+                db.add(s)
+            
+            # Seed team and team members
+            team1 = DBTeam(id="team1", projectId="project1")
+            db.add(team1)
+            db.commit()
+            
+            tm1 = DBTeamMember(id="tm1", teamId="team1", userId="user1", role="LEAD")
+            tm2 = DBTeamMember(id="tm2", teamId="team1", userId="user2", role="MEMBER")
+            db.add(tm1)
+            db.add(tm2)
+            db.commit()
+        finally:
+            db.close()
+
+        # 3. Instantiate TestClient
         from fastapi.testclient import TestClient
         from main import app
 
         client = TestClient(app)
 
+        # 4. Test Skills Validation
         validate = client.post(
             "/skills/validate",
             json={"skill_name": "python", "suggest_category": True},
@@ -298,19 +338,58 @@ def test_skills_engine_endpoints():
         assert validate.json()["normalized_name"] == "Python"
         print("✓ POST /skills/validate")
 
+        # 5. Test Skill Categories
         categories = client.get("/skills/categories")
         assert categories.status_code == 200
         assert categories.json()["total_categories"] >= 1
         print("✓ GET /skills/categories")
 
+        # 6. Test User Skill Creation & Retrieval
+        add_skill = client.post(
+            "/skills/profile/user1/skills",
+            json={"name": "Docker", "category": "Cloud & DevOps", "proficiency_level": "Intermediate"}
+        )
+        assert add_skill.status_code == 201
+        print("✓ POST /skills/profile/{user_id}/skills")
+
+        get_skills = client.get("/skills/profile/user1/skills")
+        assert get_skills.status_code == 200
+        assert len(get_skills.json()["skills"]) >= 1
+        print("✓ GET /skills/profile/{user_id}/skills")
+
+        # 7. Test Skills Match
         match = client.post("/skills/match/user1/user2")
         assert match.status_code == 200
         assert "overall_similarity" in match.json()
         print("✓ POST /skills/match/{user1}/{user2}")
 
+        # 8. Test Teammate Search
+        teammates = client.post("/matching/find-teammates?user_id=user1&max_suggestions=3")
+        assert teammates.status_code == 200
+        assert "suggestions" in teammates.json()
+        print("✓ POST /matching/find-teammates")
+
+        # 9. Test Team Validation
+        validation = client.post("/matching/validate-team?team_ids=user1&team_ids=user2")
+        assert validation.status_code == 200
+        assert "team_analysis" in validation.json()
+        print("✓ POST /matching/validate-team")
+
+        # 10. Test Team Gaps
+        gaps = client.get("/matching/team-gaps/team1")
+        assert gaps.status_code == 200
+        assert "gaps" in gaps.json()
+        print("✓ GET /matching/team-gaps")
+
+        # 11. Test Duo Compatibility
+        compat = client.post("/matching/compatibility/user1/user2")
+        assert compat.status_code == 200
+        assert "overall_compatibility" in compat.json()
+        print("✓ POST /matching/compatibility/{user1}/{user2}")
+
         return True
     except Exception as e:
-        print(f"✗ Skills Engine endpoint test failed: {e}")
+        print(f"✗ Skills and Matching Engine endpoint test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
