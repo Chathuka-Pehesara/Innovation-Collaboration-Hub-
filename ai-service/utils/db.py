@@ -66,11 +66,16 @@ def close_db():
         logger.error(f"Error closing database: {str(e)}")
 
 def check_db_health() -> bool:
-    """Check if database connection is healthy."""
+    """Check if database connection is healthy and initialize schemas."""
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
-        logger.info("Database health check passed")
+        
+        # Initialize tables if not already present
+        from models.db_models import Base
+        Base.metadata.create_all(bind=engine)
+        
+        logger.info("Database health check passed and schemas verified/initialized")
         return True
     except Exception as e:
         logger.error(f"Database health check failed: {str(e)}")
