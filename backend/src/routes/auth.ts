@@ -1,16 +1,49 @@
 /**
  * @file        auth.ts
  * @owner       IT Team
- * @description Authentication routes directing login and user creation parameters.
- * @depends     backend/src/controllers/authController.ts
- * @todo        Hook request payload fields validate validations filters.
+ * @description Authentication routes with Zod validation middleware.
+ * @depends     controllers/authController.ts, middleware/validate.ts, validators/authValidator.ts
  */
 
-import express from 'express';
+import { Router } from 'express';
+import {
+  register,
+  login,
+  logout,
+  refresh,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+} from '../controllers/authController';
+import { validate } from '../middleware/validate';
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '../validators/authValidator';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: Add authentication routes (login, register, refresh token, logout)
-// Owned by: Cybersecurity Team
+// POST /auth/register — create account, send verification email
+router.post('/register', validate(registerSchema), register);
+
+// POST /auth/login — authenticate, return JWT access + refresh tokens
+router.post('/login', validate(loginSchema), login);
+
+// POST /auth/logout — invalidate refresh token cookie
+router.post('/logout', logout);
+
+// POST /auth/refresh — issue new access token using HttpOnly refresh token cookie
+router.post('/refresh', refresh);
+
+// POST /auth/forgot-password — send password reset link
+router.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword);
+
+// POST /auth/reset-password — update password with valid token
+router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
+
+// GET /auth/verify-email/:token — verify email address from link
+router.get('/verify-email/:token', verifyEmail);
 
 export default router;

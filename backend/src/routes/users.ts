@@ -1,16 +1,82 @@
 /**
- * @file        users.ts
+ * @file        profileRoutes.ts
  * @owner       IT Team
- * @description Endpoints fetching and modifying user bios and details indices.
- * @depends     backend/src/controllers/userController.ts
- * @todo        Mount authentication verification access guards check middleware.
+ * @description Profile management routes: public view, edits, avatar, skills, portfolio, availability, student search.
+ * @depends     backend/src/controllers/userController.ts, backend/src/middleware/auth.ts
+ *
+ * Mount in routes/index.ts:
+ *   import profileRoutes from './users';
+ *   router.use('/profile', profileRoutes);
+ *   router.use('/students', profileRoutes); // for /students/search
  */
 
-import express from 'express';
+import { Router } from 'express';
+import {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+  getSkills,
+  addSkill,
+  removeSkill,
+  getPortfolio,
+  addPortfolioItem,
+  removePortfolioItem,
+  updatePortfolioItem,
+  updateAvailability,
+  searchStudents,
+  upload,
+} from '../controllers/userController';
+import { authenticate } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import {
+  updateProfileSchema,
+  addSkillSchema,
+  addPortfolioItemSchema,
+  updateAvailabilitySchema,
+} from '../validators/userValidator';
 
-const router = express.Router();
+const router = Router();
 
-// TODO: Add user routes (get profile, update profile, get skills, etc.)
-// Owned by: IT Team
+// ─── Student search (public) ────────────────────────────────────────────────
+// GET /students/search?q=alice&skill=React&page=1&limit=12
+router.get('/search', searchStudents);
+
+// ─── Public profile ─────────────────────────────────────────────────────────
+// GET /profile/:id
+router.get('/:id', getProfile);
+
+// ─── Authenticated profile mutations ────────────────────────────────────────
+// PUT /profile/:id
+router.put('/:id', authenticate, validate(updateProfileSchema), updateProfile);
+
+// POST /profile/:id/avatar  (multipart/form-data, field name: "avatar")
+router.post('/:id/avatar', authenticate, upload.single('avatar'), uploadAvatar);
+
+// ─── Skills ─────────────────────────────────────────────────────────────────
+// GET  /profile/:id/skills
+router.get('/:id/skills', getSkills);
+
+// POST /profile/:id/skills
+router.post('/:id/skills', authenticate, validate(addSkillSchema), addSkill);
+
+// DELETE /profile/:id/skills/:skillId
+router.delete('/:id/skills/:skillId', authenticate, removeSkill);
+
+// ─── Portfolio ───────────────────────────────────────────────────────────────
+// GET  /profile/:id/portfolio
+router.get('/:id/portfolio', getPortfolio);
+
+// POST /profile/:id/portfolio
+router.post('/:id/portfolio', authenticate, validate(addPortfolioItemSchema), addPortfolioItem);
+
+// PUT /profile/:id/portfolio/:itemId
+router.put('/:id/portfolio/:itemId', authenticate, validate(addPortfolioItemSchema), updatePortfolioItem);
+
+// DELETE /profile/:id/portfolio/:itemId
+router.delete('/:id/portfolio/:itemId', authenticate, removePortfolioItem);
+
+// ─── Availability ────────────────────────────────────────────────────────────
+// PUT /profile/:id/availability
+router.put('/:id/availability', authenticate, validate(updateAvailabilitySchema), updateAvailability);
 
 export default router;
