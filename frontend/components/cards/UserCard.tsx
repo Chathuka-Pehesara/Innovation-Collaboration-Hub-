@@ -8,9 +8,9 @@
 'use client';
 
 import Link from 'next/link';
-import { StudentCard as StudentCardType } from '@/lib/profileApi';
-import { AvatarWithFallback } from './AvatarWithFallback';
-import { SkillBadge } from './SkillBadge';
+import { Profile as StudentCardType } from '@/lib/api/profileApi';
+import { AvatarWithFallback } from '@/components/profile/AvatarWithFallback';
+import { SkillBadge } from '@/components/profile/SkillBadge';
 
 interface Props {
   student: StudentCardType;

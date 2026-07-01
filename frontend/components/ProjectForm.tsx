@@ -1,32 +1,69 @@
 import { useState, useEffect } from 'react';
-import { getCategories } from '../services/api';
+import { getCategories } from '@/lib/api';
 import TagInput from './TagInput';
 
-export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }) {
+export interface ProjectInitialData {
+  title?: string;
+  description?: string;
+  categoryId?: string;
+  status?: string;
+  teamSize?: number;
+  tags?: Array<{ tag: { name: string } }>;
+  skills?: Array<{ skill: { name: string } }>;
+}
+
+export interface ProjectFormData {
+  title: string;
+  description: string;
+  categoryId: string | null;
+  status: string;
+  teamSize: number;
+  tags: string[];
+  skills: string[];
+}
+
+interface FormErrors {
+  title?: string;
+  description?: string;
+  categoryId?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface ProjectFormProps {
+  initialData?: ProjectInitialData;
+  onSubmit: (data: ProjectFormData) => void;
+  isSubmitting: boolean;
+}
+
+export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }: ProjectFormProps) {
   const [title, setTitle] = useState(initialData.title || '');
   const [description, setDescription] = useState(initialData.description || '');
   const [categoryId, setCategoryId] = useState(initialData.categoryId || '');
   const [status, setStatus] = useState(initialData.status || 'Draft');
   const [teamSize, setTeamSize] = useState(initialData.teamSize || 1);
-  const [tagsInput, setTagsInput] = useState(
-    initialData.tags ? initialData.tags.map(t => t.tag.name) : []
+  const [tagsInput, setTagsInput] = useState<string[]>(
+    initialData.tags ? initialData.tags.map((t) => t.tag.name) : []
   );
-  const [skillsInput, setSkillsInput] = useState(
-    initialData.skills ? initialData.skills.map(s => s.skill.name) : []
+  const [skillsInput, setSkillsInput] = useState<string[]>(
+    initialData.skills ? initialData.skills.map((s) => s.skill.name) : []
   );
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<FormErrors>({});
   
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Client-side validation
-    const newErrors = {};
+    const newErrors: FormErrors = {};
     if (title.trim().length < 5) newErrors.title = 'Title must be at least 5 characters long.';
     if (description.trim().length < 20) newErrors.description = 'Description must be at least 20 characters long.';
     if (!categoryId) newErrors.categoryId = 'Please select a category.';

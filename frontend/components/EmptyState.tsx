@@ -1,14 +1,14 @@
 import React from "react";
 
 type EmptyStateProps = {
-  title: string;
+  title?: string;
   message?: string;
   actionText?: string;
   onAction?: () => void;
 };
 
 export default function EmptyState({
-  title,
+  title = "No Data Found",
   message,
   actionText,
   onAction,

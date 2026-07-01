@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { fetchProfile, StudentProfile } from '@/lib/profileApi';
+import { getProfile, Profile } from '@/lib/api/profileApi';
 import { useAuthStore } from '@/lib/authStore';
 import { AvatarWithFallback } from '@/components/profile/AvatarWithFallback';
 import { SkillBadge } from '@/components/profile/SkillBadge';
@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const currentUser = useAuthStore((s) => s.user);
 
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -41,7 +41,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchProfile(id)
+    getProfile(id)
       .then(setProfile)
       .catch(() => setError('Profile not found.'))
       .finally(() => setLoading(false));

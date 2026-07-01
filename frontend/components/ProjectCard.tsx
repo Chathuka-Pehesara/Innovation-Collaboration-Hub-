@@ -19,7 +19,7 @@ export default function ProjectCard({ project, index = 0 }: { project: ProjectLi
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <h3 className="text-xl font-bold text-slate-900 line-clamp-1">
-            <Link to={`/projects/${project.id}`} className="hover:text-blue-600">
+            <Link href={`/projects/${project.id}`} className="hover:text-blue-600">
               {project.title}
             </Link>
           </h3>
@@ -52,7 +52,7 @@ export default function ProjectCard({ project, index = 0 }: { project: ProjectLi
           <div className="text-xs text-slate-500">
             {new Date(project.createdAt).toLocaleDateString()}
           </div>
-          <Link to={`/projects/${project.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+          <Link href={`/projects/${project.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
             View Details &rarr;
           </Link>
         </div>

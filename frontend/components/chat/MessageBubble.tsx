@@ -93,11 +93,11 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       <div className="flex items-center gap-1.5 mt-1 px-1 text-3xs text-slate-400 dark:text-slate-500">
         <span>{timeString}</span>
         {isOwn && (
-          <span>
+          <span title={isRead ? "Read by participant" : "Sent successfully"}>
             {isRead ? (
-              <CheckCheck className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" title="Read by participant" />
+              <CheckCheck className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
             ) : (
-              <Check className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 shrink-0" title="Sent successfully" />
+              <Check className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
             )}
           </span>
         )}
