@@ -36,3 +36,4 @@ pip-delete-this-directory.txt
 *.sw?
 .DS_Store
 Thumbs.db
+*.pdf

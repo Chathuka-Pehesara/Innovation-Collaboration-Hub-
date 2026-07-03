@@ -13,7 +13,6 @@
     "axios": "^1.6.7",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.3",
-    "innovation-hub-backend": "file:../backend",
     "lucide-react": "^0.331.0",
     "next": "^14.1.0",
     "react": "^18.2.0",

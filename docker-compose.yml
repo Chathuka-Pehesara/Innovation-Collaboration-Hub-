@@ -18,6 +18,11 @@ services:
       POSTGRES_DB: innovation_hub
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovation_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Redis for Caching and Bull Queues
   redis:
@@ -42,8 +47,10 @@ services:
       - JWT_SECRET=supersecretjwtkey123!
       - AI_SERVICE_URL=http://ai-service:8000
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   # Python FastAPI AI Microservice
   ai-service:
@@ -58,7 +65,8 @@ services:
       - GEMINI_API_KEY=your_gemini_api_key_here
       - BACKEND_URL=http://backend:5000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   # Next.js Frontend App
   frontend:
