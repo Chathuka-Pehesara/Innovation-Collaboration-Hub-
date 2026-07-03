@@ -251,12 +251,17 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { token } = req.params;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const isHtmlRequest = req.headers.accept?.includes('text/html');
 
     const user = await prisma.user.findFirst({
       where: { verificationToken: token },
     });
 
     if (!user) {
+      if (isHtmlRequest) {
+        return res.redirect(`${frontendUrl}/login?error=invalid_verification_token`);
+      }
       return res.status(400).json({ message: 'Verification link is invalid or has already been used.' });
     }
 
@@ -264,6 +269,10 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
       where: { id: user.id },
       data: { isVerified: true, verificationToken: null },
     });
+
+    if (isHtmlRequest) {
+      return res.redirect(`${frontendUrl}/login?verified=true`);
+    }
 
     return res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
