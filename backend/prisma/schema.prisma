@@ -198,26 +198,40 @@ model Notification {
 // ─── Profile Management Models ──────────────────────────────────────────────
 
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
-  name            String
-  role            String         @default("student") // student, mentor, admin
-  password        String         // encrypted
-  bio             String?        @db.Text
-  specialization  String?        // AI, IT, Cybersecurity, Networking, Other
-  avatarUrl       String?
-  githubUrl       String?
-  linkedinUrl     String?
-  portfolioUrl    String?
-  twitterUrl      String?
-  availableHours  Int            @default(0) // weekly hours available
-  availableDays   String         @default("[]") // JSON array of day names
-  xp              Int            @default(0)
-  level           Int            @default(1)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  skills          UserSkill[]
-  portfolioItems  PortfolioItem[]
+  id                   String         @id @default(uuid())
+  email                String         @unique
+  name                 String
+  role                 String         @default("student") // student, mentor, admin
+  password             String         // encrypted
+  bio                  String?        @db.Text
+  specialization       String?        // AI, IT, Cybersecurity, Networking, Other
+  avatarUrl            String?
+  githubUrl            String?
+  linkedinUrl          String?
+  portfolioUrl         String?
+  twitterUrl           String?
+  availableHours       Int            @default(0) // weekly hours available
+  availableDays        String         @default("[]") // JSON array of day names
+  xp                   Int            @default(0)
+  level                Int            @default(1)
+  isVerified           Boolean        @default(false)
+  verificationToken    String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  skills               UserSkill[]
+  portfolioItems       PortfolioItem[]
+  refreshTokens        RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model UserSkill {

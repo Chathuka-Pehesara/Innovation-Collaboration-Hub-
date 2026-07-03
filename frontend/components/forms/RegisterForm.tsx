@@ -87,7 +87,12 @@ export function RegisterForm() {
       await api.post('/auth/register', { name, email, password, specialization });
       setSuccess(true);
     } catch (err: any) {
-      setServerError(err.response?.data?.message || 'Registration failed. Please try again.');
+      const respData = err.response?.data;
+      if (respData?.errors && Array.isArray(respData.errors) && respData.errors.length > 0) {
+        setServerError(respData.errors.map((e: any) => e.message).join(' '));
+      } else {
+        setServerError(respData?.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
