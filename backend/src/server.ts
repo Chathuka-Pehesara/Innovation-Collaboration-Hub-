@@ -10,6 +10,7 @@ import http from 'http';
 import dotenv from 'dotenv';
 import app from './app';
 import { initializeSocket } from './socket';
+import { connectRedis } from './services/cacheService';
 
 // Load environment variables
 dotenv.config();
@@ -25,7 +26,7 @@ const httpServer = http.createServer(app);
 initializeSocket(httpServer);
 
 // Start Server
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   console.log(`
 ╔════════════════════════════════════════════╗
 ║  Innovation & Collaboration Hub - Backend  ║
@@ -39,6 +40,12 @@ Socket.IO:   ws://localhost:${PORT}
 
 Timestamp:   ${new Date().toISOString()}
   `);
+
+  try {
+    await connectRedis();
+  } catch (err) {
+    console.error('[SERVER] Redis connection failed on startup. Cache and Rate Limiting features will operate in fail-open mode.', err);
+  }
 });
 
 // Graceful Shutdown
