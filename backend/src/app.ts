@@ -17,6 +17,7 @@ dotenv.config();
 
 // Import route aggregators
 import routes from './routes';
+import { errorHandler } from './middleware/errorHandler';
 
 // Initialize Express app
 const app: Express = express();
@@ -64,19 +65,6 @@ app.use((req: Request, res: Response) => {
 });
 
 // Global Error Handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err);
-
-  const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || 'Internal Server Error';
-
-  res.status(statusCode).json({
-    error: true,
-    message,
-    statusCode,
-    timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
-});
+app.use(errorHandler);
 
 export default app;

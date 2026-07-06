@@ -54,7 +54,7 @@ connectRedis().catch(() => {});
  */
 export const getCache = async (key: string): Promise<string | null> => {
   try {
-    if (!redisClient.isOpen) return null;
+    if (!redisClient.isReady) return null;
     return await redisClient.get(key);
   } catch (error) {
     console.error(`[CACHE] Get error for key ${key}:`, error);
@@ -67,7 +67,7 @@ export const getCache = async (key: string): Promise<string | null> => {
  */
 export const setCache = async (key: string, value: string, expireSeconds?: number): Promise<void> => {
   try {
-    if (!redisClient.isOpen) return;
+    if (!redisClient.isReady) return;
     if (expireSeconds) {
       await redisClient.set(key, value, { EX: expireSeconds });
     } else {
@@ -83,7 +83,7 @@ export const setCache = async (key: string, value: string, expireSeconds?: numbe
  */
 export const deleteCache = async (key: string): Promise<void> => {
   try {
-    if (!redisClient.isOpen) return;
+    if (!redisClient.isReady) return;
     await redisClient.del(key);
   } catch (error) {
     console.error(`[CACHE] Delete error for key ${key}:`, error);
