@@ -7,6 +7,7 @@
 
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { LoginForm } from '@/components/forms/LoginForm';
 
@@ -31,7 +32,9 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-[#1A1D27] border border-white/10 rounded-2xl p-8 shadow-xl">
-          <LoginForm />
+          <Suspense fallback={<div className="text-gray-400 text-sm text-center py-4">Loading form...</div>}>
+            <LoginForm />
+          </Suspense>
         </div>
 
         <div className="flex justify-between text-sm mt-6 px-1">

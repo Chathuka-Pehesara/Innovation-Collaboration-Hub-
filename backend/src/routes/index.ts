@@ -16,6 +16,7 @@ import teamRoutes from './teamRoutes';
 import chatRoutes from './chatRoutes';
 import notificationRoutes from './notificationRoutes';
 import analyticsRoutes from './analytics';
+import aiRoutes from './aiRoutes';
 
 const router = Router();
 
@@ -42,5 +43,6 @@ router.use('/teams', teamRoutes);
 router.use('/chats', chatRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;

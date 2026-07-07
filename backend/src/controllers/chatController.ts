@@ -3,8 +3,9 @@ import * as chatService from '../services/chatService';
 
 // Helper to determine active userId from auth context or fallbacks for testing
 const getUserId = (req: Request): string => {
-  if ((req as any).user?.id) {
-    return (req as any).user.id;
+  const user = (req as any).user;
+  if (user?.id || user?.userId) {
+    return user.id || user.userId;
   }
   const headerUserId = req.headers['x-user-id'] || req.query.userId;
   if (headerUserId) return headerUserId as string;

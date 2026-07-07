@@ -7,6 +7,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import PageWrapper from '@/components/layout/PageWrapper';
+import MentorChat from '@/components/ai/MentorChat';
 
 export default function DashboardLayout({
   children,
@@ -44,6 +45,7 @@ export default function DashboardLayout({
           <Footer />
         </main>
       </div>
+      <MentorChat />
     </div>
   );
 }

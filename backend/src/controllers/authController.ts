@@ -56,12 +56,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       select: { id: true, email: true, name: true, specialization: true, role: true },
     });
 
-    // Send verification email (non-blocking)
-    await sendVerificationEmail(email, verificationToken);
+    // Send verification email
+    const emailResult = await sendVerificationEmail(email, verificationToken);
 
     return res.status(201).json({
       message: 'Account created. Check your email to verify your address.',
       user,
+      verificationUrl: process.env.NODE_ENV !== 'production' || !emailResult.sent ? emailResult.url : undefined,
     });
   } catch (err) {
     next(err);
@@ -85,9 +86,21 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     if (!user.isVerified) {
+      let token = user.verificationToken;
+      if (!token) {
+        token = crypto.randomBytes(32).toString('hex');
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { verificationToken: token },
+        });
+      }
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+      const verifyUrl = `${backendUrl}/api/auth/verify-email/${token}`;
+
       return res.status(403).json({
         message: 'Please verify your email address before logging in.',
         code: 'EMAIL_NOT_VERIFIED',
+        verificationUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
       });
     }
 
@@ -202,8 +215,11 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       data: { resetPasswordToken: resetToken, resetPasswordExpires: expiresAt },
     });
 
-    await sendPasswordResetEmail(email, resetToken);
-    return res.json(genericResponse);
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    return res.json({
+      ...genericResponse,
+      resetUrl: process.env.NODE_ENV !== 'production' || !emailResult.sent ? emailResult.url : undefined,
+    });
   } catch (err) {
     next(err);
   }
