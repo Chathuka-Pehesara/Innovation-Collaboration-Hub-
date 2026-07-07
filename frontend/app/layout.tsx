@@ -15,7 +15,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-[#0F1117] text-gray-100 min-h-screen antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{__html: `
+          try {
+            var saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+              document.documentElement.classList.remove('dark');
+            } else {
+              document.documentElement.classList.add('dark');
+            }
+          } catch (_) {}
+        `}} />
+      </head>
+      <body className={`${inter.className} bg-background text-foreground min-h-screen antialiased`}>
         {children}
       </body>
     </html>

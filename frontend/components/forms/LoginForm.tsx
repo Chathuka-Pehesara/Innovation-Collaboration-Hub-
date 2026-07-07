@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/authStore';
@@ -13,6 +13,9 @@ interface FieldErrors {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get('verified') === 'true';
+  const errorParam = searchParams.get('error');
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [email, setEmail] = useState('');
@@ -21,6 +24,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const errors: FieldErrors = {};
@@ -34,6 +38,7 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError('');
+    setVerificationUrl(null);
     if (!validate()) return;
 
     setLoading(true);
@@ -43,8 +48,12 @@ export function LoginForm() {
       router.push('/dashboard');
     } catch (err: any) {
       const msg = err.response?.data?.message;
-      if (err.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+      const respData = err.response?.data;
+      if (respData?.code === 'EMAIL_NOT_VERIFIED') {
         setServerError('Please verify your email address before signing in.');
+        if (respData.verificationUrl) {
+          setVerificationUrl(respData.verificationUrl);
+        }
       } else {
         setServerError(msg || 'Something went wrong. Please try again.');
       }
@@ -55,6 +64,24 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      {/* Verification alerts */}
+      {verified && (
+        <div className="flex items-start gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+          <svg className="w-4 h-4 text-green-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <p className="text-green-400 text-sm">Email verified successfully! You can now log in.</p>
+        </div>
+      )}
+
+      {errorParam === 'invalid_verification_token' && (
+        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-400 text-sm">The verification link is invalid or has expired.</p>
+        </div>
+      )}
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
@@ -122,12 +149,24 @@ export function LoginForm() {
 
       {/* Server error */}
       {serverError && (
-        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-red-400 text-sm">{serverError}</p>
+        <div className="flex flex-col gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-400 text-sm">{serverError}</p>
+          </div>
+          {verificationUrl && (
+            <div className="pl-6">
+              <a
+                href={verificationUrl}
+                className="inline-block text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+              >
+                Verify Account Now (Dev Option)
+              </a>
+            </div>
+          )}
         </div>
       )}
 

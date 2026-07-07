@@ -2,70 +2,207 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #08090D;
+  --panel-bg: #0D0F16;
+  --card-bg: #131622;
+  --foreground: #D3DCF3;
+  --text-primary: #D3DCF3;
+  --text-secondary: #8E9BB4;
+  --border-color: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(99, 102, 241, 0.35);
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  --background: #F4F6FA;
+  --panel-bg: #FFFFFF;
+  --card-bg: #E7ECF7;
+  --foreground: #1D2330;
+  --text-primary: #1D2330;
+  --text-secondary: #5E677C;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(99, 102, 241, 0.45);
+  color-scheme: light;
+}
+
 @layer base {
   body {
-    @apply bg-[#0F1117] text-gray-100 antialiased min-h-screen selection:bg-indigo-500/30 selection:text-white;
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+    @apply antialiased min-h-screen selection:bg-indigo-500/30 selection:text-white;
+  }
+
+  /* Core text color overrides to force the superb unique light theme color */
+  .text-white, h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800, .text-slate-700 {
+    color: var(--text-primary) !important;
+  }
+
+  .text-gray-100 {
+    color: var(--text-primary) !important;
+  }
+
+  .text-gray-200 {
+    color: #E2EAF8 !important;
+  }
+
+  .text-gray-300 {
+    color: #CCD3E3 !important;
+  }
+
+  .text-gray-400, .text-slate-600, .text-slate-500 {
+    color: var(--text-secondary) !important;
+  }
+
+  .text-gray-500 {
+    color: #6E7B95 !important;
+  }
+
+  .text-blue-600 {
+    color: #6366f1 !important;
+  }
+
+  /* Core background overrides to force the unified platform-wide theme colors */
+  .bg-\[\#0F1117\], .bg-\[\#0f1117\], .bg-\[\#0F1117\]\/80, .bg-\[\#0f1117\]\/80 {
+    background-color: var(--background) !important;
+  }
+
+  .bg-\[\#11131C\], .bg-\[\#11131c\] {
+    background-color: var(--panel-bg) !important;
+  }
+
+  .bg-\[\#1A1D27\], .bg-\[\#1a1d27\] {
+    background-color: var(--card-bg) !important;
+  }
+
+  .bg-\[\#0B0D12\], .bg-\[\#0b0d12\], .bg-\[\#0B0D12\]\/50, .bg-\[\#0b0d12\]\/50 {
+    background-color: var(--background) !important;
+  }
+
+  .bg-white {
+    background-color: var(--panel-bg) !important;
+  }
+
+  .bg-blue-50 {
+    background-color: rgba(99, 102, 241, 0.1) !important;
+  }
+
+  .bg-green-50 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+  }
+
+  .bg-blue-100 {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+  }
+
+  .text-blue-700 {
+    color: #818cf8 !important;
+  }
+
+  /* Core border overrides to force theme borders */
+  .border-slate-200, .border-slate-300 {
+    border-color: var(--border-color) !important;
+  }
+
+  /* Custom Selection Color */
+  ::selection {
+    background-color: rgba(99, 102, 241, 0.3) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* Custom Scrollbar Styles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
 /* Glassmorphism Styles */
 .glass-panel {
-  background: rgba(26, 29, 39, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-panel-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass-card {
-  background: rgba(26, 29, 39, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1rem;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-color);
+  border-radius: 1.25rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
 }
 
 .glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 1px 1px 0 rgba(99, 102, 241, 0.05) inset;
+  border-color: var(--border-hover);
+  transform: translateY(-5px) scale(1.015);
+  box-shadow: var(--shadow-xl), 0 0 30px -5px rgba(99, 102, 241, 0.15);
 }
 
 .glass-input {
-  background: rgba(15, 17, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: white;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
+  background: var(--glass-input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-input:focus {
   outline: none;
   border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background: var(--panel-bg);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), var(--shadow-md);
 }
 
 .btn-primary {
-  @apply bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30;
+  @apply bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2.5 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/35 hover:-translate-y-0.5;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-secondary {
-  @apply bg-white/5 hover:bg-white/10 text-white font-medium px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 border border-white/10;
+  @apply bg-white/5 hover:bg-white/10 text-textPrimary font-semibold px-4 py-2.5 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 border border-white/10 hover:-translate-y-0.5;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sidebar Nav Item Hover Slide Effect */
+aside nav a {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+aside nav a:hover:not(.bg-indigo-600) {
+  transform: translateX(6px) !important;
 }
 
 /* Animations helpers */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.4s ease forwards;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .delay-100 { animation-delay: 100ms; }

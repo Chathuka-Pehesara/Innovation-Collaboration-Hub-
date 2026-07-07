@@ -27,7 +27,13 @@ const getTransporter = () => {
   return null;
 };
 
-export const sendVerificationEmail = async (email: string, token: string): Promise<boolean> => {
+export interface EmailResult {
+  success: boolean;
+  sent: boolean;
+  url: string;
+}
+
+export const sendVerificationEmail = async (email: string, token: string): Promise<EmailResult> => {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
   const verifyUrl = `${backendUrl}/api/auth/verify-email/${token}`;
 
@@ -57,16 +63,16 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
         `,
       });
       console.log(`[EmailService] Verification email sent to ${email} via SMTP.`);
-      return true;
+      return { success: true, sent: true, url: verifyUrl };
     } catch (err) {
       console.error(`[EmailService] Failed to send SMTP email to ${email}:`, err);
-      return false;
+      return { success: false, sent: false, url: verifyUrl };
     }
   }
-  return true;
+  return { success: true, sent: false, url: verifyUrl };
 };
 
-export const sendPasswordResetEmail = async (email: string, token: string): Promise<boolean> => {
+export const sendPasswordResetEmail = async (email: string, token: string): Promise<EmailResult> => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
@@ -96,11 +102,11 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
         `,
       });
       console.log(`[EmailService] Reset email sent to ${email} via SMTP.`);
-      return true;
+      return { success: true, sent: true, url: resetUrl };
     } catch (err) {
       console.error(`[EmailService] Failed to send SMTP email to ${email}:`, err);
-      return false;
+      return { success: false, sent: false, url: resetUrl };
     }
   }
-  return true;
+  return { success: true, sent: false, url: resetUrl };
 };

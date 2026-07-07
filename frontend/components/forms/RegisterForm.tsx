@@ -56,6 +56,7 @@ export function RegisterForm() {
   const [serverError, setServerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [success, setSuccess] = useState(false);
+  const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
 
   const strength = password ? getPasswordStrength(password) : null;
 
@@ -84,7 +85,10 @@ export function RegisterForm() {
 
     setLoading(true);
     try {
-      await api.post('/auth/register', { name, email, password, specialization });
+      const response = await api.post('/auth/register', { name, email, password, specialization });
+      if (response.data?.verificationUrl) {
+        setVerificationUrl(response.data.verificationUrl);
+      }
       setSuccess(true);
     } catch (err: any) {
       const respData = err.response?.data;
@@ -100,24 +104,44 @@ export function RegisterForm() {
 
   if (success) {
     return (
-      <div className="text-center py-4">
-        <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-4">
+      <div className="text-center py-4 space-y-4">
+        <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto">
           <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-white font-semibold mb-2">Check your inbox</h2>
-        <p className="text-gray-400 text-sm">
-          We sent a verification link to <span className="text-gray-200">{email}</span>. 
-          Click it to activate your account.
-        </p>
-        <button
-          onClick={() => router.push('/login')}
-          className="mt-6 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          Go to sign in
-        </button>
+        <div>
+          <h2 className="text-white font-semibold mb-1">Check your inbox</h2>
+          <p className="text-gray-400 text-sm mb-2">
+            We sent a verification link to <span className="text-gray-200">{email}</span>.
+          </p>
+          <p className="text-gray-400 text-sm">
+            Click it to activate your account.
+          </p>
+        </div>
+
+        {verificationUrl && (
+          <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-left">
+            <p className="text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">Development / Sandbox helper</p>
+            <p className="text-xs text-gray-400 mb-3">Since real emails are not sent in this environment, you can use the button below to verify this account directly:</p>
+            <a 
+              href={verificationUrl}
+              className="inline-block w-full text-center text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg transition-colors shadow-lg shadow-indigo-600/20"
+            >
+              Verify Account Now
+            </a>
+          </div>
+        )}
+
+        <div>
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-lg border border-white/10 transition-colors"
+          >
+            Go to sign in
+          </button>
+        </div>
       </div>
     );
   }

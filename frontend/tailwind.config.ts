@@ -11,6 +11,11 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        panel: "var(--panel-bg)",
+        card: "var(--card-bg)",
+        textPrimary: "var(--text-primary)",
+        textSecondary: "var(--text-secondary)",
+        borderColor: "var(--border-color)",
         brand: {
           50: "#f5f6ff",
           100: "#ebecff",
