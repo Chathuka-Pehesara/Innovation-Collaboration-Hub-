@@ -22,7 +22,7 @@ export const rateLimiter = (options: RateLimitOptions) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // If Redis client is not open/connected, fail-open gracefully to keep service online
-      if (!redisClient.isOpen) {
+      if (!redisClient.isReady) {
         console.warn(`[RATE LIMIT] Redis is not connected. Bypassing rate limiting for prefix "${keyPrefix}".`);
         return next();
       }
