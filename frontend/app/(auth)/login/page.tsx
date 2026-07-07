@@ -13,8 +13,8 @@ import { LoginForm } from '@/components/forms/LoginForm';
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#0F1117] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
+      <div className="w-full max-w-md fade-in-up">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center gap-2 mb-4">

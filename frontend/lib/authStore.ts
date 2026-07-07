@@ -42,14 +42,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (token && user) {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userId', user.id);
     } else {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('userId');
     }
   },
   logout: () => {
     set({ user: null, token: null });
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
   },
 }));
