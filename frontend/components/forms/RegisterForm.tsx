@@ -1,14 +1,8 @@
-/**
- * @file        RegisterForm.tsx
- * @owner       IT Team
- * @description Registration form: name, email, specialization, password with strength indicator.
- * @depends     lib/api.ts
- */
-
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 
 const SPECIALIZATIONS = ['IT', 'Cybersecurity', 'AI', 'Networking'] as const;
@@ -102,32 +96,52 @@ export function RegisterForm() {
     }
   };
 
+  // Staggered entry animation containers
+  const formVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.07,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { type: 'spring', stiffness: 180, damping: 20 }
+    }
+  };
+
   if (success) {
     return (
-      <div className="text-center py-4 space-y-4">
-        <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto">
-          <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="text-center py-2 space-y-4">
+        <div className="w-12 h-12 rounded-full bg-orange-500/10 border border-orange-200 flex items-center justify-center mx-auto">
+          <svg className="w-6 h-6 text-[#702224]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         <div>
-          <h2 className="text-white font-semibold mb-1">Check your inbox</h2>
-          <p className="text-gray-400 text-sm mb-2">
-            We sent a verification link to <span className="text-gray-200">{email}</span>.
+          <h2 className="text-amber-950 font-bold mb-1">Check your inbox</h2>
+          <p className="text-amber-900/80 text-sm mb-2">
+            We sent a verification link to <span className="text-amber-950 font-bold">{email}</span>.
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-amber-900/70 text-sm">
             Click it to activate your account.
           </p>
         </div>
 
         {verificationUrl && (
-          <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-left">
-            <p className="text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-1">Development / Sandbox helper</p>
-            <p className="text-xs text-gray-400 mb-3">Since real emails are not sent in this environment, you can use the button below to verify this account directly:</p>
+          <div className="p-4 bg-white/50 border border-amber-900/10 rounded-2xl text-left">
+            <p className="text-xs text-amber-950 font-bold uppercase tracking-wider mb-1">Development / Sandbox helper</p>
+            <p className="text-xs text-amber-900/70 mb-3">Since real emails are not sent in this environment, you can use the button below to verify this account directly:</p>
             <a 
               href={verificationUrl}
-              className="inline-block w-full text-center text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg transition-colors shadow-lg shadow-indigo-600/20"
+              className="inline-block w-full text-center text-xs font-semibold bg-[#702224] hover:bg-[#5C1A1C] text-white px-3 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/15"
             >
               Verify Account Now
             </a>
@@ -137,7 +151,7 @@ export function RegisterForm() {
         <div>
           <button
             onClick={() => router.push('/login')}
-            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-lg border border-white/10 transition-colors"
+            className="w-full py-2.5 bg-white hover:bg-amber-50/50 text-amber-950 text-sm font-semibold rounded-xl border border-amber-900/15 shadow-sm transition-all"
           >
             Go to sign in
           </button>
@@ -147,48 +161,67 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <motion.form 
+      variants={formVariants}
+      initial="hidden"
+      animate="show"
+      onSubmit={handleSubmit} 
+      noValidate 
+      className="space-y-4"
+    >
       {/* Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1.5">
+      <motion.div variants={itemVariants}>
+        <label htmlFor="name" className="block text-sm font-semibold text-amber-950 mb-1">
           Full name
         </label>
-        <input
+        <motion.input
           id="name"
           type="text"
           autoComplete="name"
           value={name}
           onChange={(e) => { setName(e.target.value); clearError('name'); }}
           placeholder="Your full name"
-          className={`w-full px-4 py-2.5 bg-white/5 border rounded-lg text-white placeholder-gray-500
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition
-                      ${fieldErrors.name ? 'border-red-500' : 'border-white/10'}`}
+          whileFocus={{ 
+            scale: 1.01,
+            boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
+          }}
+          transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+          className={`w-full px-4 py-2.5 bg-white border rounded-xl text-amber-950 placeholder-amber-900/35 shadow-sm
+                      focus:outline-none focus:ring-2 focus:ring-[#702224]/15 focus:border-[#702224] text-sm transition-all duration-200
+                      ${fieldErrors.name ? 'border-red-500' : 'border-amber-900/15'}`}
         />
-        {fieldErrors.name && <p className="text-red-400 text-xs mt-1">{fieldErrors.name}</p>}
-      </div>
+        {fieldErrors.name && <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.name}</p>}
+      </motion.div>
 
       {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
+      <motion.div variants={itemVariants}>
+        <label htmlFor="email" className="block text-sm font-semibold text-amber-950 mb-1">
           Email address
         </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
-          placeholder="you@opms.edu"
-          className={`w-full px-4 py-2.5 bg-white/5 border rounded-lg text-white placeholder-gray-500
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition
-                      ${fieldErrors.email ? 'border-red-500' : 'border-white/10'}`}
-        />
-        {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
-      </div>
+        <div className="relative">
+          <motion.input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+            placeholder="you@opms.edu"
+            whileFocus={{ 
+              scale: 1.01,
+              boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
+            }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className={`w-full px-4 py-2.5 bg-white border rounded-xl text-amber-950 placeholder-amber-900/35 shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-[#702224]/15 focus:border-[#702224] text-sm transition-all duration-200
+                        ${fieldErrors.email ? 'border-red-500' : 'border-amber-900/15'}`}
+          />
+        </div>
+        {fieldErrors.email && <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.email}</p>}
+      </motion.div>
 
       {/* Specialization */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+      <motion.div variants={itemVariants}>
+        <label className="block text-sm font-semibold text-amber-950 mb-1.5">
           Specialization
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -197,10 +230,10 @@ export function RegisterForm() {
               key={spec}
               type="button"
               onClick={() => { setSpecialization(spec); clearError('specialization'); }}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all
                           ${specialization === spec
-                            ? 'bg-indigo-600/30 border-indigo-500 text-indigo-300'
-                            : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:text-gray-300'
+                            ? 'bg-[#702224]/15 border-[#702224] text-[#702224]'
+                            : 'bg-white border-amber-900/10 text-amber-900/70 hover:border-amber-900/30'
                           }`}
             >
               <span>{SPEC_LABELS[spec].icon}</span>
@@ -209,34 +242,40 @@ export function RegisterForm() {
           ))}
         </div>
         {fieldErrors.specialization && (
-          <p className="text-red-400 text-xs mt-1">{fieldErrors.specialization}</p>
+          <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.specialization}</p>
         )}
-      </div>
+      </motion.div>
 
       {/* Password */}
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1.5">
+      <motion.div variants={itemVariants}>
+        <label htmlFor="password" className="block text-sm font-semibold text-amber-950 mb-1">
           Password
         </label>
         <div className="relative">
-          <input
+          <motion.input
             id="password"
             type={showPassword ? 'text' : 'password'}
             autoComplete="new-password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
             placeholder="Min 8 chars, uppercase, number, symbol"
-            className={`w-full px-4 py-2.5 pr-10 bg-white/5 border rounded-lg text-white placeholder-gray-500
-                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition
-                        ${fieldErrors.password ? 'border-red-500' : 'border-white/10'}`}
+            whileFocus={{ 
+              scale: 1.01,
+              boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
+            }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className={`w-full px-4 py-2.5 pr-10 bg-white border rounded-xl text-amber-950 placeholder-amber-900/35 shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-[#702224]/15 focus:border-[#702224] text-sm transition-all duration-200
+                        ${fieldErrors.password ? 'border-red-500' : 'border-amber-900/15'}`}
           />
+
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-900/40 hover:text-amber-950 transition-colors z-10"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {showPassword ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
@@ -260,33 +299,37 @@ export function RegisterForm() {
                 <div
                   key={i}
                   className={`h-1 flex-1 rounded-full transition-all ${
-                    i <= strength.score ? strength.color : 'bg-white/10'
+                    i <= strength.score ? strength.color : 'bg-amber-900/10'
                   }`}
                 />
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-1">{strength.label}</p>
+            <p className="text-[10px] text-amber-900/60 mt-0.5 font-medium">{strength.label} password</p>
           </div>
         )}
-        {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
-      </div>
+        {fieldErrors.password && <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.password}</p>}
+      </motion.div>
 
       {/* Server error */}
       {serverError && (
-        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <svg className="w-4 h-4 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-red-400 text-sm">{serverError}</p>
-        </div>
+          <p className="text-red-800 text-xs font-semibold">{serverError}</p>
+        </motion.div>
       )}
 
-      <button
+      {/* Submit button */}
+      <motion.button
+        variants={itemVariants}
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed
-                   text-white font-medium rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        className="w-full py-2.5 px-4 bg-[#702224] hover:bg-[#5C1A1C] disabled:opacity-50 disabled:cursor-not-allowed
+                   text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-red-950/10 flex items-center justify-center gap-2 active:scale-[0.97]"
       >
         {loading && (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -294,12 +337,12 @@ export function RegisterForm() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         )}
-        {loading ? 'Creating account...' : 'Create account'}
-      </button>
+        {loading ? 'Creating account...' : 'Create Account'}
+      </motion.button>
 
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-[10px] text-amber-900/60 text-center leading-normal">
         By creating an account, you agree to collaborate responsibly within the OPMS community.
       </p>
-    </form>
+    </motion.form>
   );
 }

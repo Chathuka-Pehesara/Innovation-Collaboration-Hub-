@@ -1,46 +1,33 @@
-/**
- * @file        register/page.tsx
- * @owner       IT Team
- * @description Registration view — renders RegisterForm, handles success redirect.
- * @depends     components/forms/RegisterForm.tsx
- */
-
 'use client';
 
 import Link from 'next/link';
 import { RegisterForm } from '@/components/forms/RegisterForm';
+import Logo from '@/components/ui/Logo';
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md fade-in-up">
-        {/* Logo / Brand */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-white font-semibold text-lg tracking-tight">Innovation Hub</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Create your account</h1>
-          <p className="text-gray-400 text-sm mt-1">Join students across every specialization</p>
-        </div>
-
-        {/* Card */}
-        <div className="bg-[#1A1D27] border border-white/10 rounded-2xl p-8 shadow-xl">
-          <RegisterForm />
-        </div>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Already have an account?{' '}
-          <Link href="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
-            Sign in
-          </Link>
-        </p>
+    <div className="w-full max-w-md py-12 px-4 fade-in-up auth-page">
+      {/* Logo / Brand */}
+      <div className="mb-6 text-center flex flex-col items-center">
+        <Link href="/" className="inline-flex items-center mb-3 hover:opacity-90 transition-opacity">
+          <Logo size={112} />
+        </Link>
+        <h1 className="text-2xl font-bold text-amber-950 font-display">Create Account</h1>
+        <p className="text-amber-900/70 text-sm mt-0.5">Join students across every specialization</p>
       </div>
-    </main>
+
+      {/* Frosted Glass Autumn Theme Card */}
+      <div className="bg-white/35 border border-white/45 rounded-[2rem] p-8 shadow-2xl shadow-orange-950/5 backdrop-blur-xl">
+        <RegisterForm />
+      </div>
+
+      {/* Footer Link */}
+      <p className="text-center text-sm text-amber-900/70 mt-5 font-medium">
+        Already have an account?{' '}
+        <Link href="/login" className="text-red-800 hover:text-red-950 hover:underline transition-all">
+          Sign in
+        </Link>
+      </p>
+    </div>
   );
 }

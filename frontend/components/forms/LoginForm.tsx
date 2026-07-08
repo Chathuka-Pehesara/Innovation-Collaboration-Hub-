@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/authStore';
 
@@ -62,80 +63,121 @@ export function LoginForm() {
     }
   };
 
+  // Staggered entry animation containers
+  const formVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { type: 'spring', stiffness: 180, damping: 20 }
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <motion.form 
+      variants={formVariants}
+      initial="hidden"
+      animate="show"
+      onSubmit={handleSubmit} 
+      noValidate 
+      className="space-y-4"
+    >
       {/* Verification alerts */}
       {verified && (
-        <div className="flex items-start gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-          <svg className="w-4 h-4 text-green-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-xl">
+          <svg className="w-4 h-4 text-green-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
-          <p className="text-green-400 text-sm">Email verified successfully! You can now log in.</p>
-        </div>
+          <p className="text-green-800 text-xs font-semibold">Email verified successfully! You can now log in.</p>
+        </motion.div>
       )}
 
       {errorParam === 'invalid_verification_token' && (
-        <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <svg className="w-4 h-4 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-red-400 text-sm">The verification link is invalid or has expired.</p>
-        </div>
+          <p className="text-red-800 text-xs font-semibold">The verification link is invalid or has expired.</p>
+        </motion.div>
       )}
+
       {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
+      <motion.div variants={itemVariants}>
+        <label htmlFor="email" className="block text-sm font-semibold text-amber-950 mb-1">
           Email address
         </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })); }}
-          placeholder="you@opms.edu"
-          className={`w-full px-4 py-2.5 bg-white/5 border rounded-lg text-white placeholder-gray-500
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition
-                      ${fieldErrors.email ? 'border-red-500' : 'border-white/10'}`}
-        />
-        {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
-      </div>
+        <div className="relative">
+          <motion.input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })); }}
+            placeholder="you@opms.edu"
+            whileFocus={{ 
+              scale: 1.01,
+              boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
+            }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className={`w-full px-4 py-2.5 bg-white border rounded-xl text-amber-950 placeholder-amber-900/35 shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-[#702224]/15 focus:border-[#702224] text-sm transition-all duration-200
+                        ${fieldErrors.email ? 'border-red-500' : 'border-amber-900/15'}`}
+          />
+        </div>
+        {fieldErrors.email && <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.email}</p>}
+      </motion.div>
 
       {/* Password */}
-      <div>
-        <div className="flex justify-between items-center mb-1.5">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+      <motion.div variants={itemVariants}>
+        <div className="flex justify-between items-center mb-1">
+          <label htmlFor="password" className="block text-sm font-semibold text-amber-950">
             Password
           </label>
-          <Link href="/forgot-password" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+          <Link href="/forgot-password" className="text-xs text-amber-900 hover:text-[#702224] transition-colors font-semibold">
             Forgot password?
           </Link>
         </div>
         <div className="relative">
-          <input
+          <motion.input
             id="password"
             type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             value={password}
             onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: undefined })); }}
             placeholder="••••••••"
-            className={`w-full px-4 py-2.5 pr-10 bg-white/5 border rounded-lg text-white placeholder-gray-500
-                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition
-                        ${fieldErrors.password ? 'border-red-500' : 'border-white/10'}`}
+            whileFocus={{ 
+              scale: 1.01,
+              boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
+            }}
+            transition={{ type: 'spring', stiffness: 250, damping: 20 }}
+            className={`w-full px-4 py-2.5 pr-10 bg-white border rounded-xl text-amber-950 placeholder-amber-900/35 shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-[#702224]/15 focus:border-[#702224] text-sm transition-all duration-200
+                        ${fieldErrors.password ? 'border-red-500' : 'border-amber-900/15'}`}
           />
+
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-900/40 hover:text-amber-950 transition-colors z-10"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
               </svg>
             ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -144,37 +186,41 @@ export function LoginForm() {
             )}
           </button>
         </div>
-        {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
-      </div>
+        {fieldErrors.password && <p className="text-red-600 text-xs mt-1 font-medium">{fieldErrors.password}</p>}
+      </motion.div>
 
       {/* Server error */}
       {serverError && (
-        <div className="flex flex-col gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+        <motion.div variants={itemVariants} className="flex flex-col gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl">
           <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-red-400 text-sm">{serverError}</p>
+            <p className="text-red-800 text-xs font-semibold">{serverError}</p>
           </div>
           {verificationUrl && (
             <div className="pl-6">
               <a
                 href={verificationUrl}
-                className="inline-block text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors"
+                className="inline-block text-xs font-bold bg-[#702224] hover:bg-[#5C1A1C] text-white px-3 py-1.5 rounded-lg transition-colors shadow-md"
               >
                 Verify Account Now (Dev Option)
               </a>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
-      <button
+      {/* Submit Button */}
+      <motion.button
+        variants={itemVariants}
         type="submit"
         disabled={loading}
-        className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed
-                   text-white font-medium rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        className="w-full py-2.5 px-4 bg-[#702224] hover:bg-[#5C1A1C] disabled:opacity-50 disabled:cursor-not-allowed
+                   text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-red-950/10 flex items-center justify-center gap-2 active:scale-[0.97]"
       >
         {loading && (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -183,9 +229,9 @@ export function LoginForm() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         )}
-        {loading ? 'Signing in...' : 'Sign in'}
-      </button>
-    </form>
+        {loading ? 'Signing in...' : 'Login'}
+      </motion.button>
+    </motion.form>
   );
 }
 

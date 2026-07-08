@@ -1,7 +1,15 @@
 import './globals.css';
-import { Inter } from 'next/font/google';
+import { Inter, Outfit } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-display',
+});
 
 export const metadata = {
   title: 'Innovation & Collaboration Hub',
@@ -27,7 +35,9 @@ export default function RootLayout({
           } catch (_) {}
         `}} />
       </head>
-      <body className={`${inter.className} bg-background text-foreground min-h-screen antialiased`}>
+      <body className={`${inter.variable} ${outfit.variable} bg-background text-foreground min-h-screen antialiased font-sans relative`}>
+        {/* Subtle high-end texture overlay */}
+        <div className="noise-overlay" />
         {children}
       </body>
     </html>
