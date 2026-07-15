@@ -24,9 +24,11 @@ const LEAF_COLORS = [
 ];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [leaves, setLeaves] = useState<any[]>([]);
 
   useEffect(() => {
+    setMounted(true);
     // Generate 25 leaves with randomized metrics
     const generated = Array.from({ length: 25 }).map((_, i) => {
       const yStart = Math.random() * 85; // Starting height percentage
@@ -50,22 +52,24 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="relative min-h-screen w-full bg-gradient-to-b from-[#FFF3EA] via-[#FFFBF7] to-[#FFEFE0] overflow-hidden flex flex-col justify-between">
       
       {/* Dynamic Keyframes for Bicycling and Wheel Rotation */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes spin-wheels {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes body-bounce {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-4px); }
-        }
-        .animate-spin-wheels {
-          animation: spin-wheels 0.8s infinite linear;
-        }
-        .animate-body-bounce {
-          animation: body-bounce 0.4s infinite ease-in-out;
-        }
-      ` }} />
+      {mounted && (
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes spin-wheels {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes body-bounce {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+          }
+          .animate-spin-wheels {
+            animation: spin-wheels 0.8s infinite linear;
+          }
+          .animate-body-bounce {
+            animation: body-bounce 0.4s infinite ease-in-out;
+          }
+        ` }} />
+      )}
 
       {/* 1. Curved Ground Backdrop */}
       <svg className="absolute bottom-0 left-0 w-full h-[30vh] pointer-events-none select-none fill-[#FADBB4]" viewBox="0 0 1440 200" preserveAspectRatio="none">
@@ -102,93 +106,95 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </svg>
 
       {/* 4. Beautiful Bicyclist riding from Left to Right */}
-      <motion.div 
-        className="absolute bottom-[3.5vh] w-[140px] h-[140px] pointer-events-none select-none z-20"
-        initial={{ x: '-150px' }}
-        animate={{ x: '100vw' }}
-        transition={{
-          duration: 16,
-          repeat: Infinity,
-          ease: 'linear',
-        }}
-      >
-        <svg viewBox="0 0 160 160" className="w-full h-full">
-          {/* Bicycle Mudguards */}
-          <path d="M14,90 A18,18 0 0,1 46,90" stroke="#EA580C" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M74,90 A18,18 0 0,1 106,90" stroke="#EA580C" strokeWidth="3" fill="none" strokeLinecap="round" />
-          
-          {/* Front & Rear Wheels (Spinning) */}
-          <g className="animate-spin-wheels" style={{ transformOrigin: '30px 90px' }}>
-            <circle cx="30" cy="90" r="18" stroke="#1C1917" strokeWidth="3.5" fill="none" />
-            <circle cx="30" cy="90" r="15" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
-            <line x1="12" y1="90" x2="48" y2="90" stroke="#1C1917" strokeWidth="1" />
-            <line x1="30" y1="72" x2="30" y2="108" stroke="#1C1917" strokeWidth="1" />
-            <line x1="17.3" y1="77.3" x2="42.7" y2="102.7" stroke="#1C1917" strokeWidth="1" />
-            <line x1="17.3" y1="102.7" x2="42.7" y2="77.3" stroke="#1C1917" strokeWidth="1" />
-          </g>
-          <g className="animate-spin-wheels" style={{ transformOrigin: '90px 90px' }}>
-            <circle cx="90" cy="90" r="18" stroke="#1C1917" strokeWidth="3.5" fill="none" />
-            <circle cx="90" cy="90" r="15" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
-            <line x1="72" y1="90" x2="108" y2="90" stroke="#1C1917" strokeWidth="1" />
-            <line x1="90" y1="72" x2="90" y2="108" stroke="#1C1917" strokeWidth="1" />
-            <line x1="77.3" y1="77.3" x2="102.7" y2="102.7" stroke="#1C1917" strokeWidth="1" />
-            <line x1="77.3" y1="102.7" x2="102.7" y2="77.3" stroke="#1C1917" strokeWidth="1" />
-          </g>
-          
-          {/* Hubs */}
-          <circle cx="30" cy="90" r="3" fill="#1C1917" />
-          <circle cx="90" cy="90" r="3" fill="#1C1917" />
-
-          {/* Indigo Frame */}
-          <path d="M30,90 L52,90 L78,63 L48,63 L30,90" stroke="#1D4ED8" strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M52,90 L48,52 M78,63 L82,45" stroke="#1D4ED8" strokeWidth="4.5" fill="none" strokeLinecap="round" />
-          <line x1="90" y1="90" x2="78" y2="63" stroke="#1D4ED8" strokeWidth="4.5" />
-          
-          {/* Handlebar */}
-          <path d="M82,45 L88,43 L84,39" stroke="#1C1917" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          {/* Seat */}
-          <path d="M42,52 L54,52" stroke="#1C1917" strokeWidth="4.5" fill="none" strokeLinecap="round" />
-
-          {/* Bouncing Rider Body */}
-          <g className="animate-body-bounce">
-            {/* Hair Ponytail */}
-            <path d="M34,18 C22,14 18,22 10,24 C14,28 24,28 34,22 Z" fill="#D9502B" />
+      {mounted && (
+        <motion.div 
+          className="absolute bottom-[3.5vh] w-[140px] h-[140px] pointer-events-none select-none z-20"
+          initial={{ x: '-150px' }}
+          animate={{ x: '100vw' }}
+          transition={{
+            duration: 16,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        >
+          <svg viewBox="0 0 160 160" className="w-full h-full">
+            {/* Bicycle Mudguards */}
+            <path d="M14,90 A18,18 0 0,1 46,90" stroke="#EA580C" strokeWidth="3" fill="none" strokeLinecap="round" />
+            <path d="M74,90 A18,18 0 0,1 106,90" stroke="#EA580C" strokeWidth="3" fill="none" strokeLinecap="round" />
             
-            {/* Boots */}
-            <path d="M34,88 L42,90 M56,84 L64,86" stroke="#5C2D1F" strokeWidth="7" fill="none" strokeLinecap="round" />
+            {/* Front & Rear Wheels (Spinning) */}
+            <g className="animate-spin-wheels" style={{ transformOrigin: '30px 90px' }}>
+              <circle cx="30" cy="90" r="18" stroke="#1C1917" strokeWidth="3.5" fill="none" />
+              <circle cx="30" cy="90" r="15" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
+              <line x1="12" y1="90" x2="48" y2="90" stroke="#1C1917" strokeWidth="1" />
+              <line x1="30" y1="72" x2="30" y2="108" stroke="#1C1917" strokeWidth="1" />
+              <line x1="17.3" y1="77.3" x2="42.7" y2="102.7" stroke="#1C1917" strokeWidth="1" />
+              <line x1="17.3" y1="102.7" x2="42.7" y2="77.3" stroke="#1C1917" strokeWidth="1" />
+            </g>
+            <g className="animate-spin-wheels" style={{ transformOrigin: '90px 90px' }}>
+              <circle cx="90" cy="90" r="18" stroke="#1C1917" strokeWidth="3.5" fill="none" />
+              <circle cx="90" cy="90" r="15" stroke="#F59E0B" strokeWidth="2.5" fill="none" />
+              <line x1="72" y1="90" x2="108" y2="90" stroke="#1C1917" strokeWidth="1" />
+              <line x1="90" y1="72" x2="90" y2="108" stroke="#1C1917" strokeWidth="1" />
+              <line x1="77.3" y1="77.3" x2="102.7" y2="102.7" stroke="#1C1917" strokeWidth="1" />
+              <line x1="77.3" y1="102.7" x2="102.7" y2="77.3" stroke="#1C1917" strokeWidth="1" />
+            </g>
             
-            {/* Red Trousers Legs */}
-            <path d="M48,52 L40,73 L34,88" stroke="#B91C1C" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M48,52 L60,68 L56,84" stroke="#B91C1C" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Hubs */}
+            <circle cx="30" cy="90" r="3" fill="#1C1917" />
+            <circle cx="90" cy="90" r="3" fill="#1C1917" />
+  
+            {/* Indigo Frame */}
+            <path d="M30,90 L52,90 L78,63 L48,63 L30,90" stroke="#1D4ED8" strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M52,90 L48,52 M78,63 L82,45" stroke="#1D4ED8" strokeWidth="4.5" fill="none" strokeLinecap="round" />
+            <line x1="90" y1="90" x2="78" y2="63" stroke="#1D4ED8" strokeWidth="4.5" />
             
-            {/* Blue Winter Coat */}
-            <path d="M40,28 L56,28 L52,58 L42,58 Z" fill="#1E3A8A" rx="4" />
-
-            {/* Red scarf blowing in wind */}
-            <path d="M36,32 C26,30 20,38 12,36 C18,44 26,42 36,36 Z" fill="#DC2626" />
-            <path d="M42,28 C42,22 54,22 54,28 L50,48" stroke="#DC2626" strokeWidth="7.5" fill="none" strokeLinecap="round" />
-            <path d="M45,28 C45,24 51,24 51,28" stroke="#FFE4E6" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-
-            {/* Face details */}
-            <circle cx="48" cy="18" r="9" fill="#FDBA74" />
-            <circle cx="51" cy="17" r="1.2" fill="#1C1917" /> {/* Eye */}
-            <path d="M49,21 C51,21 52,20 52,19" stroke="#1C1917" strokeWidth="1" fill="none" strokeLinecap="round" /> {/* Smile */}
-            
-            {/* Pom-pom beanie */}
-            <path d="M39,16 C39,7 55,7 55,16 Z" fill="#1D4ED8" />
-            <circle cx="47" cy="5" r="4" fill="#FFE4E6" /> {/* Pom-pom */}
-            
-            {/* Hair */}
-            <path d="M42,16 C42,16 46,24 40,26" stroke="#5C2D1F" strokeWidth="4" fill="none" strokeLinecap="round" />
-            
-            {/* Arms reaching to handlebar */}
-            <path d="M46,33 L66,45 L78,45" stroke="#1E3A8A" strokeWidth="5.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          </g>
-        </svg>
-      </motion.div>
-
+            {/* Handlebar */}
+            <path d="M82,45 L88,43 L84,39" stroke="#1C1917" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Seat */}
+            <path d="M42,52 L54,52" stroke="#1C1917" strokeWidth="4.5" fill="none" strokeLinecap="round" />
+  
+            {/* Bouncing Rider Body */}
+            <g className="animate-body-bounce">
+              {/* Hair Ponytail */}
+              <path d="M34,18 C22,14 18,22 10,24 C14,28 24,28 34,22 Z" fill="#D9502B" />
+              
+              {/* Boots */}
+              <path d="M34,88 L42,90 M56,84 L64,86" stroke="#5C2D1F" strokeWidth="7" fill="none" strokeLinecap="round" />
+              
+              {/* Red Trousers Legs */}
+              <path d="M48,52 L40,73 L34,88" stroke="#B91C1C" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M48,52 L60,68 L56,84" stroke="#B91C1C" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              
+              {/* Blue Winter Coat */}
+              <path d="M40,28 L56,28 L52,58 L42,58 Z" fill="#1E3A8A" rx="4" />
+  
+              {/* Red scarf blowing in wind */}
+              <path d="M36,32 C26,30 20,38 12,36 C18,44 26,42 36,36 Z" fill="#DC2626" />
+              <path d="M42,28 C42,22 54,22 54,28 L50,48" stroke="#DC2626" strokeWidth="7.5" fill="none" strokeLinecap="round" />
+              <path d="M45,28 C45,24 51,24 51,28" stroke="#FFE4E6" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+  
+              {/* Face details */}
+              <circle cx="48" cy="18" r="9" fill="#FDBA74" />
+              <circle cx="51" cy="17" r="1.2" fill="#1C1917" /> {/* Eye */}
+              <path d="M49,21 C51,21 52,20 52,19" stroke="#1C1917" strokeWidth="1" fill="none" strokeLinecap="round" /> {/* Smile */}
+              
+              {/* Pom-pom beanie */}
+              <path d="M39,16 C39,7 55,7 55,16 Z" fill="#1D4ED8" />
+              <circle cx="47" cy="5" r="4" fill="#FFE4E6" /> {/* Pom-pom */}
+              
+              {/* Hair */}
+              <path d="M42,16 C42,16 46,24 40,26" stroke="#5C2D1F" strokeWidth="4" fill="none" strokeLinecap="round" />
+              
+              {/* Arms reaching to handlebar */}
+              <path d="M46,33 L66,45 L78,45" stroke="#1E3A8A" strokeWidth="5.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+          </svg>
+        </motion.div>
+      )}
+  
       {/* 5. Wind-Blown Flowing Leaves */}
-      {leaves.map((leaf) => (
+      {mounted && leaves.map((leaf) => (
         <motion.svg
           key={leaf.id}
           className="absolute pointer-events-none select-none z-0"
