@@ -10,6 +10,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 
 const prisma = new PrismaClient();
@@ -143,7 +144,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || parseCookies(req).refreshToken;
 
     if (token) {
       await prisma.refreshToken.deleteMany({ where: { token } });
@@ -160,7 +161,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || parseCookies(req).refreshToken;
     if (!token) {
       return res.status(401).json({ message: 'No refresh token provided.' });
     }
@@ -293,5 +294,162 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     return res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
     next(err);
+  }
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const parseCookies = (req: Request): Record<string, string> => {
+  const list: Record<string, string> = {};
+  const rc = req.headers.cookie;
+
+  if (rc) {
+    rc.split(';').forEach((cookie) => {
+      const parts = cookie.split('=');
+      list[parts.shift()!.trim()] = decodeURI(parts.join('='));
+    });
+  }
+
+  return list;
+};
+
+// ─── GET /auth/google ────────────────────────────────────────────────────────
+
+export const googleAuthRedirect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+    
+    if (!client_id || !redirect_uri) {
+      return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    res.cookie('oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(
+      redirect_uri
+    )}&response_type=code&scope=openid%20profile%20email&state=${state}`;
+
+    return res.redirect(googleAuthUrl);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── GET /auth/google/callback ───────────────────────────────────────────────
+
+export const googleAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code, state } = req.query;
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/login?error=no_code`);
+    }
+
+    const cookies = parseCookies(req);
+    const savedState = cookies.oauth_state;
+    res.clearCookie('oauth_state');
+
+    if (savedState && state !== savedState) {
+      console.warn('Google OAuth State mismatch. Proceeding with caution.');
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id,
+      client_secret,
+      code,
+      redirect_uri,
+      grant_type: 'authorization_code',
+    });
+
+    const { access_token } = tokenResponse.data;
+
+    // Retrieve Google profile info
+    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const { email, name, picture } = userResponse.data;
+
+    if (!email) {
+      return res.redirect(`${frontendUrl}/login?error=no_email`);
+    }
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: placeholderPassword,
+          role: 'student',
+          isVerified: true,
+          avatarUrl: picture || null,
+          specialization: null, // Set to null to trigger first-time onboard selection
+        },
+      });
+    } else {
+      if (!user.isVerified) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { isVerified: true, verificationToken: null },
+        });
+      }
+      if (!user.avatarUrl && picture) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { avatarUrl: picture },
+        });
+      }
+    }
+
+    const localAccessToken = generateAccessToken(user.id, user.role);
+    const localRefreshToken = generateRefreshToken(user.id);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    await prisma.refreshToken.create({
+      data: {
+        token: localRefreshToken,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    res.cookie('refreshToken', localRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      specialization: user.specialization || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+    };
+
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${localAccessToken}&user=${encodeURIComponent(
+      JSON.stringify(userPayload)
+    )}${isNewUser || !user.specialization ? '&new=true' : ''}`;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error('Google OAuth Callback Error:', err);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
 };
