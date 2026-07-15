@@ -185,10 +185,10 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
                 return (
                   <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div
-                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed border ${
                         isUser
-                          ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/10'
-                          : 'bg-amber-950/5 border border-amber-900/10 text-amber-900 rounded-bl-none dark:bg-white/5 dark:border-white/5 dark:text-gray-200'
+                          ? 'bg-indigo-600/10 border-indigo-600/20 text-textPrimary dark:bg-indigo-600 dark:text-white dark:border-transparent rounded-br-none shadow-md shadow-indigo-600/5'
+                          : 'bg-amber-950/5 border-amber-900/10 text-amber-900 dark:border-transparent rounded-bl-none dark:bg-white/5 dark:border-white/5 dark:text-gray-200'
                       }`}
                     >
                       {!isUser && i === 0 && (

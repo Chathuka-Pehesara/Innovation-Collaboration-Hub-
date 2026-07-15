@@ -25,10 +25,10 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         {isOwn ? 'You' : message.senderId}
       </span>
 
-      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200 ${
+      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200 border ${
         isOwn 
-          ? 'bg-indigo-600 text-white rounded-tr-none' 
-          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-150 rounded-tl-none'
+          ? 'bg-indigo-600/10 border-indigo-600/20 text-textPrimary dark:bg-indigo-600 dark:text-white dark:border-transparent rounded-tr-none' 
+          : 'bg-slate-100 border-transparent text-slate-800 dark:bg-slate-800 dark:border-transparent dark:text-slate-150 rounded-tl-none'
       }`}>
         {/* Render Text message */}
         {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
