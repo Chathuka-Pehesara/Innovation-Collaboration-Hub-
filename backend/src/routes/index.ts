@@ -17,6 +17,7 @@ import chatRoutes from './chatRoutes';
 import notificationRoutes from './notificationRoutes';
 import analyticsRoutes from './analytics';
 import aiRoutes from './aiRoutes';
+import healthRoutes from './healthRoutes';
 
 const router = Router();
 
@@ -44,5 +45,6 @@ router.use('/chats', chatRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/ai', aiRoutes);
+router.use('/health', healthRoutes);
 
 export default router;
