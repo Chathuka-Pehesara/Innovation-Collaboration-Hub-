@@ -223,6 +223,27 @@ model User {
   skills               UserSkill[]
   portfolioItems       PortfolioItem[]
   refreshTokens        RefreshToken[]
+  loginActivities      LoginActivity[]
+}
+
+// ─── Security Models ─────────────────────────────────────────────────────────
+
+model LoginActivity {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fingerprint String   @default("none")
+  ip          String
+  browser     String
+  os          String
+  userAgent   String   @db.Text
+  riskScore   Int      @default(0)
+  status      String   // SUCCESS | FAILED | BLOCKED
+  loginTime   DateTime @default(now())
+
+  @@index([userId])
+  @@index([fingerprint])
+  @@index([ip])
 }
 
 model RefreshToken {

@@ -29,6 +29,7 @@ import {
   forgotPasswordRateLimiter,
   registerRateLimiter,
 } from '../middleware/rateLimit';
+import { securityMiddleware } from '../middleware/securityMiddleware';
 
 const router = Router();
 
@@ -36,7 +37,7 @@ const router = Router();
 router.post('/register', registerRateLimiter, validate(registerSchema), register);
 
 // POST /auth/login — authenticate, return JWT access + refresh tokens
-router.post('/login', loginRateLimiter, validate(loginSchema), login);
+router.post('/login', loginRateLimiter, securityMiddleware, validate(loginSchema), login);
 
 // POST /auth/logout — invalidate refresh token cookie
 router.post('/logout', logout);
