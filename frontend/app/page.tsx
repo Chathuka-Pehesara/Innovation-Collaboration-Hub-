@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import GlowCard from '@/components/ui/GlowCard';
 import Magnetic from '@/components/ui/Magnetic';
 import Logo from '@/components/ui/Logo';
+import Footer from '@/components/layout/Footer';
 
 export default function LandingPage() {
   const containerVariants = {
@@ -37,10 +38,10 @@ export default function LandingPage() {
       {/* Top Header */}
       <header className="relative z-10 max-w-7xl w-full mx-auto px-6 py-6 flex justify-between items-center">
         <Link href="/" className="hover:opacity-90 transition-opacity">
-          <Logo size={64} withText textClassName="text-white font-bold text-xl tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent font-display" />
+          <Logo size={64} withText textClassName="text-gray-900 font-bold text-xl tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent font-display" />
         </Link>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-gray-400 hover:text-white text-sm font-medium transition-colors">
+          <Link href="/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
             Sign In
           </Link>
           <Magnetic>
@@ -59,26 +60,25 @@ export default function LandingPage() {
         className="relative z-10 max-w-5xl w-full mx-auto px-6 py-16 text-center my-auto"
       >
         <motion.div 
-          variants={itemVariants}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/50 border border-black/10 mb-8 backdrop-blur-md shadow-sm"
         >
-          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-          <span className="text-gray-300 text-xs font-semibold tracking-wide uppercase">Collaborate & Innovate</span>
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="text-gray-700 text-xs font-bold tracking-wide uppercase">Collaborate & Innovate</span>
         </motion.div>
 
         <motion.h1 
           variants={itemVariants}
-          className="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight font-display"
+          className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight font-display"
         >
           Where Big Ideas Find Their{' '}
-          <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-600 to-amber-700 filter drop-shadow-sm">
             Perfect Teams
           </span>
         </motion.h1>
 
         <motion.p 
           variants={itemVariants}
-          className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="text-gray-600 font-medium text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
         >
           Launch campus initiatives, assemble multidisciplinary squads with AI skills compatibility, and build tomorrow's solutions together.
         </motion.p>
@@ -93,7 +93,7 @@ export default function LandingPage() {
             </Link>
           </Magnetic>
           <Magnetic>
-            <Link href="/students" className="btn-secondary px-8 py-3.5 text-base w-full sm:w-auto hover:bg-white/10">
+            <Link href="/students" className="btn-secondary px-8 py-3.5 text-base w-full sm:w-auto hover:bg-black/5 text-gray-700 border-black/10">
               Browse Innovators &rarr;
             </Link>
           </Magnetic>
@@ -110,11 +110,11 @@ export default function LandingPage() {
           <motion.div variants={itemVariants}>
             <GlowCard className="p-6 h-full flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 text-xl">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 mb-4 text-xl shadow-inner">
                   🤝
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2 font-display">AI-Powered Team Up</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <h3 className="text-gray-900 font-bold text-lg mb-2 font-display">AI-Powered Team Up</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Find partners automatically based on technical expertise, proficiency synergy, and role compatibility.
                 </p>
               </div>
@@ -124,11 +124,11 @@ export default function LandingPage() {
           <motion.div variants={itemVariants}>
             <GlowCard className="p-6 h-full flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-4 text-xl">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-600 mb-4 text-xl shadow-inner">
                   💡
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2 font-display">Idea Evaluator</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <h3 className="text-gray-900 font-bold text-lg mb-2 font-display">Idea Evaluator</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Get immediate structured feedback, domain breakdown, and technical skill list recommendations from LLMs.
                 </p>
               </div>
@@ -138,11 +138,11 @@ export default function LandingPage() {
           <motion.div variants={itemVariants}>
             <GlowCard className="p-6 h-full flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 mb-4 text-xl">
+                <div className="w-10 h-10 rounded-lg bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-700 mb-4 text-xl shadow-inner">
                   💬
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2 font-display">AI Mentorship</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <h3 className="text-gray-900 font-bold text-lg mb-2 font-display">AI Mentorship</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Stuck on architectural flow or server details? Chat with custom virtual mentors specialized in engineering.
                 </p>
               </div>
@@ -152,9 +152,7 @@ export default function LandingPage() {
       </motion.section>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 border-t border-white/5 bg-panel text-center text-xs text-gray-600">
-        <p>&copy; {new Date().getFullYear()} Innovation & Collaboration Hub. All rights reserved.</p>
-      </footer>
+      <Footer />
     </main>
   );
 }

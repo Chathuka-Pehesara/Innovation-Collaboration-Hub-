@@ -6,7 +6,6 @@ import AmbientSparks from "./AmbientSparks";
 
 export default function AutumnBackground({ children }: { children: React.ReactNode }) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const { scrollYProgress } = useScroll();
   
@@ -25,16 +24,6 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
     setPrefersReducedMotion(mediaQuery.matches);
 
     if (mediaQuery.matches) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // Calculate normalized mouse position (-1 to 1)
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      setMousePosition({ x, y });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
@@ -42,30 +31,29 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
       {/* 1. Base Layer (Static or Gradient Fallback) */}
       <div className="fixed inset-0 z-[-3] bg-background" />
       
-      {/* 2. Parallax Image Layer */}
+      {/* 2. Parallax Image Layer (Faded for absolute text legibility) */}
       {!prefersReducedMotion ? (
         <motion.div 
-          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-40"
+          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-[0.15]"
           style={{ 
-            backgroundImage: "url('/bg-autumn.png')",
+            backgroundImage: "url('/bg-autumn-light.png')",
             y: backgroundY,
-            x: mousePosition.x * -10, // Slight mouse parallax
             scale: 1.05 // Prevent edges from showing during parallax
           }}
           transition={{ type: "spring", stiffness: 50, damping: 20 }}
         />
       ) : (
         <div 
-          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-30"
-          style={{ backgroundImage: "url('/bg-autumn.png')" }}
+          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-[0.15]"
+          style={{ backgroundImage: "url('/bg-autumn-light.png')" }}
         />
       )}
 
-      {/* 3. Ambient Glow Overlay */}
+      {/* 3. Ambient Glow Overlay (Soft light enhancement) */}
       <div 
-        className="fixed inset-0 z-[-1] opacity-70 pointer-events-none"
+        className="fixed inset-0 z-[-1] opacity-40 pointer-events-none"
         style={{
-          background: "radial-gradient(circle at center, transparent 0%, var(--background) 100%)",
+          background: "radial-gradient(circle at top right, rgba(255, 255, 255, 0.4) 0%, transparent 60%)",
         }}
       />
 

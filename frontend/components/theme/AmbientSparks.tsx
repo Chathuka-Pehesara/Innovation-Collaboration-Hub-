@@ -1,74 +1,147 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
 
-interface Spark {
+interface LeafPhysics {
   id: number;
   x: number;
   y: number;
+  vx: number;
+  vy: number;
+  baseVy: number;
   size: number;
-  duration: number;
-  delay: number;
+  swayPhase: number;
+  swaySpeed: number;
+  swayAmount: number;
+  rotation: number;
+  rotationSpeed: number;
+  leafImage: string;
   opacity: number;
 }
 
 export default function AmbientSparks() {
-  const [sparks, setSparks] = useState<Spark[]>([]);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const leavesData = useRef<LeafPhysics[]>([]);
+  const mouse = useRef({ x: -1000, y: -1000 });
+  const leafNodes = useRef<(HTMLImageElement | null)[]>([]);
 
   useEffect(() => {
+    setIsClient(true);
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-    
     if (mediaQuery.matches) return;
 
-    // Generate random sparks and glowing orbs
-    const generatedSparks = Array.from({ length: 25 }).map((_, i) => ({
-      id: i,
-      x: Math.random() * 100, // random start X %
-      y: 110, // Start below screen
-      size: Math.random() * 6 + 2, // 2px to 8px
-      duration: Math.random() * 10 + 15, // 15s to 25s floating time
-      delay: Math.random() * -20, // Negative delay to pre-populate screen
-      opacity: Math.random() * 0.5 + 0.2, // 0.2 to 0.7
-    }));
+    // Initialize 25 leaves
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     
-    setSparks(generatedSparks);
+    leavesData.current = Array.from({ length: 25 }).map((_, i) => ({
+      id: i,
+      x: Math.random() * w,
+      y: Math.random() * h - h, // Start above or across screen
+      vx: 0,
+      vy: Math.random() * 0.5 + 0.5,
+      baseVy: Math.random() * 0.5 + 0.5, // Natural falling speed
+      size: Math.random() * 30 + 30, // 30px to 60px
+      swayPhase: Math.random() * Math.PI * 2,
+      swaySpeed: Math.random() * 0.02 + 0.01,
+      swayAmount: Math.random() * 0.5 + 0.2,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 1.5,
+      leafImage: `/leaf${Math.floor(Math.random() * 3) + 1}.png`,
+      opacity: Math.random() * 0.4 + 0.5
+    }));
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.current = { x: e.clientX, y: e.clientY };
+    };
+    
+    // Mouse leaves screen -> remove repulsion
+    const handleMouseLeave = () => {
+      mouse.current = { x: -1000, y: -1000 };
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseleave", handleMouseLeave);
+
+    let animationFrameId: number;
+
+    const loop = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      leavesData.current.forEach((leaf, i) => {
+        // Antigravity / Repulsion Physics
+        const dx = leaf.x + leaf.size/2 - mouse.current.x;
+        const dy = leaf.y + leaf.size/2 - mouse.current.y;
+        const distSq = dx * dx + dy * dy;
+        const radius = 250; // Effect radius
+        const radiusSq = radius * radius;
+
+        if (distSq < radiusSq) {
+          const force = (1 - distSq / radiusSq) * 1.5; // Strength of repulsion
+          const angle = Math.atan2(dy, dx);
+          leaf.vx += Math.cos(angle) * force;
+          leaf.vy += Math.sin(angle) * force;
+        }
+
+        // Apply friction and natural forces
+        leaf.vx *= 0.95; // Horizontal friction
+        leaf.vy = leaf.vy * 0.98 + leaf.baseVy * 0.02; // Gradually return to base falling speed
+
+        // Apply sway
+        leaf.swayPhase += leaf.swaySpeed;
+        const swayX = Math.sin(leaf.swayPhase) * leaf.swayAmount;
+        
+        leaf.x += leaf.vx + swayX;
+        leaf.y += leaf.vy;
+        leaf.rotation += leaf.rotationSpeed + leaf.vx * 0.5; // Spin faster when pushed
+
+        // Wrap around screen
+        if (leaf.y > height + 100) {
+          leaf.y = -100;
+          leaf.x = Math.random() * width;
+          leaf.vx = 0;
+        }
+        if (leaf.x > width + 100) leaf.x = -100;
+        if (leaf.x < -100) leaf.x = width + 100;
+
+        // Update DOM node directly for high performance
+        const node = leafNodes.current[i];
+        if (node) {
+          node.style.transform = `translate3d(${leaf.x}px, ${leaf.y}px, 0) rotate(${leaf.rotation}deg)`;
+        }
+      });
+
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    animationFrameId = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
-  if (prefersReducedMotion || sparks.length === 0) return null;
+  if (!isClient) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden mix-blend-screen">
-      {sparks.map((spark) => (
-        <motion.div
-          key={spark.id}
-          className="absolute rounded-full"
-          initial={{
-            x: `${spark.x}vw`,
-            y: `${spark.y}vh`,
-            opacity: 0,
-            scale: 0,
-          }}
-          animate={{
-            y: "-10vh",
-            x: [`${spark.x}vw`, `${spark.x - 5}vw`, `${spark.x + 5}vw`, `${spark.x}vw`],
-            opacity: [0, spark.opacity, spark.opacity, 0],
-            scale: [0, 1, 1, 0.5],
-          }}
-          transition={{
-            duration: spark.duration,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: spark.delay,
-          }}
+    <div ref={containerRef} className="fixed inset-0 z-[0] pointer-events-none overflow-hidden">
+      {leavesData.current.map((leaf, i) => (
+        <img
+          key={leaf.id}
+          ref={(el) => { leafNodes.current[i] = el; }}
+          src={leaf.leafImage}
+          alt=""
+          className="absolute top-0 left-0 filter drop-shadow-lg"
           style={{
-            width: spark.size,
-            height: spark.size,
-            background: `radial-gradient(circle, rgba(232, 160, 60, 1) 0%, rgba(193, 68, 14, 0.5) 50%, rgba(0,0,0,0) 100%)`,
-            boxShadow: `0 0 ${spark.size * 2}px ${spark.size}px rgba(193, 68, 14, 0.4)`,
-            filter: `blur(${Math.random() > 0.5 ? 1 : 0}px)`,
+            width: `${leaf.size}px`,
+            height: `${leaf.size}px`,
+            opacity: leaf.opacity,
+            willChange: 'transform',
+            transform: `translate3d(${leaf.x}px, ${leaf.y}px, 0) rotate(${leaf.rotation}deg)`
           }}
         />
       ))}

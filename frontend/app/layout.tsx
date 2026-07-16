@@ -1,5 +1,5 @@
 import './globals.css';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import AutumnBackground from '@/components/theme/AutumnBackground';
 
 const inter = Inter({ 
@@ -7,7 +7,7 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
-const outfit = Outfit({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-display',
 });
@@ -23,10 +23,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
       </head>
-      <body className={`${inter.variable} ${outfit.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
         <AutumnBackground>
           {/* Subtle high-end texture overlay */}
           <div className="noise-overlay" />
