@@ -29,7 +29,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="relative min-h-screen bg-background overflow-hidden flex flex-col justify-between">
+    <main className="relative min-h-screen bg-transparent overflow-hidden flex flex-col justify-between">
       {/* Animated ambient background glow layers */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none animate-blob-slow" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none animate-blob-slow [animation-delay:4s]" />

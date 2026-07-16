@@ -18,7 +18,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-panel border-r border-white/5 flex flex-col justify-between shrink-0">
+    <aside className="w-64 bg-black/20 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
       <div className="flex flex-col">
         {/* Logo Section */}
         <div className="p-6 border-b border-white/5">

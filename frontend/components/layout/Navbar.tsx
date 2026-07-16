@@ -8,28 +8,6 @@ import { useAuthStore } from '@/lib/authStore';
 export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme') as 'dark' | 'light' || 'dark';
-    setTheme(saved);
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('theme', next);
-    if (next === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -37,7 +15,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-panel/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-black/20 backdrop-blur-xl px-6 py-4 flex items-center justify-between">
       {/* Search Bar / Welcome Indicator */}
       <div className="flex items-center gap-4">
         {user ? (
@@ -56,15 +34,6 @@ export default function Navbar() {
 
       {/* User Actions */}
       <div className="flex items-center gap-4">
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm transition-all active:scale-[0.95] flex items-center justify-center cursor-pointer"
-          aria-label="Toggle Theme"
-          title="Toggle Theme"
-        >
-          {theme === 'dark' ? '🌙' : '☀️'}
-        </button>
 
         {user ? (
           <div className="flex items-center gap-3">
