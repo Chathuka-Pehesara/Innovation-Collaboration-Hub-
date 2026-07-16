@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChatStore } from '../../lib/store/chatStore';
+import { useAuthStore } from '../../lib/authStore';
 import { Hash, MessageSquare, Search, Plus, UserPlus, X } from 'lucide-react';
 
 interface ChatSidebarProps {
@@ -8,6 +9,7 @@ interface ChatSidebarProps {
 
 export default function ChatSidebar({ activeUserId }: ChatSidebarProps) {
   const { conversations, activeChatId, setActiveChatId, onlineUsers } = useChatStore();
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isDMModalOpen, setIsDMModalOpen] = useState(false);
   const [targetUserText, setTargetUserText] = useState('');
@@ -37,7 +39,7 @@ export default function ChatSidebar({ activeUserId }: ChatSidebarProps) {
       <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Messages</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Logged in: {activeUserId}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Logged in: {user?.name || user?.email || activeUserId}</p>
         </div>
         <button 
           onClick={() => setIsDMModalOpen(true)}
