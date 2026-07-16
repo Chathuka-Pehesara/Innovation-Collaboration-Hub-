@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from '@/components/ui/Logo';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -20,13 +21,10 @@ export default function Sidebar() {
     <aside className="w-64 bg-panel border-r border-white/5 flex flex-col justify-between shrink-0">
       <div className="flex flex-col">
         {/* Logo Section */}
-        <div className="p-6 border-b border-white/5 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span className="text-white font-bold text-lg tracking-tight">Innovation Hub</span>
+        <div className="p-6 border-b border-white/5">
+          <Link href="/dashboard" className="block hover:opacity-90 transition-opacity">
+            <Logo size={52} withText textClassName="text-white font-bold text-lg tracking-tight" />
+          </Link>
         </div>
 
         {/* Links Navigation */}

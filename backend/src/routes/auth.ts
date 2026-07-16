@@ -14,6 +14,8 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  googleAuthRedirect,
+  googleAuthCallback,
 } from '../controllers/authController';
 import { validate } from '../middleware/validate';
 import {
@@ -50,5 +52,11 @@ router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
 
 // GET /auth/verify-email/:token — verify email address from link
 router.get('/verify-email/:token', verifyEmail);
+
+// GET /auth/google — redirect to Google OAuth consent
+router.get('/google', googleAuthRedirect);
+
+// GET /auth/google/callback — handle Google OAuth redirect, exchange code, verify identity
+router.get('/google/callback', googleAuthCallback);
 
 export default router;

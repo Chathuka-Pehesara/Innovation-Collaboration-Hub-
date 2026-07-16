@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import StatusBadge from './StatusBadge';
+import GlowCard from './ui/GlowCard';
 
 type ProjectLike = {
   id: string | number;
@@ -15,18 +18,18 @@ type ProjectLike = {
 export default function ProjectCard({ project, index = 0 }: { project: ProjectLike; index?: number }) {
   const delayClass = `delay-${(index % 3 + 1) * 100}`;
   return (
-    <div className={`glass-card overflow-hidden fade-in-up ${delayClass}`}>
+    <GlowCard className={`overflow-hidden p-0 fade-in-up ${delayClass}`} tiltEffect={true}>
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
-          <h3 className="text-xl font-bold text-slate-900 line-clamp-1">
-            <Link href={`/projects/${project.id}`} className="hover:text-blue-600">
+          <h3 className="text-xl font-bold font-display text-slate-900 line-clamp-1">
+            <Link href={`/projects/${project.id}`} className="hover:text-blue-600 transition-colors">
               {project.title}
             </Link>
           </h3>
           <StatusBadge status={project.status} />
         </div>
         
-        <p className="text-slate-600 text-sm mb-4 line-clamp-3">
+        <p className="text-slate-600 text-sm mb-4 line-clamp-3 leading-relaxed">
           {project.description}
         </p>
         
@@ -52,11 +55,11 @@ export default function ProjectCard({ project, index = 0 }: { project: ProjectLi
           <div className="text-xs text-slate-500">
             {new Date(project.createdAt).toLocaleDateString()}
           </div>
-          <Link href={`/projects/${project.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+          <Link href={`/projects/${project.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
             View Details &rarr;
           </Link>
         </div>
       </div>
-    </div>
+    </GlowCard>
   );
 }

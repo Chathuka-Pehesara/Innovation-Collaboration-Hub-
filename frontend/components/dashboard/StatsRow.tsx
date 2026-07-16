@@ -1,5 +1,7 @@
 'use client';
 
+import Counter from '@/components/ui/Counter';
+
 export default function StatsRow() {
   const stats = [
     { label: 'Total Projects', value: '12', change: '+2 this week', icon: '📁', color: 'text-indigo-400' },
@@ -14,7 +16,9 @@ export default function StatsRow() {
         <div key={idx} className="glass-card p-6 flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{stat.label}</p>
-            <h4 className="text-3xl font-extrabold text-white">{stat.value}</h4>
+            <h4 className="text-3xl font-extrabold text-white font-display">
+              <Counter value={stat.value} />
+            </h4>
             <p className="text-xs text-gray-500">{stat.change}</p>
           </div>
           <div className={`text-3xl p-3 bg-white/5 border border-white/5 rounded-xl ${stat.color}`}>
