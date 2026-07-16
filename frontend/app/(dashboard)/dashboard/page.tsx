@@ -52,7 +52,7 @@ export default function DashboardPage() {
             </Link>
 
             <Link
-              href="/messages"
+              href="/messages?mentor=true"
               className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/20 hover:bg-white/10 transition-all text-sm text-gray-300 hover:text-white font-medium group"
             >
               <span>💬 Consult AI Mentor Bot</span>

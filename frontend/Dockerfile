@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm config set strict-ssl false && npm install
 
 # Copy source files
 COPY . .

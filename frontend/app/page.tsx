@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import GlowCard from '@/components/ui/GlowCard';
 import Magnetic from '@/components/ui/Magnetic';
 import Logo from '@/components/ui/Logo';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function LandingPage() {
   const containerVariants = {
@@ -48,6 +49,7 @@ export default function LandingPage() {
               Get Started
             </Link>
           </Magnetic>
+          <ThemeToggle />
         </div>
       </header>
 
