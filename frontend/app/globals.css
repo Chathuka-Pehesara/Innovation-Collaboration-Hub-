@@ -3,65 +3,65 @@
 @tailwind utilities;
 
 :root {
-  --background: #130D0B;          /* Dark warm mahogany */
-  --panel-bg: #1B1310;            /* Elevated background */
-  --card-bg: #231A16;             /* Surface cards background */
-  --surface-elevated: #312520;    /* Dialogs/popups/active inputs */
-  --foreground: #F4EFEA;          /* Cream white */
+  --background: #1E140F;          /* Dark warm charcoal-brown */
+  --panel-bg: #2A1A12;            /* Elevated background */
+  --card-bg: #362218;             /* Surface cards background */
+  --surface-elevated: #4A2C1D;    /* Dialogs/popups/active inputs */
+  --foreground: #FFF3E0;          /* Cream white */
   
-  --text-primary: #FBF9F6;
-  --text-secondary: #C3B5AB;
-  --border-color: rgba(244, 239, 234, 0.06);
-  --border-hover: rgba(178, 50, 32, 0.35); /* Electric rust-red border glow */
+  --text-primary: #FDF9F3;
+  --text-secondary: #D4C4B7;
+  --border-color: rgba(255, 243, 224, 0.08);
+  --border-hover: rgba(193, 68, 14, 0.4); /* Electric burnt orange glow */
   
-  /* Primary Accent: Electric Autumn Rust */
-  --accent-primary: #B23220;
-  --accent-primary-hover: #8C2415;
-  --accent-primary-glow: rgba(178, 50, 32, 0.15);
+  /* Primary Accent: Burnt Orange */
+  --accent-primary: #C1440E;
+  --accent-primary-hover: #9F3609;
+  --accent-primary-glow: rgba(193, 68, 14, 0.2);
   
-  /* Secondary Accent: Warm Golden Amber */
-  --accent-secondary: #F59E0B;
-  --accent-secondary-glow: rgba(245, 158, 11, 0.12);
+  /* Secondary Accent: Golden Amber */
+  --accent-secondary: #E8A03C;
+  --accent-secondary-glow: rgba(232, 160, 60, 0.15);
   
   /* Ambient gradient mesh */
-  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(178, 50, 32, 0.1) 0%, transparent 45%);
-  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%);
-  --accent-glow: rgba(178, 50, 32, 0.25);
+  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(193, 68, 14, 0.12) 0%, transparent 45%);
+  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(232, 160, 60, 0.1) 0%, transparent 45%);
+  --accent-glow: rgba(193, 68, 14, 0.3);
 
   color-scheme: dark;
 }
 
 html:not(.dark) {
-  --background: #FFF5EC;          /* Soft peach sky background */
-  --panel-bg: #FFFBF8;            /* Pure warm cream panel background */
-  --card-bg: #F7ECE1;             /* Sand/tan card background */
-  --surface-elevated: #ECDDCF;    /* Active card inputs/hover panels */
-  --foreground: #3F1C0F;          /* Deep mahogany brown body text */
+  --background: #FFF3E0;          /* Soft cream/off-white background */
+  --panel-bg: #FDF8F0;            /* Pure warm cream panel background */
+  --card-bg: #F5E8D8;             /* Warm tan card background */
+  --surface-elevated: #EBD6C1;    /* Active card inputs/hover panels */
+  --foreground: #4A2C1D;          /* Deep warm brown text */
   
-  --text-primary: #3F1C0F;
-  --text-secondary: #724A3B;
-  --border-color: rgba(63, 28, 15, 0.08);
-  --border-hover: rgba(168, 50, 32, 0.4);
+  --text-primary: #2A1A12;
+  --text-secondary: #6B4E3E;
+  --border-color: rgba(74, 44, 29, 0.08);
+  --border-hover: rgba(139, 58, 31, 0.4);
   
-  /* Primary Accent: Burgundy Crimson */
-  --accent-primary: #A83220;
-  --accent-primary-hover: #702224;
-  --accent-primary-glow: rgba(168, 50, 32, 0.12);
+  /* Primary Accent: Rust Red */
+  --accent-primary: #8B3A1F;
+  --accent-primary-hover: #682914;
+  --accent-primary-glow: rgba(139, 58, 31, 0.15);
   
   /* Secondary Accent: Amber Gold */
   --accent-secondary: #D97706;
   --accent-secondary-glow: rgba(217, 119, 6, 0.1);
   
-  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(168, 50, 32, 0.08) 0%, transparent 45%);
-  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.05) 0%, transparent 45%);
-  --accent-glow: rgba(168, 50, 32, 0.15);
+  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(139, 58, 31, 0.1) 0%, transparent 45%);
+  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.08) 0%, transparent 45%);
+  --accent-glow: rgba(139, 58, 31, 0.2);
 
   color-scheme: light;
 }
 
 @layer base {
   body {
-    background-color: var(--background) !important;
+    background-color: transparent !important;
     color: var(--foreground) !important;
     @apply antialiased min-h-screen selection:bg-violet-500/30 selection:text-white font-sans;
   }
@@ -158,17 +158,9 @@ html:not(.dark) {
   }
 }
 
-/* Texture Overlay */
+/* Texture Overlay (Disabled for performance) */
 .noise-overlay {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.025;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  display: none;
 }
 
 /* Elevated glass panels & cards with layered shadows */
@@ -182,23 +174,38 @@ html:not(.dark) {
 
 .glass-card {
   position: relative;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 1.25rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px var(--border-color);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  will-change: transform;
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 .glass-card:hover {
-  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(139, 58, 31, 0.3);
   transform: translateY(-4px);
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.25), 
-    0 10px 10px -5px rgba(0, 0, 0, 0.08),
-    0 0 40px -10px var(--accent-primary-glow),
-    0 0 0 1px var(--border-hover);
+    0 15px 30px -5px rgba(0, 0, 0, 0.1), 
+    0 0 30px -10px rgba(139, 58, 31, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
 }
 
 /* Spotlight Glowing Border effect using mouse coordinates */
@@ -245,17 +252,47 @@ html:not(.dark) {
 }
 
 .btn-primary {
-  @apply bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 hover:-translate-y-0.5;
-  box-shadow: 0 8px 16px -2px var(--accent-primary-glow), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply font-bold px-6 py-3 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 overflow-hidden relative border;
+  color: white !important;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px var(--accent-primary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
 }
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-20deg);
+  transition: all 0.6s ease-in-out;
+  z-index: -1;
+}
+
 .btn-primary:hover {
-  box-shadow: 0 12px 20px -2px var(--accent-primary-glow), 0 8px 12px -4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-primary-glow), 0 0 20px var(--accent-secondary-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary:hover::before {
+  left: 150%;
 }
 
 .btn-secondary {
-  @apply bg-white/5 hover:bg-white/10 text-textPrimary font-semibold px-4 py-2.5 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 border border-white/10 hover:-translate-y-0.5;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply text-white font-semibold px-6 py-3 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 border transition-all relative overflow-hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
 
 /* Sidebar navigation link effects */

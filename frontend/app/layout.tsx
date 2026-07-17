@@ -1,12 +1,13 @@
 import './globals.css';
-import { Inter, Outfit } from 'next/font/google';
+import { Inter, Space_Grotesk } from 'next/font/google';
+import AutumnBackground from '@/components/theme/AutumnBackground';
 
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-sans',
 });
 
-const outfit = Outfit({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-display',
 });
@@ -22,23 +23,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{__html: `
-          try {
-            var saved = localStorage.getItem('theme');
-            if (saved === 'light') {
-              document.documentElement.classList.remove('dark');
-            } else {
-              document.documentElement.classList.add('dark');
-            }
-          } catch (_) {}
-        `}} />
       </head>
-      <body className={`${inter.variable} ${outfit.variable} bg-background text-foreground min-h-screen antialiased font-sans relative`}>
-        {/* Subtle high-end texture overlay */}
-        <div className="noise-overlay" />
-        {children}
+      <body className={`${inter.variable} ${spaceGrotesk.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
+        <AutumnBackground>
+          {/* Subtle high-end texture overlay */}
+          <div className="noise-overlay" />
+          {children}
+        </AutumnBackground>
       </body>
     </html>
   );

@@ -35,7 +35,7 @@ function AuthCallbackHandler() {
   }, [searchParams, setAuth, router]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-center gap-4 max-w-sm text-center">
         {/* Elegant spinner */}
         <div className="relative w-16 h-16 flex items-center justify-center">
@@ -54,7 +54,7 @@ function AuthCallbackHandler() {
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="w-12 h-12 rounded-full border-4 border-indigo-600/10 border-t-indigo-600 animate-spin" />
       </div>
     }>

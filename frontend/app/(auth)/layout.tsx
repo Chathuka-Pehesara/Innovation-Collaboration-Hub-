@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -27,28 +27,45 @@ const LEAF_COLORS = [
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  const [leaves, setLeaves] = useState<any[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isSayingHi, setIsSayingHi] = useState(false);
+  const controls = useAnimation();
 
   useEffect(() => {
     setMounted(true);
-    // Generate 25 leaves with randomized metrics
-    const generated = Array.from({ length: 25 }).map((_, i) => {
-      const yStart = Math.random() * 85; // Starting height percentage
-      const ySway = 40 + Math.random() * 100; // Vertical drift pixels
-      return {
-        id: i,
-        path: LEAF_PATHS[Math.floor(Math.random() * LEAF_PATHS.length)],
-        color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
-        scale: 0.6 + Math.random() * 0.7,
-        duration: 9 + Math.random() * 11, // Floating speed seconds
-        delay: Math.random() * -20, // Negative delay so leaves exist immediately on load
-        yStart: `${yStart}vh`,
-        ySway: ySway,
-        rotation: Math.random() * 360,
-      };
-    });
-    setLeaves(generated);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      controls.start({
+        x: ["-20vw", "110vw"],
+        transition: { duration: 16, repeat: Infinity, ease: "linear" },
+      });
+    }
+  }, [mounted, controls]);
+
+  const handleBicyclistClick = () => {
+    if (isPaused) return;
+    setIsPaused(true);
+    setIsSayingHi(true);
+
+    controls.stop();
+
+    setTimeout(() => {
+      setIsSayingHi(false);
+      setIsPaused(false);
+
+      controls.start({
+        x: "110vw",
+        transition: { duration: 8, ease: "linear" },
+      }).then(() => {
+        controls.start({
+          x: ["-20vw", "110vw"],
+          transition: { duration: 16, repeat: Infinity, ease: "linear" },
+        });
+      });
+    }, 3000);
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-b from-[#FFF3EA] via-[#FFFBF7] to-[#FFEFE0] dark:from-[#130D0B] dark:via-[#1B1310] dark:to-[#160F0D] overflow-hidden flex flex-col justify-between transition-colors duration-500">
@@ -71,6 +88,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           @keyframes body-bounce {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-4px); }
+          }
+          @keyframes wave-arm {
+            from { transform: rotate(-15deg); }
+            to { transform: rotate(15deg); }
           }
           .animate-spin-wheels {
             animation: spin-wheels 0.8s infinite linear;
@@ -115,25 +136,28 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <path d="M150,180 C125,110 155,50 200,70 C245,50 275,110 250,180 C275,230 235,280 200,255 C165,280 125,230 150,180 Z" className="fill-[#E65D38] dark:fill-[#8F331A] transition-colors duration-500" opacity="0.85" />
       </svg>
 
-      {/* 4. Beautiful Bicyclist riding from Left to Right */}
+      {/* 4. Interactive Bicyclist riding from Left to Right */}
       {mounted && (
         <motion.div 
-          className="absolute bottom-[3.5vh] w-[140px] h-[140px] pointer-events-none select-none z-20"
-          initial={{ x: '-150px' }}
-          animate={{ x: '100vw' }}
-          transition={{
-            duration: 16,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
+          className="absolute bottom-[3.5vh] w-[140px] h-[140px] select-none z-50 cursor-pointer"
+          initial={{ x: "-20vw" }}
+          animate={controls}
+          onClick={handleBicyclistClick}
         >
-          <svg viewBox="0 0 160 160" className="w-full h-full">
+          {isSayingHi && (
+            <div className="absolute top-[-30px] right-[-10px] bg-white text-gray-800 px-4 py-2 rounded-2xl shadow-lg border border-gray-100 font-bold text-sm animate-bounce z-30 pointer-events-none">
+              Hi! 👋
+              <div className="absolute bottom-[-5px] left-[15px] w-3 h-3 bg-white transform rotate-45 border-b border-r border-gray-100"></div>
+            </div>
+          )}
+          
+          <svg viewBox="0 0 160 160" className="w-full h-full pointer-events-none">
             {/* Bicycle Mudguards */}
             <path d="M14,90 A18,18 0 0,1 46,90" className="stroke-[#EA580C] dark:stroke-[#9A3412] transition-colors duration-500" strokeWidth="3" fill="none" strokeLinecap="round" />
             <path d="M74,90 A18,18 0 0,1 106,90" className="stroke-[#EA580C] dark:stroke-[#9A3412] transition-colors duration-500" strokeWidth="3" fill="none" strokeLinecap="round" />
             
             {/* Front & Rear Wheels (Spinning) */}
-            <g className="animate-spin-wheels" style={{ transformOrigin: '30px 90px' }}>
+            <g style={{ transformOrigin: '30px 90px', animation: isPaused ? 'none' : 'spin-wheels 0.8s infinite linear' }}>
               <circle cx="30" cy="90" r="18" className="stroke-[#1C1917] dark:stroke-[#E7E5E4] transition-colors duration-500" strokeWidth="3.5" fill="none" />
               <circle cx="30" cy="90" r="15" className="stroke-[#F59E0B] dark:stroke-[#D97706] transition-colors duration-500" strokeWidth="2.5" fill="none" />
               <line x1="12" y1="90" x2="48" y2="90" className="stroke-[#1C1917] dark:stroke-[#44403C] transition-colors duration-500" strokeWidth="1" />
@@ -141,7 +165,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <line x1="17.3" y1="77.3" x2="42.7" y2="102.7" className="stroke-[#1C1917] dark:stroke-[#44403C] transition-colors duration-500" strokeWidth="1" />
               <line x1="17.3" y1="102.7" x2="42.7" y2="77.3" className="stroke-[#1C1917] dark:stroke-[#44403C] transition-colors duration-500" strokeWidth="1" />
             </g>
-            <g className="animate-spin-wheels" style={{ transformOrigin: '90px 90px' }}>
+            <g style={{ transformOrigin: '90px 90px', animation: isPaused ? 'none' : 'spin-wheels 0.8s infinite linear' }}>
               <circle cx="90" cy="90" r="18" className="stroke-[#1C1917] dark:stroke-[#E7E5E4] transition-colors duration-500" strokeWidth="3.5" fill="none" />
               <circle cx="90" cy="90" r="15" className="stroke-[#F59E0B] dark:stroke-[#D97706] transition-colors duration-500" strokeWidth="2.5" fill="none" />
               <line x1="72" y1="90" x2="108" y2="90" className="stroke-[#1C1917] dark:stroke-[#44403C] transition-colors duration-500" strokeWidth="1" />
@@ -165,10 +189,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <path d="M42,52 L54,52" className="stroke-[#1C1917] dark:stroke-[#E7E5E4] transition-colors duration-500" strokeWidth="4.5" fill="none" strokeLinecap="round" />
   
             {/* Bouncing Rider Body */}
-            <g className="animate-body-bounce">
+            <g style={{ animation: isPaused ? 'none' : 'body-bounce 0.4s infinite ease-in-out' }}>
               {/* Hair Ponytail */}
               <path d="M34,18 C22,14 18,22 10,24 C14,28 24,28 34,22 Z" fill="#D9502B" />
-              
               {/* Boots */}
               <path d="M34,88 L42,90 M56,84 L64,86" className="stroke-[#5C2D1F] dark:stroke-[#78350F] transition-colors duration-500" strokeWidth="7" fill="none" strokeLinecap="round" />
               
@@ -186,54 +209,36 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   
               {/* Face details */}
               <circle cx="48" cy="18" r="9" className="fill-[#FDBA74] dark:fill-[#FED7AA] transition-colors duration-500" />
-              <circle cx="51" cy="17" r="1.2" className="fill-[#1C1917] dark:fill-[#E7E5E4] transition-colors duration-500" /> {/* Eye */}
-              <path d="M49,21 C51,21 52,20 52,19" className="stroke-[#1C1917] dark:stroke-[#E7E5E4] transition-colors duration-500" strokeWidth="1" fill="none" strokeLinecap="round" /> {/* Smile */}
+              <circle cx="51" cy="17" r="1.2" className="fill-[#1C1917] dark:fill-[#E7E5E4] transition-colors duration-500" />
+              <path d="M49,21 C51,21 52,20 52,19" className="stroke-[#1C1917] dark:stroke-[#E7E5E4] transition-colors duration-500" strokeWidth="1" fill="none" strokeLinecap="round" />
               
               {/* Pom-pom beanie */}
               <path d="M39,16 C39,7 55,7 55,16 Z" className="fill-[#1D4ED8] dark:fill-[#3B82F6] transition-colors duration-500" />
-              <circle cx="47" cy="5" r="4" className="fill-[#FFE4E6] dark:fill-[#E7E5E4] transition-colors duration-500" /> {/* Pom-pom */}
+              <circle cx="47" cy="5" r="4" className="fill-[#FFE4E6] dark:fill-[#E7E5E4] transition-colors duration-500" />
               
               {/* Hair */}
               <path d="M42,16 C42,16 46,24 40,26" className="stroke-[#5C2D1F] dark:stroke-[#78350F] transition-colors duration-500" strokeWidth="4" fill="none" strokeLinecap="round" />
               
-              {/* Arms reaching to handlebar */}
-              <path d="M46,33 L66,45 L78,45" className="stroke-[#1E3A8A] dark:stroke-[#1E40AF] transition-colors duration-500" strokeWidth="5.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Arms — waving when paused, riding when moving */}
+              <g style={{ 
+                transformOrigin: "46px 33px", 
+                animation: isPaused ? "wave-arm 0.4s infinite alternate ease-in-out" : "none" 
+              }}>
+                <path 
+                  d={isPaused ? "M46,33 L60,15 L65,10" : "M46,33 L66,45 L78,45"} 
+                  className="stroke-[#1E3A8A] dark:stroke-[#1E40AF] transition-colors duration-500"
+                  strokeWidth="5.5" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                />
+              </g>
             </g>
           </svg>
         </motion.div>
       )}
   
-      {/* 5. Wind-Blown Flowing Leaves */}
-      {mounted && leaves.map((leaf) => (
-        <motion.svg
-          key={leaf.id}
-          className="absolute pointer-events-none select-none z-0"
-          style={{
-            top: leaf.yStart,
-            width: 22 * leaf.scale,
-            height: 22 * leaf.scale,
-            fill: leaf.color,
-          }}
-          viewBox="0 0 20 28"
-          initial={{ x: '-10vw', rotate: leaf.rotation, opacity: 0 }}
-          animate={{
-            x: '110vw',
-            y: [0, leaf.ySway, -leaf.ySway, leaf.ySway / 2, 0],
-            rotate: leaf.rotation + 720,
-            opacity: [0, 0.9, 0.9, 0.9, 0],
-          }}
-          transition={{
-            duration: leaf.duration,
-            delay: leaf.delay,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        >
-          <path d={leaf.path} />
-        </motion.svg>
-      ))}
-
-      {/* 6. Form Content Area */}
+      {/* 5. Form Content Area */}
       <div className="relative z-20 flex-1 w-full flex items-center justify-center">
         {children}
       </div>
