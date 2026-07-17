@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { Skill, getProfileSkills, removeSkill } from '@/lib/api/profileApi';
 import Toast from '@/components/Toast';
 import QuizModal from './QuizModal';
+import { SkillBadge } from './SkillBadge';
 
 interface SkillsManagerProps {
   userId: string;
@@ -29,26 +30,13 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [showSupportedSkills, setShowSupportedSkills] = useState(false);
 
   // Common skills list for autocomplete
   const commonSkills = [
-    'React',
-    'Node.js',
-    'TypeScript',
-    'Python',
-    'JavaScript',
-    'Java',
-    'SQL',
-    'MongoDB',
-    'Firebase',
-    'AWS',
-    'Docker',
-    'Git',
-    'GraphQL',
-    'REST API',
-    'UI/UX Design',
-    'Machine Learning',
-    'Data Science',
+    'React', 'Node.js', 'TypeScript', 'Python', 'JavaScript', 'Java',
+    'SQL', 'MongoDB', 'Firebase', 'AWS', 'Docker', 'Git', 'GitHub',
+    'GraphQL', 'HTML', 'CSS'
   ];
 
   useEffect(() => {
@@ -197,24 +185,47 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
         </div>
       </form>
 
+      {/* Tiers Legend Showcase */}
+      <div className="mb-6 p-4 rounded-xl border border-orange-200 bg-orange-50/50">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-orange-950">Skill Tiers Showcase (Max 100 XP)</h3>
+          <button 
+            onClick={() => setShowSupportedSkills(!showSupportedSkills)}
+            className="text-xs bg-orange-200/50 hover:bg-orange-200 text-orange-900 px-3 py-1.5 rounded-lg font-medium transition"
+          >
+            {showSupportedSkills ? 'Hide Supported Skills' : 'View Supported Skills'}
+          </button>
+        </div>
+        
+        {showSupportedSkills ? (
+          <div className="flex flex-wrap gap-4 mt-4 p-4 bg-white/40 rounded-lg border border-orange-100">
+            {commonSkills.map(s => (
+              <SkillBadge key={s} name={s} score={0} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-4">
+            <SkillBadge name="Platinum Tier" score={100} />
+            <SkillBadge name="Gold Tier" score={75} />
+            <SkillBadge name="Silver Tier" score={50} />
+            <SkillBadge name="Bronze Tier" score={25} />
+            <SkillBadge name="Novice" score={0} />
+          </div>
+        )}
+      </div>
+
       {/* Skills List */}
       {skills.length > 0 ? (
-        <div className="space-y-2">
+        <div className="flex flex-wrap gap-4">
           {skills.map((skill) => (
-            <div
-              key={skill.id}
-              className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
-            >
-              <div>
-                <p className="font-medium text-slate-900">{skill.name}</p>
-                <p className="text-xs text-slate-600">Score: <span className="font-bold">{skill.score ?? 0} XP</span></p>
-              </div>
+            <div key={skill.id} className="relative group">
+              <SkillBadge name={skill.name} score={skill.score} />
               <button
                 onClick={() => handleRemoveSkill(skill.id)}
-                className="text-red-600 hover:text-red-700 transition"
+                className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200"
                 title="Remove skill"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -231,8 +242,8 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
         </div>
       )}
 
-      <div className="mt-4 text-sm text-slate-600">
-        <p>💡 Tip: You must pass the AI assessment to add a skill to your profile.</p>
+      <div className="mt-6 text-sm text-slate-600">
+        <p>💡 Tip: Pass AI assessments to upgrade your skill tier! Each passed test grants up to 50 XP.</p>
       </div>
 
       {isQuizOpen && (

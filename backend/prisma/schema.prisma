@@ -225,6 +225,7 @@ model User {
   skillAssessments     SkillAssessment[]
   portfolioItems       PortfolioItem[]
   refreshTokens        RefreshToken[]
+  badges               UserBadge[]
 }
 
 model RefreshToken {
@@ -271,4 +272,24 @@ model SkillAssessment {
   score     Int      
   passed    Boolean
   createdAt DateTime @default(now())
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique // e.g., "React Novice", "Java Expert"
+  description String?
+  icon        String?     // e.g. a lucide icon name or emoji
+  tier        String      @default("Bronze") // Bronze, Silver, Gold, Platinum
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
 }

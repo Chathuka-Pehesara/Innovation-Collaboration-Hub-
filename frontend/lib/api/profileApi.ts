@@ -137,6 +137,15 @@ export const addSkill = async (
   return response.data.skill || response.data;
 };
 
+// ─── GET /profile/:id/badges ────────────────────────────────────────────────
+/**
+ * Fetch user's badges
+ */
+export const getProfileBadges = async (userId: string) => {
+  const response = await apiClient.get(`/profile/${userId}/badges`);
+  return response.data.badges || [];
+};
+
 // Gamification Quiz endpoints
 export const generateQuiz = async (skillName: string) => {
   const response = await apiClient.post('/quizzes/generate', { skillName });

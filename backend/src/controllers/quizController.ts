@@ -83,16 +83,17 @@ export const evaluateQuiz = async (req: Request, res: Response, next: NextFuncti
     });
 
     // Update UserSkill score
+    let newScore = score * 10;
     const userSkill = await prisma.userSkill.findUnique({
       where: { userId_skillId: { userId, skillId } }
     });
 
     if (userSkill) {
-      let newScore = userSkill.score;
+      newScore = userSkill.score;
       if (passed) {
-        newScore += (score * 10); // e.g. 5 questions correct = +50 score
+        newScore += (score * 10);
       } else {
-        newScore = Math.max(0, newScore - 10); // Penalty for failing
+        newScore = Math.max(0, newScore - 10);
       }
 
       await prisma.userSkill.update({
@@ -100,20 +101,58 @@ export const evaluateQuiz = async (req: Request, res: Response, next: NextFuncti
         data: { score: newScore }
       });
     } else {
-      // If adding a new skill and passed
       if (passed) {
         await prisma.userSkill.create({
           data: {
             userId,
             skillId,
             level: 'Beginner',
-            score: score * 10
+            score: newScore
           }
         });
       }
     }
 
-    res.json({ passed, score, correctCount, total: questions.length, skill });
+    // Award Badges based on newScore
+    const badgeEarned = [];
+    if (passed) {
+      const tiers = [
+        { tier: 'Platinum', threshold: 100, icon: 'Award' },
+        { tier: 'Gold', threshold: 75, icon: 'Star' },
+        { tier: 'Silver', threshold: 50, icon: 'Shield' },
+        { tier: 'Bronze', threshold: 25, icon: 'Medal' }
+      ];
+
+      for (const t of tiers) {
+        if (newScore >= t.threshold) {
+          const badgeName = `${skill.name} ${t.tier}`;
+          let badge = await prisma.badge.findUnique({ where: { name: badgeName } });
+          if (!badge) {
+            badge = await prisma.badge.create({
+              data: {
+                name: badgeName,
+                tier: t.tier,
+                description: `Achieved ${t.tier} level in ${skill.name}`,
+                icon: t.icon
+              }
+            });
+          }
+
+          const existingUserBadge = await prisma.userBadge.findUnique({
+            where: { userId_badgeId: { userId, badgeId: badge.id } }
+          });
+
+          if (!existingUserBadge) {
+            await prisma.userBadge.create({
+              data: { userId, badgeId: badge.id }
+            });
+            badgeEarned.push(badge);
+          }
+        }
+      }
+    }
+
+    res.json({ passed, score, correctCount, total: questions.length, skill, badgesEarned: badgeEarned });
   } catch (error) {
     next(error);
   }

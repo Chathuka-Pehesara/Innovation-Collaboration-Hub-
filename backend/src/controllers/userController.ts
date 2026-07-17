@@ -236,6 +236,35 @@ export const getSkills = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
+// ─── GET /profile/:id/badges ────────────────────────────────────────────────
+/**
+ * Returns the badges earned by a user.
+ */
+export const getBadges = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    const userBadges = await prisma.userBadge.findMany({
+      where: { userId: id },
+      include: { badge: true },
+      orderBy: { awardedAt: 'desc' }
+    });
+
+    const badges = userBadges.map((ub) => ({
+      id: ub.badge.id,
+      name: ub.badge.name,
+      description: ub.badge.description,
+      tier: ub.badge.tier,
+      icon: ub.badge.icon,
+      awardedAt: ub.awardedAt,
+    }));
+
+    return res.status(200).json({ badges });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ─── POST /profile/:id/skills ───────────────────────────────────────────────
 /**
  * Adds a skill (by skillId) to the user's profile with an optional proficiency level.

@@ -16,6 +16,7 @@ import {
   updateProfile,
   uploadAvatar,
   getSkills,
+  getBadges,
   addSkill,
   removeSkill,
   getPortfolio,
@@ -61,6 +62,10 @@ router.post('/:id/skills', authenticate, validate(addSkillSchema), addSkill);
 
 // DELETE /profile/:id/skills/:skillId
 router.delete('/:id/skills/:skillId', authenticate, removeSkill);
+
+// ─── Badges ─────────────────────────────────────────────────────────────────
+// GET  /profile/:id/badges
+router.get('/:id/badges', getBadges);
 
 // ─── Portfolio ───────────────────────────────────────────────────────────────
 // GET  /profile/:id/portfolio

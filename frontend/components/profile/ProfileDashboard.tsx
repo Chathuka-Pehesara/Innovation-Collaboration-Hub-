@@ -13,6 +13,7 @@ import EditProfileForm from './EditProfileForm';
 import AvatarUpload from './AvatarUpload';
 import SkillsManager from './SkillsManager';
 import { SkillBadge } from './SkillBadge';
+import ProfileBadges from './ProfileBadges';
 import PortfolioManager from './PortfolioManager';
 import AvailabilitySettings from './AvailabilitySettings';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
@@ -177,6 +178,9 @@ export default function ProfileDashboard({ userId }: ProfileDashboardProps) {
                 <p className="text-xs opacity-80 uppercase font-semibold tracking-wider">Weekly Hours</p>
                 <p className="text-4xl font-extrabold mt-3">{profile.availableHours}h</p>
               </div>
+
+              {/* Badges Component */}
+              <ProfileBadges userId={userId} />
 
               <div className="glass-card p-6">
                 <h3 className="font-bold text-white mb-4">Social Links</h3>
