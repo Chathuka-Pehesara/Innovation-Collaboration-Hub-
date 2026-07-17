@@ -5,14 +5,29 @@ import { getIo, isUserOnline } from '../socket/chatSocket';
 const prisma = new PrismaClient();
 
 // Configure SMTP transport with robust fallbacks
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
-  port: parseInt(process.env.SMTP_PORT || '2525', 10),
-  auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || ''
+const getNotificationTransporter = () => {
+  const host = process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io';
+  const port = parseInt(process.env.SMTP_PORT || '1025', 10);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  const config: any = {
+    host,
+    port,
+    secure: port === 465,
+    tls: {
+      rejectUnauthorized: false
+    }
+  };
+
+  if (user && pass && user !== 'your_smtp_user' && pass !== 'your_smtp_password') {
+    config.auth = { user, pass };
   }
-});
+
+  return nodemailer.createTransport(config);
+};
+
+const transporter = getNotificationTransporter();
 
 // GET /notifications/:userId
 export const getUserNotifications = async (userId: string) => {

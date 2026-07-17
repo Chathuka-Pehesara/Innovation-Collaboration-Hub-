@@ -46,6 +46,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=supersecretjwtkey123!
       - AI_SERVICE_URL=http://ai-service:8000
+      - SMTP_HOST=maildev
+      - SMTP_PORT=1025
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,6 +83,14 @@ services:
       - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
     depends_on:
       - backend
+
+  # Maildev local SMTP server & webmail interface
+  maildev:
+    image: maildev/maildev:2.1.0
+    container_name: ih-maildev
+    ports:
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP
 
 volumes:
   postgres_data:
