@@ -27,6 +27,7 @@ model Skill {
   name     String         @unique
   projects ProjectSkill[]
   users    UserSkill[]
+  assessments SkillAssessment[]
 }
 
 model Project {
@@ -221,6 +222,7 @@ model User {
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   skills               UserSkill[]
+  skillAssessments     SkillAssessment[]
   portfolioItems       PortfolioItem[]
   refreshTokens        RefreshToken[]
 }
@@ -241,6 +243,7 @@ model UserSkill {
   skillId   String
   skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
   level     String   @default("Beginner") // Beginner, Intermediate, Advanced
+  score     Int      @default(0)
   addedAt   DateTime @default(now())
 
   @@unique([userId, skillId])
@@ -257,4 +260,15 @@ model PortfolioItem {
   tags      String   @default("[]") // JSON array of tag strings
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model SkillAssessment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  score     Int      
+  passed    Boolean
+  createdAt DateTime @default(now())
 }

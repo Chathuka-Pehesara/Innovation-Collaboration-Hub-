@@ -135,10 +135,10 @@ export default function AmbientSparks() {
           ref={(el) => { leafNodes.current[i] = el; }}
           src={leaf.leafImage}
           alt=""
-          className="absolute top-0 left-0 filter drop-shadow-lg"
+          className="absolute top-0 left-0 filter drop-shadow-lg object-contain"
           style={{
             width: `${leaf.size}px`,
-            height: `${leaf.size}px`,
+            height: 'auto',
             opacity: leaf.opacity,
             willChange: 'transform',
             transform: `translate3d(${leaf.x}px, ${leaf.y}px, 0) rotate(${leaf.rotation}deg)`

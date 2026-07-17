@@ -48,7 +48,8 @@ export interface Profile {
 export interface Skill {
   id: string;
   name: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  level: string;
+  score?: number;
 }
 
 export interface PortfolioItem {
@@ -134,6 +135,17 @@ export const addSkill = async (
 ): Promise<Skill> => {
   const response = await apiClient.post(`/profile/${userId}/skills`, data);
   return response.data.skill || response.data;
+};
+
+// Gamification Quiz endpoints
+export const generateQuiz = async (skillName: string) => {
+  const response = await apiClient.post('/quizzes/generate', { skillName });
+  return response.data;
+};
+
+export const evaluateQuiz = async (skillName: string, answers: number[]) => {
+  const response = await apiClient.post('/quizzes/evaluate', { skillName, answers });
+  return response.data;
 };
 
 // ─── DELETE /profile/:id/skills/:skillId ────────────────────────────────────

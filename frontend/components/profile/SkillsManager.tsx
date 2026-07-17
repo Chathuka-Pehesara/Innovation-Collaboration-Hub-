@@ -8,8 +8,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Skill, getProfileSkills, addSkill, removeSkill } from '@/lib/api/profileApi';
+import { Skill, getProfileSkills, removeSkill } from '@/lib/api/profileApi';
 import Toast from '@/components/Toast';
+import QuizModal from './QuizModal';
 
 interface SkillsManagerProps {
   userId: string;
@@ -27,6 +28,7 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
 
   // Common skills list for autocomplete
   const commonSkills = [
@@ -99,25 +101,27 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
       return;
     }
 
-    setIsAdding(true);
-    try {
-      const newSkill = await addSkill(userId, {
-        skillName: skillName.trim(),
-        level: proficiencyLevel,
-      });
-      setSkills([...skills, newSkill]);
-      setSkillName('');
-      setProficiencyLevel('Beginner');
-      setSuggestions([]);
-      setShowSuggestions(false);
-      setToast({ message: 'Skill added successfully', type: 'success' });
-      onSkillsUpdate?.([...skills, newSkill]);
-    } catch (error) {
-      setToast({ message: 'Failed to add skill', type: 'error' });
-      console.error(error);
-    } finally {
-      setIsAdding(false);
-    }
+    setIsQuizOpen(true);
+  };
+
+  const handleQuizSuccess = (skill: any, score: number) => {
+    setIsQuizOpen(false);
+    
+    // We get back the skill object from the backend
+    const newSkill = {
+      id: skill.id,
+      name: skill.name,
+      level: 'Beginner', // Will be upgraded later based on score
+      score: score * 10
+    };
+    
+    const updatedSkills = [...skills, newSkill];
+    setSkills(updatedSkills);
+    setSkillName('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setToast({ message: `Skill added successfully! You scored ${score}/5.`, type: 'success' });
+    onSkillsUpdate?.(updatedSkills);
   };
 
   const handleRemoveSkill = async (skillId: string) => {
@@ -182,29 +186,13 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
             </div>
           </div>
 
-          {/* Proficiency Level */}
-          <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Proficiency Level</label>
-            <select
-              value={proficiencyLevel}
-              onChange={(e) =>
-                setProficiencyLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Advanced')
-              }
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
-          </div>
-
           {/* Add Button */}
           <button
             type="submit"
-            disabled={isAdding || !skillName.trim()}
-            className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-slate-400"
+            disabled={!skillName.trim()}
+            className="w-full bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 transition disabled:bg-slate-400"
           >
-            {isAdding ? 'Adding...' : 'Add Skill'}
+            Take Skill Assessment
           </button>
         </div>
       </form>
@@ -219,7 +207,7 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
             >
               <div>
                 <p className="font-medium text-slate-900">{skill.name}</p>
-                <p className="text-xs text-slate-600">Level: {skill.level}</p>
+                <p className="text-xs text-slate-600">Score: <span className="font-bold">{skill.score ?? 0} XP</span></p>
               </div>
               <button
                 onClick={() => handleRemoveSkill(skill.id)}
@@ -244,8 +232,16 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
       )}
 
       <div className="mt-4 text-sm text-slate-600">
-        <p>💡 Tip: Click on suggestions or type to find common skills. You can also add custom skills.</p>
+        <p>💡 Tip: You must pass the AI assessment to add a skill to your profile.</p>
       </div>
+
+      {isQuizOpen && (
+        <QuizModal 
+          skillName={skillName.trim()} 
+          onClose={() => setIsQuizOpen(false)} 
+          onSuccess={handleQuizSuccess} 
+        />
+      )}
     </div>
   );
 }

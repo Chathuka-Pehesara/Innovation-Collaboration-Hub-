@@ -12,6 +12,7 @@ import { Profile, getProfile } from '@/lib/api/profileApi';
 import EditProfileForm from './EditProfileForm';
 import AvatarUpload from './AvatarUpload';
 import SkillsManager from './SkillsManager';
+import { SkillBadge } from './SkillBadge';
 import PortfolioManager from './PortfolioManager';
 import AvailabilitySettings from './AvailabilitySettings';
 import LoadingSkeleton from '@/components/LoadingSkeleton';
@@ -148,15 +149,11 @@ export default function ProfileDashboard({ userId }: ProfileDashboardProps) {
                   <h2 className="text-xl font-bold text-white mb-4">Skills ({profile.skills.length})</h2>
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.slice(0, 6).map((skill) => (
-                      <div
-                        key={skill.id}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 border border-indigo-500/15 rounded-full"
-                      >
-                        <span className="text-xs font-semibold text-indigo-400">{skill.name}</span>
-                        <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">
-                          {skill.level}
-                        </span>
-                      </div>
+                      <SkillBadge 
+                        key={skill.id} 
+                        name={skill.name} 
+                        score={skill.score} 
+                      />
                     ))}
                     {profile.skills.length > 6 && (
                       <div className="text-xs text-gray-400 self-center ml-2">

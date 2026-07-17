@@ -34,17 +34,15 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
       {/* 2. Parallax Image Layer (Faded for absolute text legibility) */}
       {!prefersReducedMotion ? (
         <motion.div 
-          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-[0.15]"
+          className="fixed inset-0 z-[-2] bg-cover bg-top bg-no-repeat opacity-[0.15]"
           style={{ 
             backgroundImage: "url('/bg-autumn-light.png')",
-            y: backgroundY,
-            scale: 1.05 // Prevent edges from showing during parallax
           }}
           transition={{ type: "spring", stiffness: 50, damping: 20 }}
         />
       ) : (
         <div 
-          className="fixed inset-0 z-[-2] bg-cover bg-center bg-no-repeat opacity-[0.15]"
+          className="fixed inset-0 z-[-2] bg-cover bg-top bg-no-repeat opacity-[0.15]"
           style={{ backgroundImage: "url('/bg-autumn-light.png')" }}
         />
       )}

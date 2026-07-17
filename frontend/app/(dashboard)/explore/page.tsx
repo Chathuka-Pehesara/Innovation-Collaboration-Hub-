@@ -6,6 +6,7 @@ import { evaluateIdeaApi, IdeaEvaluationResponse } from '@/lib/api/aiApi';
 import IdeaEvaluator from '@/components/ai/IdeaEvaluator';
 import StatusBadge from '@/components/StatusBadge';
 import Toast from '@/components/Toast';
+import Link from 'next/link';
 
 interface Project {
   id: string;
@@ -20,10 +21,23 @@ interface Project {
   aiResult?: { score: number; suggestions: string } | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function ExplorePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Filtering & Pagination
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   
   // AI evaluation states
@@ -33,13 +47,29 @@ export default function ExplorePage() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
+  const fetchCategories = async () => {
+    try {
+      const { data } = await api.get('/projects/categories');
+      setCategories(data);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  };
+
   const fetchProjects = async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/projects', {
-        params: { search: searchQuery || undefined }
+        params: { 
+          search: searchQuery || undefined,
+          category: selectedCategory || undefined,
+          status: selectedStatus || undefined,
+          page,
+          limit: 9
+        }
       });
       setProjects(data.data || []);
+      setTotalPages(data.meta?.totalPages || 1);
     } catch (err) {
       console.error('Failed to load projects:', err);
     } finally {
@@ -48,8 +78,27 @@ export default function ExplorePage() {
   };
 
   useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
     fetchProjects();
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, selectedStatus, page]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(1);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedStatus(e.target.value);
+    setPage(1);
+  };
 
   const handleOpenEvaluation = async (project: Project) => {
     setSelectedProject(project);
@@ -123,20 +172,44 @@ export default function ExplorePage() {
         />
       )}
 
-      {/* Header and Search */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* Header and Search/Filters */}
+      <div className="flex flex-col gap-6 mb-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Explore Campus Projects</h1>
           <p className="text-gray-400 text-sm">Discover innovative student-led projects and review their AI compatibility metrics.</p>
         </div>
-        <div className="w-full md:w-80 relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search projects..."
-            className="w-full glass-input text-sm px-4 py-2.5"
-          />
+        
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-96 relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search projects..."
+              className="w-full glass-input text-sm px-4 py-2.5"
+            />
+          </div>
+          <select 
+            value={selectedCategory} 
+            onChange={handleCategoryChange}
+            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none bg-[#161822] cursor-pointer"
+          >
+            <option value="">All Categories</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
+          <select 
+            value={selectedStatus} 
+            onChange={handleStatusChange}
+            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none bg-[#161822] cursor-pointer"
+          >
+            <option value="">All Statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
         </div>
       </div>
 
@@ -147,57 +220,89 @@ export default function ExplorePage() {
         </div>
       ) : projects.length === 0 ? (
         <div className="glass-panel p-16 rounded-2xl text-center text-gray-500 text-sm">
-          No projects found. Be the first to start a project!
+          No projects found matching your criteria.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((proj) => (
-            <div
-              key={proj.id}
-              className="glass-card flex flex-col justify-between border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] p-6 transition-all duration-300 relative group"
-            >
-              <div>
-                <div className="flex justify-between items-start gap-4 mb-3">
-                  <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
-                    {proj.title}
-                  </h3>
-                  <StatusBadge status={proj.status} />
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((proj) => (
+              <div
+                key={proj.id}
+                className="glass-card flex flex-col justify-between border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] p-6 transition-all duration-300 relative group"
+              >
+                <div>
+                  <div className="flex justify-between items-start gap-4 mb-3">
+                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
+                      {proj.title}
+                    </h3>
+                    <StatusBadge status={proj.status} />
+                  </div>
+
+                  <p className="text-gray-400 text-xs line-clamp-3 mb-4 leading-relaxed">
+                    {proj.description}
+                  </p>
+
+                  {/* Category & Badges */}
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {proj.category && (
+                      <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/10 text-[10px] font-semibold">
+                        {proj.category.name}
+                      </span>
+                    )}
+                    {proj.tags?.slice(0, 3).map((t) => (
+                      <span key={t.tag.name} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/10 text-[10px]">
+                        #{t.tag.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
-                <p className="text-gray-400 text-xs line-clamp-3 mb-4 leading-relaxed">
-                  {proj.description}
-                </p>
-
-                {/* Category & Badges */}
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {proj.category && (
-                    <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/10 text-[10px] font-semibold">
-                      {proj.category.name}
-                    </span>
-                  )}
-                  {proj.tags?.slice(0, 3).map((t) => (
-                    <span key={t.tag.name} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/10 text-[10px]">
-                      #{t.tag.name}
-                    </span>
-                  ))}
+                {/* Card Footer */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
+                  <span className="text-[10px] text-gray-500">
+                    Team size: <strong>{proj.teamSize}</strong>
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleOpenEvaluation(proj)}
+                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center cursor-pointer"
+                    >
+                      Analyze Idea
+                    </button>
+                    <Link
+                      href={`/projects/${proj.id}`}
+                      className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center cursor-pointer"
+                    >
+                      View Details &rarr;
+                    </Link>
+                  </div>
                 </div>
               </div>
-
-              {/* Card Footer */}
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
-                <span className="text-[10px] text-gray-500">
-                  Team size: <strong>{proj.teamSize}</strong>
-                </span>
-                <button
-                  onClick={() => handleOpenEvaluation(proj)}
-                  className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  Analyze Idea &rarr;
-                </button>
-              </div>
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-8 pt-4">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="btn-secondary px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-gray-400 text-sm">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="btn-secondary px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Idea Evaluation Modal */}
