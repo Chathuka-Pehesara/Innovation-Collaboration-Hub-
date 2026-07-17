@@ -37,3 +37,11 @@ pip-delete-this-directory.txt
 .DS_Store
 Thumbs.db
 *.pdf
+
+# Test artifacts & local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# User uploads (runtime generated)
+backend/uploads/

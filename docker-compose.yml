@@ -3,8 +3,6 @@
 # Description: Multi-container orchestration configuration for the Innovation & Collaboration Hub services.
 # Depends: frontend, backend, ai-service, postgres, redis
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
