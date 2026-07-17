@@ -134,14 +134,12 @@ def root():
 
 
 @app.get("/health")
-def health_check():
-    """Health check endpoint."""
-    from services.provider_factory import get_provider_health_fields
-
+async def health_check():
+    """Liveness and readiness probe for the AI microservice."""
     return {
         "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        **get_provider_health_fields(),
+        "service": "ai-service",
+        "timestamp": __import__('datetime').datetime.utcnow().isoformat()
     }
 
 

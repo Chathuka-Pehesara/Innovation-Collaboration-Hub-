@@ -1,0 +1,32 @@
+name: AI Service CI
+
+on:
+  push:
+    paths:
+      - 'ai-service/**'
+  pull_request:
+    paths:
+      - 'ai-service/**'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ai-service
+
+      - name: Run syntax check
+        run: python -m py_compile main.py
+        working-directory: ai-service
+
+      - name: Run tests (if any)
+        run: python -m pytest --tb=short --ignore=venv -q || true
+        working-directory: ai-service

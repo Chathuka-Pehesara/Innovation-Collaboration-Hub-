@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/lib/authStore';
 import StatusBadge from '@/components/StatusBadge';
+import { motion } from 'framer-motion';
 
 interface Project {
   id: string;
@@ -85,10 +86,18 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((proj) => (
-            <div
+          {projects.map((proj, index) => (
+            <motion.div
               key={proj.id}
-              className="glass-card flex flex-col justify-between border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] p-6 transition-all duration-300 relative group"
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                duration: 0.5, 
+                delay: index * 0.1, 
+                type: 'spring', 
+                stiffness: 100 
+              }}
+              className="glass-card flex flex-col justify-between border border-white/10 bg-black/20 backdrop-blur-xl hover:bg-black/40 p-6 transition-all duration-300 relative group spotlight-card overflow-hidden"
             >
               <div>
                 <div className="flex justify-between items-start gap-4 mb-3">
@@ -129,7 +138,7 @@ export default function ProjectsPage() {
                   Manage Workspace &rarr;
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

@@ -14,6 +14,7 @@ import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 import { evaluateRisk } from '../security/riskEngine';
 import { logLoginActivity } from '../services/loginActivityService';
+import { verifyPoW } from '../security/powService';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -76,7 +77,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, powNonce, powTimestamp, website } = req.body;
     const sec = req.securityDetails || {
       ip: req.ip || '0.0.0.0',
       userAgent: req.headers['user-agent'] || '',
@@ -84,6 +85,34 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       os: 'Unknown',
       fingerprint: req.body?.fingerprint || 'none',
     };
+
+    // ── Honeypot Detection Shield ──────────────────────────────────────────────
+    if (website) {
+      console.warn(`[SECURITY] Bot detected via Honeypot - IP: ${sec.ip}`);
+      return res.status(403).json({
+        message: 'Suspicious activity detected. Login denied.',
+        code: 'HONEYPOT_TRIGGERED',
+      });
+    }
+
+    // ── Proof of Work (PoW) Shield ───────────────────────────────────────────────
+    if (!email || !powNonce || !powTimestamp) {
+      console.warn(`[SECURITY] Missing PoW details - IP: ${sec.ip}`);
+      return res.status(400).json({
+        message: 'Security challenge verification elements are missing. Please try again.',
+        code: 'POW_MISSING',
+      });
+    }
+
+    const isPowValid = verifyPoW(email, parseInt(powTimestamp as string, 10), powNonce);
+    if (!isPowValid) {
+      console.warn(`[SECURITY] Invalid PoW challenge solution from IP: ${sec.ip}`);
+      return res.status(403).json({
+        message: 'Suspicious activity detected. Cryptographic security challenge failed.',
+        code: 'POW_FAILED',
+      });
+    }
+
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
