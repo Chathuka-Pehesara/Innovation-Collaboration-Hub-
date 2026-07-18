@@ -26,6 +26,9 @@ export function LoginForm() {
   const [serverError, setServerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const validate = (): boolean => {
     const errors: FieldErrors = {};
@@ -40,6 +43,8 @@ export function LoginForm() {
     e.preventDefault();
     setServerError('');
     setVerificationUrl(null);
+    setVerificationSuccess(null);
+    setVerificationError(null);
     if (!validate()) return;
 
     setLoading(true);
@@ -60,6 +65,30 @@ export function LoginForm() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyNow = async () => {
+    if (!verificationUrl) return;
+    setVerifying(true);
+    setVerificationError(null);
+    setVerificationSuccess(null);
+    try {
+      const token = verificationUrl.split('/').pop();
+      const response = await api.get(`/auth/verify-email/${token}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      setVerificationSuccess(response.data?.message || 'Verification successful!');
+      setTimeout(() => {
+        router.push('/login?verified=true');
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      setVerificationError(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -200,13 +229,21 @@ export function LoginForm() {
             <p className="text-red-800 text-xs font-semibold">{serverError}</p>
           </div>
           {verificationUrl && (
-            <div className="pl-6">
-              <a
-                href={verificationUrl}
-                className="inline-block text-xs font-bold bg-[#702224] hover:bg-[#5C1A1C] text-white px-3 py-1.5 rounded-lg transition-colors shadow-md"
+            <div className="pl-6 space-y-2">
+              <button
+                type="button"
+                onClick={handleVerifyNow}
+                disabled={verifying}
+                className="inline-block text-xs font-bold bg-[#702224] hover:bg-[#5C1A1C] disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-all shadow-md"
               >
-                Verify Account Now (Dev Option)
-              </a>
+                {verifying ? 'Verifying...' : 'Verify Account Now (Dev Option)'}
+              </button>
+              {verificationSuccess && (
+                <p className="text-green-850 text-xs font-semibold">✓ {verificationSuccess}</p>
+              )}
+              {verificationError && (
+                <p className="text-red-800 text-xs font-semibold">✗ {verificationError}</p>
+              )}
             </div>
           )}
         </motion.div>
