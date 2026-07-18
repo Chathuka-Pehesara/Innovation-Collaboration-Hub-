@@ -58,12 +58,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     });
 
     // Send verification email
-    const emailResult = await sendVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(email, verificationToken);
 
     return res.status(201).json({
       message: 'Account created. Check your email to verify your address.',
       user,
-      verificationUrl: process.env.NODE_ENV !== 'production' || !emailResult.sent ? emailResult.url : undefined,
     });
   } catch (err) {
     next(err);
@@ -95,13 +94,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           data: { verificationToken: token },
         });
       }
-      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-      const verifyUrl = `${backendUrl}/api/auth/verify-email/${token}`;
-
       return res.status(403).json({
         message: 'Please verify your email address before logging in.',
         code: 'EMAIL_NOT_VERIFIED',
-        verificationUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
       });
     }
 
