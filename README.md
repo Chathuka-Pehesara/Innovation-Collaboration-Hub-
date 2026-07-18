@@ -165,6 +165,6 @@ Commit messages must identify the contributing team, type of modification, and a
 
 ## Contact / Team Leads
 *   **IT Team Lead**: [Sewwandi / Email]
-*   **Cybersecurity Team Lead**: [Vikum / Email]
+*   **Cybersecurity Team Lead**: [Vikum / vikumdulaksha@gmail.com]
 *   **AI Team Lead**: [Chathuka / Chathuka02Pehesara@gmail.com]
 *   **Networking Team Lead**: [Dumindu / Email]
