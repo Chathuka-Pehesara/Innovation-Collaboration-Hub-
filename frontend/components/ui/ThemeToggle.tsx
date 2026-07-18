@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'dark' | 'light' || 'dark';
     setTheme(saved);
+    setMounted(true);
     if (saved === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -26,6 +28,13 @@ export default function ThemeToggle() {
       document.documentElement.classList.remove('dark');
     }
   };
+
+  // Render a placeholder until mounted to avoid server/client hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="p-2.5 rounded-xl bg-white/70 dark:bg-white/5 border border-amber-900/10 dark:border-white/10 text-sm shadow-sm w-10 h-10" />
+    );
+  }
 
   return (
     <motion.button
