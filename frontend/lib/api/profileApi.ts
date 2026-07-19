@@ -146,6 +146,17 @@ export const getProfileBadges = async (userId: string) => {
   return response.data.badges || [];
 };
 
+
+export const analyzePortfolioProject = async (userId: string, data: { title: string; description: string }) => {
+  const response = await apiClient.post(`/profile/${userId}/portfolio/analyze`, data);
+  return response.data;
+};
+
+export const submitPortfolioProject = async (userId: string, data: any) => {
+  const response = await apiClient.post(`/profile/${userId}/portfolio/submit`, data);
+  return response.data;
+};
+
 // Gamification Quiz endpoints
 export const generateQuiz = async (skillName: string) => {
   const response = await apiClient.post('/quizzes/generate', { skillName });

@@ -136,35 +136,35 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
     );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white/60 backdrop-blur-md rounded-2xl border border-orange-200/50 p-6 shadow-sm">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <h2 className="text-xl font-bold text-slate-900 mb-6">Skills</h2>
+      <h2 className="text-xl font-bold text-orange-950 mb-6">Skills</h2>
 
       {/* Add Skill Form */}
-      <form onSubmit={handleAddSkill} className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <form onSubmit={handleAddSkill} className="mb-6 p-5 bg-gradient-to-br from-orange-50/80 to-amber-50/80 rounded-xl border border-orange-200/60 shadow-inner">
         <div className="space-y-4">
           {/* Skill Name */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Skill Name</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Skill Name</label>
             <div className="relative">
               <input
                 type="text"
                 value={skillName}
                 onChange={(e) => handleSkillNameChange(e.target.value)}
                 placeholder="Search or type a skill..."
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               />
 
               {/* Suggestions */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg z-10">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-md border border-orange-200/60 rounded-xl shadow-xl z-10 overflow-hidden">
                   {suggestions.map((suggestion) => (
                     <button
                       key={suggestion}
                       type="button"
                       onClick={() => handleSelectSuggestion(suggestion)}
-                      className="w-full text-left px-4 py-2 hover:bg-blue-50 transition border-b border-slate-100 last:border-b-0"
+                      className="w-full text-left px-4 py-2 hover:bg-orange-100/50 text-orange-950 font-medium transition border-b border-orange-100 last:border-b-0"
                     >
                       {suggestion}
                     </button>
@@ -178,7 +178,7 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
           <button
             type="submit"
             disabled={!skillName.trim()}
-            className="w-full bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-indigo-700 transition disabled:bg-slate-400"
+            className="w-full mt-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50"
           >
             Take Skill Assessment
           </button>
@@ -237,12 +237,12 @@ export default function SkillsManager({ userId, onSkillsUpdate }: SkillsManagerP
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-600">
+        <div className="text-center py-8 text-orange-900/60 font-medium bg-orange-50/30 rounded-xl border border-dashed border-orange-200">
           <p>No skills added yet. Add your first skill to get started!</p>
         </div>
       )}
 
-      <div className="mt-6 text-sm text-slate-600">
+      <div className="mt-6 text-sm text-orange-800 font-medium bg-amber-50/50 p-3 rounded-xl border border-amber-200/50">
         <p>💡 Tip: Pass AI assessments to upgrade your skill tier! Each passed test grants up to 50 XP.</p>
       </div>
 

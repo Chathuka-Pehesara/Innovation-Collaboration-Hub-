@@ -86,25 +86,26 @@ export default function AvatarUpload({ userId, currentAvatarUrl, onSuccess }: Av
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white/60 backdrop-blur-md rounded-2xl border border-orange-200/50 p-6 shadow-sm">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <h2 className="text-xl font-bold text-slate-900 mb-6">Profile Picture</h2>
+      <h2 className="text-xl font-bold text-orange-950 mb-6">Profile Picture</h2>
 
       <div className="space-y-6">
         {/* Current / Preview Avatar */}
         <div className="flex justify-center">
           {preview ? (
-            <div className="relative w-48 h-48">
+            <div className="relative w-48 h-48 group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-amber-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
               <Image
                 src={preview}
                 alt="Avatar preview"
                 fill
-                className="object-cover rounded-lg shadow-md"
+                className="relative object-cover rounded-2xl shadow-lg border-2 border-white"
               />
             </div>
           ) : (
-            <div className="w-48 h-48 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white text-5xl font-bold shadow-md">
+            <div className="w-48 h-48 bg-gradient-to-br from-orange-400 to-amber-600 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-lg border-4 border-white/60">
               ?
             </div>
           )}
@@ -122,11 +123,11 @@ export default function AvatarUpload({ userId, currentAvatarUrl, onSuccess }: Av
         {/* Upload Area */}
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center cursor-pointer hover:bg-blue-50 transition"
+          className="border-2 border-dashed border-orange-300/60 rounded-2xl p-8 text-center cursor-pointer bg-white/50 hover:bg-orange-50/80 hover:border-orange-400 transition-all shadow-sm"
         >
-          <div className="text-blue-600 mb-2">
+          <div className="text-orange-500 mb-3 flex justify-center">
             <svg
-              className="w-8 h-8 mx-auto"
+              className="w-10 h-10"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -139,32 +140,32 @@ export default function AvatarUpload({ userId, currentAvatarUrl, onSuccess }: Av
               />
             </svg>
           </div>
-          <p className="text-slate-900 font-medium">Click to upload or drag and drop</p>
-          <p className="text-slate-600 text-sm">PNG, JPG, WebP up to 5 MB</p>
+          <p className="text-orange-950 font-bold mb-1">Click to upload or drag and drop</p>
+          <p className="text-orange-700/80 text-xs font-semibold">PNG, JPG, WebP up to 5 MB</p>
         </div>
 
         {/* File Info */}
         {selectedFile && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-slate-900">
-              <strong>Selected:</strong> {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+          <div className="bg-orange-50/80 border border-orange-200/60 rounded-xl p-4 shadow-inner">
+            <p className="text-sm text-orange-950 font-medium">
+              <strong className="font-bold">Selected:</strong> {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
             </p>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 pt-2">
           <button
             onClick={handleUpload}
             disabled={!selectedFile || isLoading}
-            className="flex-1 bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-slate-400"
+            className="flex-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50"
           >
-            {isLoading ? 'Uploading...' : 'Upload'}
+            {isLoading ? 'Uploading...' : 'Upload Avatar'}
           </button>
           {selectedFile && (
             <button
               onClick={handleReset}
-              className="flex-1 bg-slate-200 text-slate-900 font-medium py-2 px-4 rounded-lg hover:bg-slate-300 transition"
+              className="flex-1 bg-white border border-orange-200 text-orange-900 font-bold py-3 px-4 rounded-xl hover:bg-orange-50 shadow-sm transition-colors"
             >
               Cancel
             </button>

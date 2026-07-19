@@ -10,8 +10,10 @@ import {
   Zap, 
   MessageSquare, 
   Trophy, 
-  Settings 
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
+import { useAuthStore } from '@/lib/authStore';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -25,6 +27,11 @@ export default function Sidebar() {
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
+
+  const { user } = useAuthStore();
+  if (user?.role === 'admin') {
+    navItems.push({ name: 'Admin Dashboard', href: '/admin', icon: ShieldAlert });
+  }
 
   return (
     <aside className="w-72 bg-[var(--panel-bg)]/70 backdrop-blur-3xl border-r border-[var(--border-color)] flex flex-col justify-between shrink-0 shadow-[4px_0_30px_rgba(0,0,0,0.1)] relative z-20 transition-all duration-300">

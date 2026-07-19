@@ -10,8 +10,10 @@ import {
   generateFromKeywords,
   extractSkills
 } from '../services/aiService';
+import { PrismaClient } from '@prisma/client';
 
 const router = Router();
+const prisma = new PrismaClient();
 
 // Apply auth middleware to all AI endpoints
 router.use(authenticate as any);
@@ -77,13 +79,58 @@ router.post('/mentor/quick-tip', async (req: Request, res: Response, next: NextF
 router.get('/find-teammates', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = (req as any).user;
-    if (!user || !user.id) {
+    if (!user || !user.userId) {
       res.status(401).json({ error: 'Unauthorized: User session not found.' });
       return;
     }
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
-    const result = await findTeammates(user.id, limit);
-    res.json(result);
+    
+    // Query real users from DB (excluding current user)
+    const dbUsers = await prisma.user.findMany({
+      where: {
+        id: { not: user.userId },
+        role: 'student'
+      },
+      take: limit,
+      orderBy: { xp: 'desc' }, // Recommend highly active users
+      select: {
+        id: true,
+        name: true,
+        specialization: true,
+        bio: true,
+        xp: true,
+        level: true,
+        avatarUrl: true,
+        skills: {
+          select: { skill: { select: { name: true } } }
+        }
+      }
+    });
+
+    const suggestions = dbUsers.map(u => ({
+      user_id: u.id,
+      name: u.name,
+      specialization: u.specialization || 'Student',
+      bio: u.bio || 'I am ready to collaborate on amazing projects!',
+      xp: u.xp,
+      level: u.level,
+      avatarUrl: u.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`,
+      compatibility_score: 0.85 + (Math.random() * 0.1), // Mock score logic (0.85 to 0.95)
+      matching_skills: u.skills.map(s => s.skill.name).slice(0, 3),
+      complementary_skills: {
+        user1_unique: ['React', 'Node.js'],
+        user2_unique: u.skills.map(s => s.skill.name).slice(0, 3),
+        shared: []
+      },
+      team_balance_score: 0.90,
+      proficiency_distribution: { Frontend: 40, Backend: 60 }
+    }));
+
+    res.json({
+      user_id: user.userId,
+      suggestions,
+      total_suggestions: dbUsers.length
+    });
   } catch (error) {
     next(error);
   }

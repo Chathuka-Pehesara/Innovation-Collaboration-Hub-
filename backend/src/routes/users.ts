@@ -21,10 +21,13 @@ import {
   removeSkill,
   getPortfolio,
   addPortfolioItem,
+  analyzePortfolioProject,
+  submitPortfolioProject,
   removePortfolioItem,
   updatePortfolioItem,
   updateAvailability,
   searchStudents,
+  getAllUsersAdmin,
   upload,
 } from '../controllers/userController';
 import { authenticate } from '../middleware/auth';
@@ -41,6 +44,10 @@ const router = Router();
 // ─── Student search (public) ────────────────────────────────────────────────
 // GET /students/search?q=alice&skill=React&page=1&limit=12
 router.get('/search', searchStudents);
+
+// ─── Admin Users ────────────────────────────────────────────────────────────
+// GET /admin/all
+router.get('/admin/all', authenticate, getAllUsersAdmin);
 
 // ─── Public profile ─────────────────────────────────────────────────────────
 // GET /profile/:id
@@ -71,7 +78,13 @@ router.get('/:id/badges', getBadges);
 // GET  /profile/:id/portfolio
 router.get('/:id/portfolio', getPortfolio);
 
-// POST /profile/:id/portfolio
+// POST /profile/:id/portfolio/analyze
+router.post('/:id/portfolio/analyze', authenticate, analyzePortfolioProject);
+
+// POST /profile/:id/portfolio/submit
+router.post('/:id/portfolio/submit', authenticate, submitPortfolioProject);
+
+// POST /profile/:id/portfolio (Legacy direct add)
 router.post('/:id/portfolio', authenticate, validate(addPortfolioItemSchema), addPortfolioItem);
 
 // PUT /profile/:id/portfolio/:itemId
