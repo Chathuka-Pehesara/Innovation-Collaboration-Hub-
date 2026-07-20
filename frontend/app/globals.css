@@ -3,58 +3,58 @@
 @tailwind utilities;
 
 :root {
-  --background: #1E140F;          /* Dark warm charcoal-brown */
-  --panel-bg: #2A1A12;            /* Elevated background */
-  --card-bg: #362218;             /* Surface cards background */
-  --surface-elevated: #4A2C1D;    /* Dialogs/popups/active inputs */
-  --foreground: #FFF3E0;          /* Cream white */
+  --background: #2D2018;          /* Soft, warm autumn brown (lighter than before) */
+  --panel-bg: #3A281E;            /* Elevated background */
+  --card-bg: #473125;             /* Surface cards background */
+  --surface-elevated: #5C4031;    /* Dialogs/popups/active inputs */
+  --foreground: #FFF9F2;          /* Brighter cream white */
   
-  --text-primary: #FDF9F3;
-  --text-secondary: #D4C4B7;
-  --border-color: rgba(255, 243, 224, 0.08);
-  --border-hover: rgba(193, 68, 14, 0.4); /* Electric burnt orange glow */
+  --text-primary: #FFFFFF;        /* Pure white for maximum clarity */
+  --text-secondary: #E3D1C5;      /* Brighter secondary text */
+  --border-color: rgba(255, 243, 224, 0.12);
+  --border-hover: rgba(193, 68, 14, 0.5); 
   
   /* Primary Accent: Burnt Orange */
   --accent-primary: #C1440E;
   --accent-primary-hover: #9F3609;
-  --accent-primary-glow: rgba(193, 68, 14, 0.2);
+  --accent-primary-glow: rgba(193, 68, 14, 0.25);
   
   /* Secondary Accent: Golden Amber */
   --accent-secondary: #E8A03C;
-  --accent-secondary-glow: rgba(232, 160, 60, 0.15);
+  --accent-secondary-glow: rgba(232, 160, 60, 0.2);
   
   /* Ambient gradient mesh */
-  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(193, 68, 14, 0.12) 0%, transparent 45%);
-  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(232, 160, 60, 0.1) 0%, transparent 45%);
-  --accent-glow: rgba(193, 68, 14, 0.3);
+  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(193, 68, 14, 0.15) 0%, transparent 45%);
+  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(232, 160, 60, 0.12) 0%, transparent 45%);
+  --accent-glow: rgba(193, 68, 14, 0.35);
 
   color-scheme: dark;
 }
 
 html:not(.dark) {
-  --background: #FFF3E0;          /* Soft cream/off-white background */
-  --panel-bg: #FDF8F0;            /* Pure warm cream panel background */
-  --card-bg: #F5E8D8;             /* Warm tan card background */
-  --surface-elevated: #EBD6C1;    /* Active card inputs/hover panels */
-  --foreground: #4A2C1D;          /* Deep warm brown text */
+  --background: #FCF4EB;          /* Cleaner, brighter cream background */
+  --panel-bg: #FFFFFF;            /* Pure white for maximum panel contrast */
+  --card-bg: #FDF8F3;             /* Very soft warm tint for cards */
+  --surface-elevated: #F5EAE0;    /* Distinct active state */
+  --foreground: #2C1E16;          /* Stronger, clearer dark brown text */
   
-  --text-primary: #2A1A12;
-  --text-secondary: #6B4E3E;
-  --border-color: rgba(74, 44, 29, 0.08);
-  --border-hover: rgba(139, 58, 31, 0.4);
+  --text-primary: #1A110D;        /* Almost black autumn tint for ultimate readability */
+  --text-secondary: #5C4233;      /* Darker secondary text for better contrast */
+  --border-color: rgba(44, 30, 22, 0.1);
+  --border-hover: rgba(193, 68, 14, 0.4);
   
   /* Primary Accent: Rust Red */
-  --accent-primary: #8B3A1F;
-  --accent-primary-hover: #682914;
-  --accent-primary-glow: rgba(139, 58, 31, 0.15);
+  --accent-primary: #A63F19;      /* Slightly brighter rust for visibility */
+  --accent-primary-hover: #8B3211;
+  --accent-primary-glow: rgba(166, 63, 25, 0.15);
   
   /* Secondary Accent: Amber Gold */
   --accent-secondary: #D97706;
-  --accent-secondary-glow: rgba(217, 119, 6, 0.1);
+  --accent-secondary-glow: rgba(217, 119, 6, 0.15);
   
-  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(139, 58, 31, 0.1) 0%, transparent 45%);
+  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(166, 63, 25, 0.08) 0%, transparent 45%);
   --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.08) 0%, transparent 45%);
-  --accent-glow: rgba(139, 58, 31, 0.2);
+  --accent-glow: rgba(166, 63, 25, 0.2);
 
   color-scheme: light;
 }
@@ -282,17 +282,18 @@ html:not(.dark) {
 }
 
 .btn-secondary {
-  @apply text-white font-semibold px-6 py-3 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 border transition-all relative overflow-hidden;
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  @apply font-semibold px-6 py-3 rounded-xl active:scale-[0.96] flex items-center justify-center gap-2 border transition-all relative overflow-hidden;
+  color: var(--text-primary) !important;
+  background: var(--surface-elevated);
+  border-color: var(--border-color);
   backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--border-hover);
+  border-color: var(--accent-primary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 /* Sidebar navigation link effects */
