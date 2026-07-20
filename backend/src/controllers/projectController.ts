@@ -33,7 +33,7 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
   try {
     const { category, tag, status, search, page = '1', limit = '10' } = req.query;
     
-    let whereClause: any = {};
+    const whereClause: any = {};
     if (category) whereClause.categoryId = category;
     if (status) whereClause.status = status;
     if (search) {

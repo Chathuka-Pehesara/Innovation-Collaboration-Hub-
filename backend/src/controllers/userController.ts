@@ -452,7 +452,7 @@ export const analyzePortfolioProject = async (req: AuthRequest, res: Response, n
     };
 
     const validationQuiz = extractedSkills.map(skill => {
-      let q = MOCK_QUESTIONS[skill.toLowerCase()] || MOCK_QUESTIONS.default;
+      const q = MOCK_QUESTIONS[skill.toLowerCase()] || MOCK_QUESTIONS.default;
       return { skill, question: q.question, options: q.options };
     });
 
@@ -481,8 +481,8 @@ export const submitPortfolioProject = async (req: AuthRequest, res: Response, ne
 
     // In a real system, we'd validate the answers server-side.
     // For this MVP gamification, we assume frontend verified them or we give flat XP for completing the project.
-    let correctCount = answers.length; // assuming all correct for this phase
-    let passed = correctCount > 0 || extractedSkills.length > 0;
+    const correctCount = answers.length; // assuming all correct for this phase
+    const passed = correctCount > 0 || extractedSkills.length > 0;
     
     // Create the project
     const item = await prisma.portfolioItem.create({
@@ -503,7 +503,7 @@ export const submitPortfolioProject = async (req: AuthRequest, res: Response, ne
         let skill = await prisma.skill.findUnique({ where: { name: skillName } });
         if (!skill) skill = await prisma.skill.create({ data: { name: skillName } });
 
-        let userSkill = await prisma.userSkill.findUnique({
+        const userSkill = await prisma.userSkill.findUnique({
           where: { userId_skillId: { userId: id, skillId: skill.id } }
         });
 
