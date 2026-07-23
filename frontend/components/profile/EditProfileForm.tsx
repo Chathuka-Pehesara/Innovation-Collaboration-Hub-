@@ -70,42 +70,42 @@ export default function EditProfileForm({ profile, userId, onSuccess }: EditProf
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white/60 backdrop-blur-md rounded-2xl border border-orange-200/50 p-6 shadow-sm">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <h2 className="text-xl font-bold text-slate-900 mb-6">Edit Profile</h2>
+      <h2 className="text-xl font-bold text-orange-950 mb-6">Edit Profile</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-1">Name</label>
+          <label className="block text-sm font-bold text-orange-950 mb-1">Name</label>
           <input
             {...register('name')}
             type="text"
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             placeholder="Enter your name"
           />
-          {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs font-bold mt-1.5">{errors.name.message}</p>}
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-1">Bio</label>
+          <label className="block text-sm font-bold text-orange-950 mb-1">Bio</label>
           <textarea
             {...register('bio')}
             rows={4}
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             placeholder="Tell us about yourself (max 500 characters)"
           />
-          {errors.bio && <p className="text-red-600 text-sm mt-1">{errors.bio.message}</p>}
+          {errors.bio && <p className="text-red-600 text-xs font-bold mt-1.5">{errors.bio.message}</p>}
         </div>
 
         {/* Specialization */}
         <div>
-          <label className="block text-sm font-medium text-slate-900 mb-1">Specialization</label>
+          <label className="block text-sm font-bold text-orange-950 mb-1">Specialization</label>
           <select
             {...register('specialization')}
-            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium shadow-sm transition-shadow"
           >
             <option value="">Select a specialization</option>
             <option value="AI">AI</option>
@@ -115,77 +115,79 @@ export default function EditProfileForm({ profile, userId, onSuccess }: EditProf
             <option value="Other">Other</option>
           </select>
           {errors.specialization && (
-            <p className="text-red-600 text-sm mt-1">{errors.specialization.message}</p>
+            <p className="text-red-600 text-xs font-bold mt-1.5">{errors.specialization.message}</p>
           )}
         </div>
 
         {/* Social Links */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* GitHub */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">GitHub URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">GitHub URL</label>
             <input
               {...register('githubUrl')}
               type="url"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               placeholder="https://github.com/..."
             />
             {errors.githubUrl && (
-              <p className="text-red-600 text-sm mt-1">{errors.githubUrl.message}</p>
+              <p className="text-red-600 text-xs font-bold mt-1.5">{errors.githubUrl.message}</p>
             )}
           </div>
 
           {/* LinkedIn */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">LinkedIn URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">LinkedIn URL</label>
             <input
               {...register('linkedinUrl')}
               type="url"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               placeholder="https://linkedin.com/..."
             />
             {errors.linkedinUrl && (
-              <p className="text-red-600 text-sm mt-1">{errors.linkedinUrl.message}</p>
+              <p className="text-red-600 text-xs font-bold mt-1.5">{errors.linkedinUrl.message}</p>
             )}
           </div>
 
           {/* Portfolio */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Portfolio URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Portfolio URL</label>
             <input
               {...register('portfolioUrl')}
               type="url"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               placeholder="https://..."
             />
             {errors.portfolioUrl && (
-              <p className="text-red-600 text-sm mt-1">{errors.portfolioUrl.message}</p>
+              <p className="text-red-600 text-xs font-bold mt-1.5">{errors.portfolioUrl.message}</p>
             )}
           </div>
 
           {/* Twitter */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Twitter URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Twitter URL</label>
             <input
               {...register('twitterUrl')}
               type="url"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               placeholder="https://twitter.com/..."
             />
             {errors.twitterUrl && (
-              <p className="text-red-600 text-sm mt-1">{errors.twitterUrl.message}</p>
+              <p className="text-red-600 text-xs font-bold mt-1.5">{errors.twitterUrl.message}</p>
             )}
           </div>
         </div>
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-slate-400"
-        >
-          {isLoading ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div className="pt-4 border-t border-orange-200/50">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50"
+          >
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </form>
     </div>
   );

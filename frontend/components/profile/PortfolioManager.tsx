@@ -14,8 +14,12 @@ import {
   getPortfolio,
   addPortfolioItem,
   removePortfolioItem,
+  analyzePortfolioProject,
+  submitPortfolioProject,
 } from '@/lib/api/profileApi';
 import Toast from '@/components/Toast';
+import ProjectQuizModal from './ProjectQuizModal';
+import { Github, Loader2 } from 'lucide-react';
 
 interface PortfolioManagerProps {
   userId: string;
@@ -72,6 +76,10 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
     });
   };
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [extractedSkills, setExtractedSkills] = useState<string[]>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -80,19 +88,44 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
       return;
     }
 
+    setIsAnalyzing(true);
+    try {
+      const analysis = await analyzePortfolioProject(userId, {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+      });
+      
+      if (analysis.validationQuiz && analysis.validationQuiz.length > 0) {
+        setExtractedSkills(analysis.extractedSkills);
+        setQuizQuestions(analysis.validationQuiz);
+      } else {
+        // No skills detected, just submit immediately
+        await submitProject([]);
+      }
+    } catch (error) {
+      setToast({ message: 'Failed to analyze project', type: 'error' });
+      console.error(error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const submitProject = async (answers: number[]) => {
     setIsAdding(true);
     try {
-      const newItem = await addPortfolioItem(userId, {
+      const result = await submitPortfolioProject(userId, {
         title: formData.title.trim(),
         description: formData.description.trim(),
         url: formData.url.trim(),
         imageUrl: formData.imageUrl.trim(),
         tags: formData.tags,
+        answers,
+        extractedSkills
       });
 
-      setItems([newItem, ...items]);
-      onItemsUpdate?.([newItem, ...items]);
-      setToast({ message: 'Portfolio item added', type: 'success' });
+      setItems([result.item, ...items]);
+      onItemsUpdate?.([result.item, ...items]);
+      setToast({ message: 'Portfolio item added! ' + (result.badgesEarned?.length > 0 ? 'You earned new badges!' : ''), type: 'success' });
       setShowForm(false);
       setFormData({
         title: '',
@@ -102,9 +135,13 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
         tags: [],
         tagInput: '',
       });
+      setQuizQuestions([]);
+      setExtractedSkills([]);
+      return { passed: true, badgesEarned: result.badgesEarned || [] };
     } catch (error) {
-      setToast({ message: 'Failed to add portfolio item', type: 'error' });
+      setToast({ message: 'Failed to submit portfolio item', type: 'error' });
       console.error(error);
+      return { passed: false, badgesEarned: [] };
     } finally {
       setIsAdding(false);
     }
@@ -136,14 +173,14 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
     );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white/60 backdrop-blur-md rounded-2xl border border-orange-200/50 p-6 shadow-sm">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-900">Portfolio</h2>
+        <h2 className="text-xl font-bold text-orange-950">Portfolio</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+          className="bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-700 transition-all"
         >
           {showForm ? 'Cancel' : '+ Add Project'}
         </button>
@@ -151,59 +188,59 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
 
       {/* Add Project Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-4">
+        <form onSubmit={handleSubmit} className="mb-6 p-6 bg-gradient-to-br from-orange-50/80 to-amber-50/80 rounded-2xl border border-orange-200/60 shadow-inner space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Project Title*</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Project Title*</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Enter project title"
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Description</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe your project..."
               rows={3}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             />
           </div>
 
           {/* URL */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Project URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Project URL</label>
             <input
               type="url"
               value={formData.url}
               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
               placeholder="https://..."
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             />
           </div>
 
           {/* Image URL */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Image URL</label>
+            <label className="block text-sm font-bold text-orange-950 mb-1">Image URL</label>
             <input
               type="url"
               value={formData.imageUrl}
               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
               placeholder="https://..."
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
             />
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-slate-900 mb-1">Tags</label>
-            <div className="flex gap-2 mb-2">
+            <label className="block text-sm font-bold text-orange-950 mb-1">Tags</label>
+            <div className="flex gap-3 mb-3">
               <input
                 type="text"
                 value={formData.tagInput}
@@ -215,24 +252,24 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
                   }
                 }}
                 placeholder="Type and press Enter to add a tag"
-                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 bg-white/80 border border-orange-200/60 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-orange-950 font-medium placeholder-orange-900/30 shadow-sm transition-shadow"
               />
               <button
                 type="button"
                 onClick={handleAddTag}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                className="bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold px-5 py-2 rounded-xl transition"
               >
                 Add
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
               {formData.tags.map((tag, idx) => (
-                <div key={idx} className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                <div key={idx} className="flex items-center gap-1.5 bg-orange-500 text-white font-bold px-3 py-1 rounded-lg shadow-sm border border-orange-400">
                   <span className="text-sm">{tag}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(idx)}
-                    className="text-blue-500 hover:text-blue-700"
+                    className="text-white/70 hover:text-white"
                   >
                     ✕
                   </button>
@@ -242,43 +279,47 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
           </div>
 
           {/* Submit */}
-          <button
-            type="submit"
-            disabled={isAdding || !formData.title.trim()}
-            className="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-slate-400"
-          >
-            {isAdding ? 'Adding...' : 'Add Project'}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isAdding || isAnalyzing || !formData.title.trim()}
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isAnalyzing && <Loader2 className="w-5 h-5 animate-spin" />}
+              {isAnalyzing ? 'Analyzing Skills...' : isAdding ? 'Adding...' : 'Add Project'}
+            </button>
+          </div>
         </form>
       )}
 
       {/* Portfolio Items List */}
       {items.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {items.map((item) => (
             <div
               key={item.id}
-              className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition"
+              className="bg-white/70 backdrop-blur-sm border border-orange-200/60 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-orange-900/5 transition-all group"
             >
               {/* Image */}
               {item.imageUrl && (
-                <div className="relative w-full h-40 bg-slate-100">
-                  <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                <div className="relative w-full h-48 bg-orange-100/50 overflow-hidden">
+                  <Image src={item.imageUrl} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-orange-950/20 to-transparent" />
                 </div>
               )}
 
               {/* Content */}
-              <div className="p-4">
-                <h3 className="font-bold text-slate-900 mb-1">{item.title}</h3>
-                {item.description && <p className="text-sm text-slate-600 mb-2">{item.description}</p>}
+              <div className="p-5 flex flex-col h-full">
+                <h3 className="text-xl font-bold text-orange-950 mb-2">{item.title}</h3>
+                {item.description && <p className="text-sm text-orange-900/70 font-medium mb-4 flex-grow">{item.description}</p>}
 
                 {/* Tags */}
                 {item.tags && item.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
+                  <div className="flex flex-wrap gap-2 mb-5">
                     {item.tags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded"
+                        className="text-xs bg-orange-100/80 text-orange-800 border border-orange-200 font-bold px-2.5 py-1 rounded-lg"
                       >
                         {tag}
                       </span>
@@ -287,20 +328,21 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-orange-100">
                   {item.url && (
                     <a
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 text-sm hover:underline"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-orange-950 hover:bg-orange-900 text-white text-sm font-bold rounded-xl shadow-md transition-colors"
                     >
-                      View Project →
+                      <Github className="w-4 h-4" />
+                      Repository
                     </a>
                   )}
                   <button
                     onClick={() => handleRemoveItem(item.id)}
-                    className="text-red-600 hover:text-red-700 text-sm transition"
+                    className="text-red-500 hover:text-red-700 font-bold text-sm transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
                   >
                     Remove
                   </button>
@@ -310,9 +352,20 @@ export default function PortfolioManager({ userId, onItemsUpdate }: PortfolioMan
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-600">
+        <div className="text-center py-12 text-orange-900/60 font-medium bg-orange-50/30 rounded-2xl border border-dashed border-orange-200">
           <p>No portfolio items yet. Start by adding your first project!</p>
         </div>
+      )}
+
+      {quizQuestions.length > 0 && (
+        <ProjectQuizModal 
+          questions={quizQuestions} 
+          onClose={() => {
+            setQuizQuestions([]);
+            setIsAdding(false);
+          }}
+          onSubmit={submitProject}
+        />
       )}
     </div>
   );

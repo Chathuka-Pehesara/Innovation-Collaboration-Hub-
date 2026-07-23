@@ -9,15 +9,15 @@
   --surface-elevated: #EBD6C1;    /* Active card inputs/hover panels */
   --foreground: #4A2C1D;          /* Deep warm brown text */
   
-  --text-primary: #2A1A12;
-  --text-secondary: #6B4E3E;
-  --border-color: rgba(74, 44, 29, 0.08);
-  --border-hover: rgba(139, 58, 31, 0.4);
+  --text-primary: #1A110D;        /* Almost black autumn tint for ultimate readability */
+  --text-secondary: #5C4233;      /* Darker secondary text for better contrast */
+  --border-color: rgba(44, 30, 22, 0.1);
+  --border-hover: rgba(193, 68, 14, 0.4);
   
   /* Primary Accent: Rust Red */
-  --accent-primary: #8B3A1F;
-  --accent-primary-hover: #682914;
-  --accent-primary-glow: rgba(139, 58, 31, 0.15);
+  --accent-primary: #A63F19;      /* Slightly brighter rust for visibility */
+  --accent-primary-hover: #8B3211;
+  --accent-primary-glow: rgba(166, 63, 25, 0.15);
   
   /* Secondary Accent: Amber Gold */
   --accent-secondary: #D97706;
@@ -408,5 +408,3 @@ aside nav a:hover:not(.bg-indigo-600):not(.bg-violet-600) {
   box-shadow: 0 0 0px 1000px #FFFFFF inset !important;
   transition: background-color 5000s ease-in-out 0s;
 }
-
-

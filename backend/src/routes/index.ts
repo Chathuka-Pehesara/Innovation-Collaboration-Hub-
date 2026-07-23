@@ -18,6 +18,7 @@ import notificationRoutes from './notificationRoutes';
 import analyticsRoutes from './analytics';
 import aiRoutes from './aiRoutes';
 import healthRoutes from './healthRoutes';
+import quizRoutes from './quizRoutes';
 
 const router = Router();
 
@@ -46,5 +47,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/health', healthRoutes);
+router.use('/quizzes', quizRoutes);
 
 export default router;

@@ -48,7 +48,8 @@ export interface Profile {
 export interface Skill {
   id: string;
   name: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  level: string;
+  score?: number;
 }
 
 export interface PortfolioItem {
@@ -134,6 +135,37 @@ export const addSkill = async (
 ): Promise<Skill> => {
   const response = await apiClient.post(`/profile/${userId}/skills`, data);
   return response.data.skill || response.data;
+};
+
+// ─── GET /profile/:id/badges ────────────────────────────────────────────────
+/**
+ * Fetch user's badges
+ */
+export const getProfileBadges = async (userId: string) => {
+  const response = await apiClient.get(`/profile/${userId}/badges`);
+  return response.data.badges || [];
+};
+
+
+export const analyzePortfolioProject = async (userId: string, data: { title: string; description: string }) => {
+  const response = await apiClient.post(`/profile/${userId}/portfolio/analyze`, data);
+  return response.data;
+};
+
+export const submitPortfolioProject = async (userId: string, data: any) => {
+  const response = await apiClient.post(`/profile/${userId}/portfolio/submit`, data);
+  return response.data;
+};
+
+// Gamification Quiz endpoints
+export const generateQuiz = async (skillName: string) => {
+  const response = await apiClient.post('/quizzes/generate', { skillName });
+  return response.data;
+};
+
+export const evaluateQuiz = async (skillName: string, answers: number[]) => {
+  const response = await apiClient.post('/quizzes/evaluate', { skillName, answers });
+  return response.data;
 };
 
 // ─── DELETE /profile/:id/skills/:skillId ────────────────────────────────────

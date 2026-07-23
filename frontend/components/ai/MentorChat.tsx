@@ -199,8 +199,8 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
                     <div
                       className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed border ${
                         isUser
-                          ? 'bg-indigo-600/10 border-indigo-600/20 text-textPrimary dark:bg-indigo-600 dark:text-white dark:border-transparent rounded-br-none shadow-md shadow-indigo-600/5'
-                          : 'bg-amber-950/5 border-amber-900/10 text-amber-900 dark:border-transparent rounded-bl-none dark:bg-white/5 dark:border-white/5 dark:text-gray-200'
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white border-transparent rounded-br-none shadow-md shadow-orange-500/20'
+                          : 'bg-orange-50 border-orange-200/60 text-orange-950 dark:border-transparent rounded-bl-none dark:bg-white/5 dark:border-white/5 dark:text-gray-200'
                       }`}
                     >
                       {!isUser && i === 0 && (
@@ -233,7 +233,7 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
                   <button
                     key={i}
                     onClick={() => handleSend(sug)}
-                    className="px-2 py-0.5 rounded-full border border-amber-950/15 hover:border-indigo-650 bg-white hover:bg-indigo-650/5 text-[10px] text-indigo-700 hover:text-indigo-900 transition-all text-left truncate max-w-[200px] dark:border-white/10 dark:hover:border-indigo-500 dark:bg-white/5 dark:hover:bg-indigo-600/10 dark:text-indigo-300 dark:hover:text-white"
+                    className="px-2 py-0.5 rounded-full border border-orange-300 hover:border-orange-500 bg-white hover:bg-orange-50 text-[10px] text-orange-700 hover:text-orange-900 font-bold transition-all text-left truncate max-w-[200px] shadow-sm"
                   >
                     {sug}
                   </button>
@@ -254,13 +254,13 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={`Ask ${activeMentor.label.split(' ')[0]}...`}
-                className="flex-1 px-3.5 py-2.5 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/15 bg-white/95 border border-amber-950/15 text-amber-950 placeholder-amber-900/40 focus:border-indigo-500 dark:bg-white/5 dark:border-white/10 dark:text-white dark:placeholder-white/30"
+                className="flex-1 px-3.5 py-2.5 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/30 bg-white/95 border border-orange-200/60 text-orange-950 font-medium placeholder-orange-900/40 shadow-inner"
                 disabled={loading}
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="btn-primary px-3.5 py-2 hover:bg-indigo-500 transition-colors shrink-0 disabled:opacity-40"
+                className="bg-orange-500 text-white rounded-xl px-3.5 py-2 hover:bg-orange-600 shadow-md transition-colors shrink-0 disabled:opacity-40"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -275,7 +275,7 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
         whileHover={{ scale: 1.08, rotate: isOpen ? -90 : 0 }}
         whileTap={{ scale: 0.93 }}
         transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-        className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 flex items-center justify-center text-white shadow-xl shadow-indigo-600/30 relative border border-white/10 group cursor-pointer"
+        className="w-14 h-14 rounded-full bg-gradient-to-tr from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 flex items-center justify-center text-white shadow-xl shadow-orange-500/30 relative border border-white/20 group cursor-pointer"
         title="Consult AI Mentor"
       >
         <AnimatePresence mode="wait">
@@ -306,8 +306,8 @@ export default function MentorChat({ projectContext }: MentorChatProps) {
 
         {!isOpen && (
           <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
           </span>
         )}
       </motion.button>

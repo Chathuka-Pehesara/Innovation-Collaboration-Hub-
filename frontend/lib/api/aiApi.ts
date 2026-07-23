@@ -45,6 +45,12 @@ export interface QuickTipResponse {
 
 export interface TeammateResult {
   user_id: string;
+  name?: string;
+  specialization?: string;
+  bio?: string;
+  xp?: number;
+  level?: number;
+  avatarUrl?: string;
   compatibility_score: number;
   matching_skills: string[];
   complementary_skills: {
