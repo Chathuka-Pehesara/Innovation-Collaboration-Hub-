@@ -3,35 +3,6 @@
 @tailwind utilities;
 
 :root {
-  --background: #1E140F;          /* Dark warm charcoal-brown */
-  --panel-bg: #2A1A12;            /* Elevated background */
-  --card-bg: #362218;             /* Surface cards background */
-  --surface-elevated: #4A2C1D;    /* Dialogs/popups/active inputs */
-  --foreground: #FFF3E0;          /* Cream white */
-  
-  --text-primary: #FDF9F3;
-  --text-secondary: #D4C4B7;
-  --border-color: rgba(255, 243, 224, 0.08);
-  --border-hover: rgba(193, 68, 14, 0.4); /* Electric burnt orange glow */
-  
-  /* Primary Accent: Burnt Orange */
-  --accent-primary: #C1440E;
-  --accent-primary-hover: #9F3609;
-  --accent-primary-glow: rgba(193, 68, 14, 0.2);
-  
-  /* Secondary Accent: Golden Amber */
-  --accent-secondary: #E8A03C;
-  --accent-secondary-glow: rgba(232, 160, 60, 0.15);
-  
-  /* Ambient gradient mesh */
-  --gradient-mesh-1: radial-gradient(circle at 10% 20%, rgba(193, 68, 14, 0.12) 0%, transparent 45%);
-  --gradient-mesh-2: radial-gradient(circle at 90% 80%, rgba(232, 160, 60, 0.1) 0%, transparent 45%);
-  --accent-glow: rgba(193, 68, 14, 0.3);
-
-  color-scheme: dark;
-}
-
-html:not(.dark) {
   --background: #FFF3E0;          /* Soft cream/off-white background */
   --panel-bg: #FDF8F0;            /* Pure warm cream panel background */
   --card-bg: #F5E8D8;             /* Warm tan card background */

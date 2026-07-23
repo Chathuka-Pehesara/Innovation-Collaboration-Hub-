@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const LEAF_PATHS = [
   // Classic birch leaf
@@ -68,14 +67,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-b from-[#FFF3EA] via-[#FFFBF7] to-[#FFEFE0] dark:from-[#130D0B] dark:via-[#1B1310] dark:to-[#160F0D] overflow-hidden flex flex-col justify-between transition-colors duration-500">
+    <div className="relative min-h-screen w-full bg-gradient-to-b from-[#FFF3EA] via-[#FFFBF7] to-[#FFEFE0] overflow-hidden flex flex-col justify-between transition-colors duration-500">
       
-      {/* 0. Top Right Theme Toggler & Home Link */}
+      {/* 0. Top Right Home Link */}
       <div className="absolute top-0 right-0 z-50 p-6 flex items-center gap-3">
-        <Link href="/" className="text-xs text-amber-900/60 dark:text-white/60 hover:text-amber-950 dark:hover:text-white font-semibold transition-colors bg-white/70 dark:bg-white/5 border border-amber-900/10 dark:border-white/10 px-3.5 py-2.5 rounded-xl backdrop-blur-md">
+        <Link href="/" className="text-xs text-amber-900/60 hover:text-amber-950 font-semibold transition-colors bg-white/70 border border-amber-900/10 px-3.5 py-2.5 rounded-xl backdrop-blur-md">
           Go Home
         </Link>
-        <ThemeToggle />
       </div>
 
       {/* Dynamic Keyframes for Bicycling and Wheel Rotation */}
