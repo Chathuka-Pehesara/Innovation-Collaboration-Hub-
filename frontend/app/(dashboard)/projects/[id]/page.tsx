@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/lib/authStore';
 import { evaluateIdeaApi, IdeaEvaluationResponse } from '@/lib/api/aiApi';
 import IdeaEvaluator from '@/components/ai/IdeaEvaluator';
 import StatusBadge from '@/components/StatusBadge';
 import Toast from '@/components/Toast';
+import KanbanWorkspace from '@/components/dashboard/KanbanWorkspace';
 
 interface Project {
   id: string;
@@ -24,9 +26,12 @@ interface Project {
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuthStore();
   
   const [project, setProject] = useState<Project | null>(null);
+  const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [creatingTeam, setCreatingTeam] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<IdeaEvaluationResponse | null>(null);
   
@@ -38,6 +43,13 @@ export default function ProjectDetailsPage() {
       setLoading(true);
       const { data } = await api.get(`/projects/${id}`);
       setProject(data);
+
+      try {
+        const teamRes = await api.get(`/teams/project/${id}`);
+        setTeam(teamRes.data);
+      } catch (teamErr) {
+        console.log('No team created yet for this project.');
+      }
 
       if (data.aiResult) {
         try {
@@ -63,6 +75,23 @@ export default function ProjectDetailsPage() {
       console.error('Failed to load project details:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateTeamWorkspace = async () => {
+    if (!project) return;
+    try {
+      setCreatingTeam(true);
+      const { data } = await api.post('/teams', { projectId: project.id });
+      setTeam(data);
+      setToastType('success');
+      setToastMsg('Team Workspace created successfully!');
+    } catch (err: any) {
+      console.error('Failed to create team workspace:', err);
+      setToastType('error');
+      setToastMsg(err.response?.data?.error || 'Failed to create team workspace');
+    } finally {
+      setCreatingTeam(false);
     }
   };
 
@@ -241,8 +270,33 @@ export default function ProjectDetailsPage() {
               </div>
             )}
           </div>
+
+          {/* TEAM WORKSPACE & KANBAN SECTION */}
+          {team ? (
+            <KanbanWorkspace team={team} onRefresh={fetchProject} currentUserId={user?.id} />
+          ) : (
+            <div className="glass-card p-8 border border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent rounded-3xl text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto text-xl font-bold">
+                📋
+              </div>
+              <div className="max-w-md mx-auto space-y-2">
+                <h3 className="text-lg font-bold text-white">Interactive Team Workspace</h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Initialize the Kanban board, milestone progress tracker, and peer evaluation system for this project.
+                </p>
+              </div>
+              <button
+                onClick={handleCreateTeamWorkspace}
+                disabled={creatingTeam}
+                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-2xl shadow-lg shadow-orange-500/25 transition-all mx-auto"
+              >
+                {creatingTeam ? 'Creating Workspace...' : '🚀 Initialize Team Workspace'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+

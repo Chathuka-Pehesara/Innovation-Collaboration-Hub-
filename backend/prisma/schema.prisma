@@ -84,6 +84,7 @@ model Team {
   tasks       Task[]
   resources   Resource[]
   activities  Activity[]
+  evaluations PeerEvaluation[]
   chat        Chat?
 }
 
@@ -294,3 +295,20 @@ model UserBadge {
 
   @@unique([userId, badgeId])
 }
+
+model PeerEvaluation {
+  id              String   @id @default(uuid())
+  teamId          String
+  team            Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  evaluatorId     String   
+  evaluateeId     String   
+  rating          Int      @default(5)
+  teamworkScore   Int      @default(5)
+  technicalScore  Int      @default(5)
+  comment         String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  @@index([teamId])
+  @@index([evaluateeId])
+}
+

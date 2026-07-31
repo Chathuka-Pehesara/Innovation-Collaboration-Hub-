@@ -344,3 +344,60 @@ export const removeMember = async (req: AuthRequest, res: Response, next: NextFu
     next(error);
   }
 };
+
+// Peer Evaluation Handlers
+export const submitPeerEvaluation = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const evaluatorId = req.user?.userId;
+    if (!evaluatorId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
+    const teamId = req.params.id;
+    const { evaluateeId, rating = 5, teamworkScore = 5, technicalScore = 5, comment = '' } = req.body;
+
+    if (!evaluateeId) {
+      res.status(400).json({ error: 'Evaluatee ID is required' });
+      return;
+    }
+
+    const evaluation = await prisma.peerEvaluation.create({
+      data: {
+        teamId,
+        evaluatorId,
+        evaluateeId,
+        rating: Number(rating),
+        teamworkScore: Number(teamworkScore),
+        technicalScore: Number(technicalScore),
+        comment,
+      },
+    });
+
+    // Award +25 XP to the evaluated user
+    await prisma.user.update({
+      where: { id: evaluateeId },
+      data: { xp: { increment: 25 } },
+    });
+
+    await logActivity(teamId, `Submitted peer evaluation for team member`, evaluatorId);
+    res.status(201).json(evaluation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeamEvaluations = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const teamId = req.params.id;
+    const evaluations = await prisma.peerEvaluation.findMany({
+      where: { teamId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(evaluations);
+  } catch (error) {
+    next(error);
+  }
+};
+

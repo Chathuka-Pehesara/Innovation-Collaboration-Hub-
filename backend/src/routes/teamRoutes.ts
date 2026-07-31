@@ -14,7 +14,9 @@ import {
   createTask,
   updateTask,
   deleteTask,
-  uploadResource
+  uploadResource,
+  submitPeerEvaluation,
+  getTeamEvaluations,
 } from '../controllers/teamController';
 import { authenticate } from '../middleware/auth';
 
@@ -60,4 +62,9 @@ router.delete('/:id/tasks/:taskId', authenticate, deleteTask);
 // Resources
 router.post('/:id/resources', authenticate, upload.single('file'), uploadResource);
 
+// Peer Evaluations
+router.post('/:id/evaluations', authenticate, submitPeerEvaluation);
+router.get('/:id/evaluations', authenticate, getTeamEvaluations);
+
 export default router;
+
