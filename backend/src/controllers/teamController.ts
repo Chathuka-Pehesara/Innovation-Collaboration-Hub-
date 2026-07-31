@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
+import { createNotification } from '../services/notificationService';
 
 const prisma = new PrismaClient();
 
@@ -381,6 +382,16 @@ export const submitPeerEvaluation = async (req: AuthRequest, res: Response, next
     });
 
     await logActivity(teamId, `Submitted peer evaluation for team member`, evaluatorId);
+
+    // Notify evaluated user
+    await createNotification(
+      evaluateeId,
+      'PEER_EVALUATION',
+      'New Peer Evaluation (+25 XP)',
+      'You received a peer evaluation from a team member and earned +25 XP!',
+      teamId
+    ).catch(() => {});
+
     res.status(201).json(evaluation);
   } catch (error) {
     next(error);

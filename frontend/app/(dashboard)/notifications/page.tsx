@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNotificationStore } from '../../../lib/store/notificationStore';
+import { useAuthStore } from '../../../lib/authStore';
 import { Bell, Check, CheckSquare, Trash2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
@@ -13,17 +14,17 @@ export default function NotificationsPage() {
     markAsRead, 
     markAllAsRead 
   } = useNotificationStore();
+  const { user } = useAuthStore();
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const queryUserId = searchParams.get('userId');
-      const storedUserId = localStorage.getItem('userId');
-      const currentUserId = queryUserId || storedUserId || 'user_123';
+      const currentUserId = queryUserId || user?.id || localStorage.getItem('userId') || 'user_123';
       setUserId(currentUserId);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (userId) {

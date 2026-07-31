@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { createNotification } from '../services/notificationService';
 
 const prisma = new PrismaClient();
 
@@ -303,10 +304,19 @@ export const submitProposalReview = async (req: Request, res: Response, next: Ne
     });
 
     // Update project status to reflect mentor review outcome
-    await prisma.project.update({
+    const updatedProject = await prisma.project.update({
       where: { id: projectId },
       data: { status },
     });
+
+    // Notify project owner
+    await createNotification(
+      updatedProject.ownerId,
+      'PROPOSAL_REVIEW',
+      `Proposal Review: ${status}`,
+      `Your project proposal "${updatedProject.title}" has been evaluated by a mentor. Decision: ${status}. Grade: ${academicScore || 'N/A'}/100.`,
+      projectId
+    ).catch((err) => console.error('Failed to dispatch review notification:', err));
 
     res.status(201).json(review);
   } catch (error) {
