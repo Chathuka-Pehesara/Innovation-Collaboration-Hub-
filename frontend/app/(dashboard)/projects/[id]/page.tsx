@@ -9,6 +9,7 @@ import IdeaEvaluator from '@/components/ai/IdeaEvaluator';
 import StatusBadge from '@/components/StatusBadge';
 import Toast from '@/components/Toast';
 import KanbanWorkspace from '@/components/dashboard/KanbanWorkspace';
+import MentorProposalReview from '@/components/dashboard/MentorProposalReview';
 
 interface Project {
   id: string;
@@ -228,6 +229,15 @@ export default function ProjectDetailsPage() {
 
         {/* Right column - description and AI analysis */}
         <div className="lg:col-span-2 space-y-8">
+          {/* LECTURER / MENTOR PROPOSAL REVIEW SECTION */}
+          <MentorProposalReview
+            projectId={project.id}
+            currentStatus={project.status}
+            reviews={(project as any).reviews || []}
+            userRole={user?.role}
+            onRefresh={fetchProject}
+          />
+
           {/* Description Section */}
           <div className="glass-card p-6 border border-white/5 bg-white/[0.01] space-y-3">
             <h3 className="text-base font-bold text-white pb-3 border-b border-white/5">Project Description Outline</h3>

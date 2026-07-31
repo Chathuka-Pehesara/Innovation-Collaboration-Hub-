@@ -93,7 +93,8 @@ export const getProjectById = async (req: Request, res: Response, next: NextFunc
         category: true,
         tags: { include: { tag: true } },
         skills: { include: { skill: true } },
-        aiResult: true
+        aiResult: true,
+        reviews: { orderBy: { createdAt: 'desc' } }
       }
     });
     if (!project) {
@@ -271,3 +272,59 @@ export const receiveAIResult = async (req: Request, res: Response, next: NextFun
     next(error);
   }
 };
+
+// ─── Mentor / Lecturer Proposal Review Handlers ──────────────────────────────
+export const submitProposalReview = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = (req as any).user;
+    const reviewerId = user?.id || user?.userId;
+    if (!user || !reviewerId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
+
+    const projectId = req.params.id;
+    const { status, academicScore, feedback } = req.body;
+
+    const VALID_STATUSES = ['Approved', 'Changes_Requested', 'Rejected', 'In_Review'];
+    if (!status || !VALID_STATUSES.includes(status)) {
+      res.status(400).json({ error: 'Invalid review status. Must be Approved, Changes_Requested, Rejected, or In_Review.' });
+      return;
+    }
+
+    const review = await prisma.proposalReview.create({
+      data: {
+        projectId,
+        reviewerId,
+        status,
+        academicScore: academicScore ? Number(academicScore) : null,
+        feedback: feedback || '',
+      },
+    });
+
+    // Update project status to reflect mentor review outcome
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { status },
+    });
+
+    res.status(201).json(review);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProposalReviews = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const projectId = req.params.id;
+    const reviews = await prisma.proposalReview.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(reviews);
+  } catch (error) {
+    next(error);
+  }
+};
+

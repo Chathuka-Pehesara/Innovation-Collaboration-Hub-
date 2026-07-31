@@ -46,6 +46,7 @@ model Project {
   skills      ProjectSkill[]
   aiResult    AIResult?
   team        Team?
+  reviews     ProposalReview[]
 }
 
 model ProjectTag {
@@ -311,4 +312,19 @@ model PeerEvaluation {
   @@index([teamId])
   @@index([evaluateeId])
 }
+
+model ProposalReview {
+  id            String   @id @default(uuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviewerId    String   
+  status        String   // Approved, Changes_Requested, Rejected
+  academicScore Int?     // 1 - 100 grade
+  feedback      String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([projectId])
+}
+
 
