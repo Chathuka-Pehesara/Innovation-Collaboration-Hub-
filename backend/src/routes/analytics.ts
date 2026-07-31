@@ -1,16 +1,11 @@
-/**
- * @file        analytics.ts
- * @owner       IT Team
- * @description Analytics endpoints generating progress graphs variables.
- * @depends     backend/src/services/aiService.ts
- * @todo        Implement query caches preventing database locks issues.
- */
-
 import express from 'express';
+import { getDashboardAnalytics } from '../controllers/adminController';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// TODO: Add analytics routes (project stats, team performance, etc.)
-// Owned by: IT Team
+// GET /api/analytics/dashboard (Admin only)
+router.get('/dashboard', authenticate, authorize('admin'), getDashboardAnalytics);
 
 export default router;
+

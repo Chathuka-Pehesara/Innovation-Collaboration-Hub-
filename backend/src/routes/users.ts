@@ -27,10 +27,14 @@ import {
   updatePortfolioItem,
   updateAvailability,
   searchStudents,
-  getAllUsersAdmin,
   upload,
 } from '../controllers/userController';
-import { authenticate } from '../middleware/auth';
+import {
+  getAllUsersAdmin,
+  updateUserRoleAdmin,
+  toggleUserVerificationAdmin,
+} from '../controllers/adminController';
+import { authenticate, authorize } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
   updateProfileSchema,
@@ -45,9 +49,16 @@ const router = Router();
 // GET /students/search?q=alice&skill=React&page=1&limit=12
 router.get('/search', searchStudents);
 
-// ─── Admin Users ────────────────────────────────────────────────────────────
+// ─── Admin Users Management ──────────────────────────────────────────────────
 // GET /admin/all
-router.get('/admin/all', authenticate, getAllUsersAdmin);
+router.get('/admin/all', authenticate, authorize('admin'), getAllUsersAdmin);
+
+// PATCH /admin/:id/role
+router.patch('/admin/:id/role', authenticate, authorize('admin'), updateUserRoleAdmin);
+
+// PATCH /admin/:id/verify
+router.patch('/admin/:id/verify', authenticate, authorize('admin'), toggleUserVerificationAdmin);
+
 
 // ─── Public profile ─────────────────────────────────────────────────────────
 // GET /profile/:id
