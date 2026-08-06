@@ -209,6 +209,9 @@ model User {
   specialization       String?        // AI, IT, Cybersecurity, Networking, Other
   avatarUrl            String?
   githubUrl            String?
+  githubUsername       String?
+  githubPrCount        Int            @default(0)
+  githubTitle          String?
   linkedinUrl          String?
   portfolioUrl         String?
   twitterUrl           String?
