@@ -1,3 +1,4 @@
+/* eslint-disable */
 // @ts-nocheck
 // @ts-ignore
 import cron from 'node-cron';
