@@ -14,6 +14,6 @@
         <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="12" font-weight="bold" fill="#FFFFFF">
           <text x="16" y="20">Contributor</text>
           <rect x="140" y="6" width="50" height="20" rx="10" fill="#000000" fill-opacity="0.2" />
-          <text x="165" y="20" text-anchor="middle">0 PRs</text>
+          <text x="165" y="20" text-anchor="middle">1 PRs</text>
         </g>
       </svg>

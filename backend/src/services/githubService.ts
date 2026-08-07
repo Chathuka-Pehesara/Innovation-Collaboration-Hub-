@@ -13,10 +13,12 @@ export class GithubService {
    */
   static async getUserPRCount(username: string): Promise<number> {
     try {
-      // We search for merged PRs authored by the user to the main branch of the specific repository
+      // Note: GitHub search API has rate limits. In production, provide an Authorization header with a PAT.
       const repo = 'Chathuka-Pehesara/Innovation-Collaboration-Hub-';
       const query = `repo:${repo} is:pr is:merged base:main author:${username}`;
-      const response = await axios.get(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}`);
+      const headers = process.env.GITHUB_TOKEN ? { Authorization: `token ${process.env.GITHUB_TOKEN}` } : {};
+      
+      const response = await axios.get(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}`, { headers });
       
       return response.data.total_count || 0;
     } catch (error) {

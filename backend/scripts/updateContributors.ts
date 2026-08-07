@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 import fs from 'fs';
 import path from 'path';
 import { GithubService } from '../src/services/githubService';
@@ -24,16 +26,14 @@ async function generateContributorsTable() {
   // Paths
   const repoRoot = path.join(__dirname, '..', '..');
   const badgesDir = path.join(repoRoot, 'badges');
-  const contributorsFile = path.join(repoRoot, 'CONTRIBUTORS.md');
+  const readmeFile = path.join(repoRoot, 'README.md');
 
   // Ensure badges directory exists
   if (!fs.existsSync(badgesDir)) {
     fs.mkdirSync(badgesDir, { recursive: true });
   }
 
-  let tableMarkdown = `# Project Contributors\n\n`;
-  tableMarkdown += `Thank you to all our amazing contributors! Here is the live status of their PR contributions and titles.\n\n`;
-  tableMarkdown += `| Contributor | GitHub | PRs | Current Title |\n`;
+  let tableMarkdown = `| Contributor | GitHub | PRs | Current Title |\n`;
   tableMarkdown += `| :--- | :--- | :---: | :--- |\n`;
 
   for (const username of CONTRIBUTORS) {
@@ -63,8 +63,15 @@ async function generateContributorsTable() {
   }
 
   // Write the markdown file
-  fs.writeFileSync(contributorsFile, tableMarkdown);
-  console.log(`\nSuccess! Wrote badges to /badges/ and generated CONTRIBUTORS.md`);
+  let readmeContent = fs.readFileSync(readmeFile, 'utf8');
+  const startMarker = '<!-- CONTRIBUTORS-START -->';
+  const endMarker = '<!-- CONTRIBUTORS-END -->';
+  const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`);
+  
+  readmeContent = readmeContent.replace(regex, `${startMarker}\n${tableMarkdown}${endMarker}`);
+  
+  fs.writeFileSync(readmeFile, readmeContent);
+  console.log(`\nSuccess! Wrote badges to /badges/ and injected table into README.md`);
 }
 
 generateContributorsTable().catch(console.error);
