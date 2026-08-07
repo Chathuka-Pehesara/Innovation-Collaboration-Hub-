@@ -179,6 +179,18 @@ export default function ProfileDashboard({ userId }: ProfileDashboardProps) {
                       <p className="text-xs text-orange-900/60 uppercase tracking-wider font-bold">Level</p>
                       <p className="font-semibold text-orange-950 mt-1">Level {profile.level}</p>
                     </div>
+                    {profile.githubUsername && profile.githubTitle && (
+                      <div className="col-span-2 bg-gradient-to-r from-orange-500/10 to-amber-500/10 p-3 rounded-xl border border-orange-200/50 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-orange-900/60 uppercase tracking-wider font-bold">GitHub Contributor Rank</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-bold text-orange-950">{profile.githubTitle}</span>
+                            <span className="text-xs font-semibold px-2 py-0.5 bg-black/10 text-orange-900 rounded-full">{profile.githubPrCount} PRs</span>
+                          </div>
+                        </div>
+                        <div className="text-2xl">🏆</div>
+                      </div>
+                    )}
                   </div>
                   {profile.bio && (
                     <div className="mt-6 pt-5 border-t border-orange-200/50">
