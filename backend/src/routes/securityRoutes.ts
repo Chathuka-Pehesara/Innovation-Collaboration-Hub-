@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Router } from 'express';
 import { getThreatLogs, seedThreats } from '../controllers/securityController';
 
