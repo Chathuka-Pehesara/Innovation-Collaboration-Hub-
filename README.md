@@ -179,7 +179,7 @@ Thank you to all our amazing contributors! Here is the live status of their PR c
 | <img src="https://github.com/Vikumd34.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Vikumd34](https://github.com/Vikumd34) | **0** | ![Contributor](badges/Vikumd34.svg) |
 | <img src="https://github.com/VinujiBandaranayaka.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [VinujiBandaranayaka](https://github.com/VinujiBandaranayaka) | **1** | ![Contributor](badges/VinujiBandaranayaka.svg) |
 | <img src="https://github.com/Sewwandi23.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Sewwandi23](https://github.com/Sewwandi23) | **0** | ![Contributor](badges/Sewwandi23.svg) |
-| <img src="https://github.com/Chathuka-Pehesara.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Chathuka-Pehesara](https://github.com/Chathuka-Pehesara) | **8** | ![Named Developer](badges/Chathuka-Pehesara.svg) |
+| <img src="https://github.com/Chathuka-Pehesara.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Chathuka-Pehesara](https://github.com/Chathuka-Pehesara) | **9** | ![Named Developer](badges/Chathuka-Pehesara.svg) |
 <!-- CONTRIBUTORS-END -->
 
 ---
