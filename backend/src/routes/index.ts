@@ -19,6 +19,7 @@ import analyticsRoutes from './analytics';
 import aiRoutes from './aiRoutes';
 import healthRoutes from './healthRoutes';
 import quizRoutes from './quizRoutes';
+import securityRoutes from './securityRoutes';
 
 const router = Router();
 
@@ -48,5 +49,6 @@ router.use('/analytics', analyticsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/health', healthRoutes);
 router.use('/quizzes', quizRoutes);
+router.use('/security', securityRoutes);
 
 export default router;

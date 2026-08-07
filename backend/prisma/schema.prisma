@@ -297,3 +297,15 @@ model UserBadge {
 
   @@unique([userId, badgeId])
 }
+
+// ─── Security Models ──────────────────────────────────────────────
+
+model ThreatLog {
+  id        String   @id @default(uuid())
+  ip        String?
+  type      String   // e.g., HONEYPOT, BRUTE_FORCE, INVALID_POW
+  severity  String   // e.g., LOW, MEDIUM, HIGH, CRITICAL
+  fingerprint String?
+  metadata  String?  @db.Text // JSON string for extra data
+  createdAt DateTime @default(now())
+}
