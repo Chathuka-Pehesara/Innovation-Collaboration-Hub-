@@ -12,6 +12,9 @@ import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
+import { evaluateRisk } from '../security/riskEngine';
+import { logLoginActivity } from '../services/loginActivityService';
+import { verifyPoW } from '../security/powService';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -74,7 +77,42 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, powNonce, powTimestamp, website } = req.body;
+    const sec = req.securityDetails || {
+      ip: req.ip || '0.0.0.0',
+      userAgent: req.headers['user-agent'] || '',
+      browser: 'Unknown',
+      os: 'Unknown',
+      fingerprint: req.body?.fingerprint || 'none',
+    };
+
+    // ── Honeypot Detection Shield ──────────────────────────────────────────────
+    if (website) {
+      console.warn(`[SECURITY] Bot detected via Honeypot - IP: ${sec.ip}`);
+      return res.status(403).json({
+        message: 'Suspicious activity detected. Login denied.',
+        code: 'HONEYPOT_TRIGGERED',
+      });
+    }
+
+    // ── Proof of Work (PoW) Shield ───────────────────────────────────────────────
+    if (!email || !powNonce || !powTimestamp) {
+      console.warn(`[SECURITY] Missing PoW details - IP: ${sec.ip}`);
+      return res.status(400).json({
+        message: 'Security challenge verification elements are missing. Please try again.',
+        code: 'POW_MISSING',
+      });
+    }
+
+    const isPowValid = verifyPoW(email, parseInt(powTimestamp as string, 10), powNonce);
+    if (!isPowValid) {
+      console.warn(`[SECURITY] Invalid PoW challenge solution from IP: ${sec.ip}`);
+      return res.status(403).json({
+        message: 'Suspicious activity detected. Cryptographic security challenge failed.',
+        code: 'POW_FAILED',
+      });
+    }
+
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -83,6 +121,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      // Log failed attempt
+      logLoginActivity({ userId: user.id, security: sec, riskScore: 0, status: 'FAILED' });
+
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
@@ -105,6 +146,28 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
     }
 
+    // ── Risk Engine Evaluation ─────────────────────────────────────────────────
+    const risk = await evaluateRisk({
+      userId: user.id,
+      fingerprint: sec.fingerprint,
+      ip: sec.ip,
+      browser: sec.browser,
+      os: sec.os,
+    });
+
+    console.log(`[SECURITY] Login risk for ${email}: score=${risk.score} decision=${risk.decision}`, risk.reasons);
+
+    if (risk.decision === 'BLOCK') {
+      // Log blocked login
+      logLoginActivity({ userId: user.id, security: sec, riskScore: risk.score, status: 'BLOCKED' });
+
+      return res.status(403).json({
+        message: 'Login blocked due to suspicious activity. Please try from a recognized device.',
+        code: 'HIGH_RISK_LOGIN',
+        riskScore: risk.score,
+      });
+    }
+
     // Issue tokens
     const accessToken = generateAccessToken(user.id, user.role);
     const refreshTokenValue = generateRefreshToken(user.id);
@@ -116,6 +179,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     await prisma.refreshToken.create({
       data: { token: refreshTokenValue, userId: user.id, expiresAt },
     });
+
+    // Log successful login with risk score
+    logLoginActivity({ userId: user.id, security: sec, riskScore: risk.score, status: 'SUCCESS' });
 
     // Set refresh token as HttpOnly cookie
     res.cookie('refreshToken', refreshTokenValue, {
@@ -133,6 +199,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         name: user.name,
         specialization: user.specialization,
         role: user.role,
+      },
+      security: {
+        riskScore: risk.score,
+        newDevice: risk.score < 90,
       },
     });
   } catch (err) {
@@ -319,7 +389,7 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
   try {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
-    
+
     if (!client_id || !redirect_uri) {
       return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
     }
