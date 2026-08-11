@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 // Helper to ensure team and user membership exist
 export const ensureTeamAndMembership = async (teamId: string, userId: string): Promise<void> => {
-  let team = await prisma.team.findUnique({
+  const team = await prisma.team.findUnique({
     where: { id: teamId }
   });
 
