@@ -51,6 +51,9 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [success, setSuccess] = useState(false);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const strength = password ? getPasswordStrength(password) : null;
 
@@ -93,6 +96,29 @@ export function RegisterForm() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyNow = async () => {
+    if (!verificationUrl) return;
+    setVerifying(true);
+    setVerificationError(null);
+    setVerificationSuccess(null);
+    try {
+      const token = verificationUrl.split('/').pop();
+      const response = await api.get(`/auth/verify-email/${token}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      setVerificationSuccess(response.data?.message || 'Verification successful!');
+      setTimeout(() => {
+        router.push('/login?verified=true');
+      }, 1500);
+    } catch (err: any) {
+      setVerificationError(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -139,12 +165,20 @@ export function RegisterForm() {
           <div className="p-4 bg-white/50 border border-amber-900/10 rounded-2xl text-left">
             <p className="text-xs text-amber-950 font-bold uppercase tracking-wider mb-1">Development / Sandbox helper</p>
             <p className="text-xs text-amber-900/70 mb-3">Since real emails are not sent in this environment, you can use the button below to verify this account directly:</p>
-            <a 
-              href={verificationUrl}
-              className="inline-block w-full text-center text-xs font-semibold bg-[#702224] hover:bg-[#5C1A1C] text-white px-3 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/15"
+            <button 
+              type="button"
+              onClick={handleVerifyNow}
+              disabled={verifying}
+              className="w-full text-center text-xs font-semibold bg-[#702224] hover:bg-[#5C1A1C] disabled:opacity-50 text-white px-3 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/15 flex items-center justify-center gap-2"
             >
-              Verify Account Now
-            </a>
+              {verifying ? 'Verifying...' : 'Verify Account Now'}
+            </button>
+            {verificationSuccess && (
+              <p className="text-green-800 text-xs mt-2 font-medium">✓ {verificationSuccess}</p>
+            )}
+            {verificationError && (
+              <p className="text-red-600 text-xs mt-2 font-medium">✗ {verificationError}</p>
+            )}
           </div>
         )}
 
