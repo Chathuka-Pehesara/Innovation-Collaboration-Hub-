@@ -13,13 +13,14 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (including devDependencies so we can build the TypeScript files)
-RUN npm install
+RUN npm config set strict-ssl false && npm install
 
 # Copy Prisma schema definition
 COPY prisma ./prisma/
 
 # Generate Prisma Client
-RUN npx prisma generate
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+RUN npx --no-install prisma generate
 
 # Copy project files
 COPY . .

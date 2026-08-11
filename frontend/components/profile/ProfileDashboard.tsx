@@ -22,13 +22,14 @@ import EmptyState from '@/components/EmptyState';
 
 interface ProfileDashboardProps {
   userId: string;
+  defaultTab?: 'overview' | 'edit' | 'avatar' | 'skills' | 'portfolio' | 'availability';
 }
 
-export default function ProfileDashboard({ userId }: ProfileDashboardProps) {
+export default function ProfileDashboard({ userId, defaultTab = 'overview' }: ProfileDashboardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'avatar' | 'skills' | 'portfolio' | 'availability'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'avatar' | 'skills' | 'portfolio' | 'availability'>(defaultTab);
 
   useEffect(() => {
     fetchProfile();

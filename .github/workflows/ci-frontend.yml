@@ -22,7 +22,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
         working-directory: frontend
 
       - name: Run linter
@@ -35,3 +35,4 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: http://localhost:5000
           NEXT_PUBLIC_SOCKET_URL: http://localhost:5000
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:5000

@@ -67,7 +67,7 @@ export default function DashboardPage() {
             </Link>
 
             <Link
-              href="/messages"
+              href="/messages?mentor=true"
               className="flex items-center justify-between p-5 rounded-2xl bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] hover:border-[#8B5CF6]/40 hover:bg-[var(--surface-elevated)] transition-all duration-300 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-semibold group hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
