@@ -26,7 +26,7 @@ export const ensureTeamAndMembership = async (teamId: string, userId: string): P
       });
     }
 
-    team = await prisma.team.create({
+    await prisma.team.create({
       data: {
         id: teamId,
         projectId: project.id

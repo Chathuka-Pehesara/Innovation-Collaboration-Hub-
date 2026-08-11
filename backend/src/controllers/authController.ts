@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* eslint-disable */
 /**
  * @file        authController.ts
  * @owner       IT Team
