@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* eslint-disable */
 /**
  * @file        authController.ts
  * @owner       IT Team
@@ -12,6 +14,7 @@ import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
+import { verifyPoW } from '../security/powService';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -73,15 +76,42 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, powNonce, powTimestamp, website, fingerprint } = req.body;
+
+    // Honeypot check
+    if (website && website.trim() !== '') {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'HONEYPOT', severity: 'CRITICAL', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
+      return res.status(403).json({ message: 'Bot detected by honeypot.' });
+    }
+
+    // Proof of Work validation
+    if (!powNonce || !powTimestamp) {
+      return res.status(403).json({ message: 'Proof of work is required.' });
+    }
+
+    const isValidPow = verifyPoW(email, Number(powTimestamp), powNonce);
+    if (!isValidPow) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'INVALID_POW', severity: 'MEDIUM', fingerprint: fingerprint || null, metadata: JSON.stringify({ email, powNonce }) }
+      });
+      return res.status(403).json({ message: `Proof of work failed or expired.` });
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
@@ -314,7 +344,7 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
   try {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
-    
+
     if (!client_id || !redirect_uri) {
       return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
     }

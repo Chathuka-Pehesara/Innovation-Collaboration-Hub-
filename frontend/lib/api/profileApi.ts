@@ -33,6 +33,9 @@ export interface Profile {
   bio?: string;
   avatarUrl?: string;
   githubUrl?: string;
+  githubUsername?: string;
+  githubPrCount?: number;
+  githubTitle?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
   twitterUrl?: string;
