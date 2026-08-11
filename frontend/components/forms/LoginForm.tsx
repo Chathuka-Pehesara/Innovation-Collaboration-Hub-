@@ -486,6 +486,37 @@ export function LoginForm() {
         </motion.a>
       </motion.div>
 
+      {/* 🐱 Walking cat keyframes */}
+      <style>{`
+        @keyframes ghCatWalk {
+          0%   { transform: translateX(-70px); }   /* stroll in from left */
+          27%  { transform: translateX(195px); }   /* arrives near center */
+          68%  { transform: translateX(210px); }   /* barely moves — purring pause */
+          100% { transform: translateX(700px); }   /* trots off to the right */
+        }
+        @keyframes ghCatBob {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-2px); }
+        }
+        @keyframes ghTailWag {
+          0%, 100% { transform: rotate(-22deg); }
+          50%       { transform: rotate(22deg); }
+        }
+        @keyframes ghLegA {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-5px); }
+        }
+        @keyframes ghLegB {
+          0%, 100% { transform: translateY(-5px); }
+          50%       { transform: translateY(0px); }
+        }
+        @keyframes ghPurrPulse {
+          0%, 100% { transform: scale(1)     rotate(0deg); }
+          25%       { transform: scale(1.016) rotate(0.5deg); }
+          75%       { transform: scale(1.016) rotate(-0.5deg); }
+        }
+      `}</style>
+
       {/* GitHub Button */}
       <motion.div variants={itemVariants} className="relative group rounded-xl">
         {/* Amber theme glow on hover */}
@@ -552,6 +583,60 @@ export function LoginForm() {
               →
             </motion.span>
           </span>
+
+          {/* 🐱 Cat walking on hover — strolls to center, purrs, then trots off */}
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            {/* Outer div: horizontal walk */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, animation: 'ghCatWalk 9s linear infinite' }}>
+              {/* Middle div: gentle body bob */}
+              <div style={{ animation: 'ghCatBob 0.7s ease-in-out infinite' }}>
+                {/* Inner div: purring vibration (scale wobble) */}
+                <div style={{ animation: 'ghPurrPulse 0.22s ease-in-out infinite' }}>
+                  <svg width="58" height="38" viewBox="0 0 58 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Tail — wags from base */}
+                    <g style={{ transformBox: 'fill-box', transformOrigin: 'center bottom', animation: 'ghTailWag 0.6s ease-in-out infinite' }}>
+                      <path d="M10 22 Q2 12 6 2" stroke="#222" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                    </g>
+                    {/* Body */}
+                    <ellipse cx="26" cy="26" rx="15" ry="8" fill="#222"/>
+                    {/* Head */}
+                    <circle cx="39" cy="14" r="9" fill="#222"/>
+                    {/* Ears */}
+                    <polygon points="33,7 36,1 39,7" fill="#222"/>
+                    <polygon points="39,7 42,1 45,7" fill="#222"/>
+                    {/* Inner ear pink */}
+                    <polygon points="34,7 36,3.5 38,7" fill="#fda4af" opacity="0.75"/>
+                    <polygon points="40,7 42,3.5 44,7" fill="#fda4af" opacity="0.75"/>
+                    {/* Eyes — amber to match UI */}
+                    <ellipse cx="37" cy="13" rx="2.2" ry="2.8" fill="#f59e0b"/>
+                    <ellipse cx="43" cy="13" rx="2.2" ry="2.8" fill="#f59e0b"/>
+                    {/* Pupils */}
+                    <ellipse cx="37" cy="13.5" rx="0.85" ry="2.1" fill="#111"/>
+                    <ellipse cx="43" cy="13.5" rx="0.85" ry="2.1" fill="#111"/>
+                    {/* Eye shine */}
+                    <circle cx="37.9" cy="12" r="0.65" fill="white"/>
+                    <circle cx="43.9" cy="12" r="0.65" fill="white"/>
+                    {/* Nose */}
+                    <ellipse cx="46" cy="17" rx="1.4" ry="0.9" fill="#fda4af"/>
+                    {/* Mouth */}
+                    <path d="M45 18.5 Q46 20 47 18.5" stroke="#666" strokeWidth="0.65" strokeLinecap="round" fill="none"/>
+                    {/* Whiskers left */}
+                    <line x1="30" y1="16" x2="37" y2="17" stroke="#bbb" strokeWidth="0.65"/>
+                    <line x1="30" y1="18" x2="37" y2="18" stroke="#bbb" strokeWidth="0.65"/>
+                    {/* Whiskers right */}
+                    <line x1="46" y1="17" x2="54" y2="15.5" stroke="#bbb" strokeWidth="0.65"/>
+                    <line x1="46" y1="18" x2="54" y2="18" stroke="#bbb" strokeWidth="0.65"/>
+                    {/* Legs — slow alternating gait (0.68s = lazy walk) */}
+                    <rect style={{ animation: 'ghLegA 0.68s ease-in-out infinite' }} x="33" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegB 0.68s ease-in-out infinite' }} x="26" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegB 0.68s ease-in-out infinite' }} x="17" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegA 0.68s ease-in-out infinite' }} x="10" y="32" width="4" height="6" rx="2" fill="#222"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </motion.a>
       </motion.div>
 
