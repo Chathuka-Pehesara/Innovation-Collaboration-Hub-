@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import TopologyMap from "@/components/network/TopologyMap";
-import { Server, Cpu, Clock, Activity, RefreshCw } from "lucide-react";
+import LatencyChart from "@/components/network/LatencyChart";
+import TrafficFeed from "@/components/network/TrafficFeed";
+import { Server, Cpu, Clock, Activity, RefreshCw, Database, HardDrive, Brain } from "lucide-react";
 
 interface ServiceStatus {
   status: "healthy" | "degraded" | "down";
@@ -35,24 +37,36 @@ export default function StatusPage() {
   const [countdown, setCountdown] = useState(15);
   const [error, setError] = useState<string | null>(null);
 
+  // Latency History for Sparklines
+  const [history, setHistory] = useState<{
+    db: number[];
+    redis: number[];
+    ai: number[];
+  }>({ db: [], redis: [], ai: [] });
+
   const fetchHealth = async () => {
     try {
       setLoading(true);
       setError(null);
-      // In development, Next.js proxy might be needed, or full URL.
-      // We will use process.env.NEXT_PUBLIC_API_URL if available, else fallback
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/health`);
       
-      // We expect 200, 207 or 503 based on health controller
       if (!res.ok && res.status !== 207 && res.status !== 503) {
         throw new Error(`HTTP Error ${res.status}`);
       }
       
-      const data = await res.json();
+      const data: HealthReport = await res.json();
       setReport(data);
       setLastUpdated(new Date());
-      setCountdown(15); // Reset countdown
+      setCountdown(15);
+      
+      // Update history for charts
+      setHistory(prev => ({
+        db: [...prev.db, data.services.database.latencyMs || 0].slice(-20),
+        redis: [...prev.redis, data.services.redis.latencyMs || 0].slice(-20),
+        ai: [...prev.ai, data.services.aiService.latencyMs || 0].slice(-20),
+      }));
+
     } catch (err: any) {
       setError(err.message || 'Failed to fetch system health');
     } finally {
@@ -63,12 +77,10 @@ export default function StatusPage() {
   useEffect(() => {
     fetchHealth();
     
-    // Poll every 15 seconds
     const interval = setInterval(() => {
       fetchHealth();
     }, 15000);
     
-    // Countdown timer
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => (prev > 0 ? prev - 1 : 15));
     }, 1000);
@@ -120,15 +132,60 @@ export default function StatusPage() {
         </div>
       )}
 
-      {/* Topology Map */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-slate-900 dark:text-white">
-          <Activity className="w-5 h-5 text-indigo-500" />
-          Live Network Topology
-        </h2>
-        {/* Render map even if loading to show skeletons/unknown status */}
-        <TopologyMap services={report?.services} />
+      {/* Top Section: Topology and Traffic Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col">
+          <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-slate-900 dark:text-white">
+            <Activity className="w-5 h-5 text-indigo-500" />
+            Live Network Topology
+          </h2>
+          <div className="flex-1">
+            <TopologyMap services={report?.services} />
+          </div>
+        </div>
+
+        <div className="lg:col-span-1 flex flex-col">
+          <TrafficFeed />
+        </div>
       </div>
+
+      {/* Latency Charts Row */}
+      {report && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <Database className="w-4 h-4 text-blue-500" />
+                <span className="font-semibold text-sm">PostgreSQL Latency</span>
+              </div>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{report.services.database.latencyMs}ms</span>
+            </div>
+            <LatencyChart data={history.db} color="#3b82f6" />
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <HardDrive className="w-4 h-4 text-red-500" />
+                <span className="font-semibold text-sm">Redis Cache Latency</span>
+              </div>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{report.services.redis.latencyMs}ms</span>
+            </div>
+            <LatencyChart data={history.redis} color="#ef4444" />
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                <Brain className="w-4 h-4 text-purple-500" />
+                <span className="font-semibold text-sm">AI Service Latency</span>
+              </div>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{report.services.aiService.latencyMs}ms</span>
+            </div>
+            <LatencyChart data={history.ai} color="#a855f7" />
+          </div>
+        </div>
+      )}
 
       {/* System Metrics */}
       {report && (
