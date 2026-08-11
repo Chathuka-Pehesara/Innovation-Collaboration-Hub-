@@ -49,6 +49,7 @@ export function startGithubSyncJob() {
   };
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const cron = require('node-cron');
     cron.schedule('0 */6 * * *', syncTask);
     console.log('GitHub Sync Cron Job scheduled via node-cron (Runs every 6 hours).');
