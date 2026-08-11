@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
         <AutumnBackground>
           {/* Subtle high-end texture overlay */}
           <div className="noise-overlay" />
