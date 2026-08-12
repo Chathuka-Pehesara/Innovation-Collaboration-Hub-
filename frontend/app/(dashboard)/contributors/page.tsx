@@ -75,7 +75,7 @@ export default function ContributorsPage() {
     members: [
       {
         id: 'aids-member-1',
-        name: 'Adeepa Udayanga',
+        name: 'Adipa Udayanga',
         role: 'Machine Learning Engineer',
         description: 'Develops predictive models and recommendation algorithms for skill compatibility and team matching.',
         department: 'AI & Data Science Department',
