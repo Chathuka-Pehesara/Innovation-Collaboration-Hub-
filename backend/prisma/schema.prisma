@@ -44,6 +44,7 @@ model Project {
   skills      ProjectSkill[]
   aiResult    AIResult?
   team        Team?
+  commits     Commit[]
 }
 
 model ProjectTag {
@@ -70,6 +71,21 @@ model AIResult {
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   score       Int
   suggestions String   // Can store JSON array of strings
+}
+
+model Commit {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId      String
+  message     String
+  filesChanged Int     @default(1)
+  additions   Int      @default(0)
+  deletions   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([userId])
 }
 
 model Team {
