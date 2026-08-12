@@ -97,12 +97,31 @@ export default function ContributorsPage() {
     ],
   };
 
-  const departments: DepartmentData[] = [itDepartment, aidsDepartment];
+  // Cyber Security Department Data
+  const cyberDepartment: DepartmentData = {
+    id: 'cyber-department',
+    badge: 'Cyber Security',
+    name: 'Cyber Security Department',
+    badgeBgColor: 'bg-emerald-100 dark:bg-emerald-950/70',
+    badgeTextColor: 'text-emerald-600 dark:text-emerald-400',
+    leader: {
+      id: 'cyber-lead',
+      name: 'Vikum',
+      role: 'Cyber Security Department Lead',
+      description: 'Oversees threat modeling, application security audits, vulnerability assessments, and compliance standards across all hub systems.',
+      isLead: true,
+      department: 'Cyber Security Department',
+    },
+    members: [],
+  };
+
+  const departments: DepartmentData[] = [itDepartment, aidsDepartment, cyberDepartment];
 
   const pillDepartments = [
     { id: 'all', name: 'All Departments' },
     { id: 'it-department', name: 'IT Department' },
     { id: 'aids-department', name: 'AI & Data Science' },
+    { id: 'cyber-department', name: 'Cyber Security' },
   ];
 
   const filteredDepartments = selectedDept === 'all'
