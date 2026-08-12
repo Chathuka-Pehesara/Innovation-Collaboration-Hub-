@@ -3,8 +3,6 @@
 # Description: Multi-container orchestration configuration for the Innovation & Collaboration Hub services.
 # Depends: frontend, backend, ai-service, postgres, redis
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -18,6 +16,11 @@ services:
       POSTGRES_DB: innovation_hub
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d innovation_hub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Redis for Caching and Bull Queues
   redis:
@@ -41,9 +44,13 @@ services:
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=supersecretjwtkey123!
       - AI_SERVICE_URL=http://ai-service:8000
+      - SMTP_HOST=maildev
+      - SMTP_PORT=1025
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   # Python FastAPI AI Microservice
   ai-service:
@@ -58,7 +65,8 @@ services:
       - GEMINI_API_KEY=your_gemini_api_key_here
       - BACKEND_URL=http://backend:5000
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   # Next.js Frontend App
   frontend:
@@ -69,10 +77,18 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
       - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
     depends_on:
       - backend
+
+  # Maildev local SMTP server & webmail interface
+  maildev:
+    image: maildev/maildev:2.1.0
+    container_name: ih-maildev
+    ports:
+      - "1080:1080" # Web UI
+      - "1025:1025" # SMTP
 
 volumes:
   postgres_data:

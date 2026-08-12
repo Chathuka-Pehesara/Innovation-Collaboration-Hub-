@@ -16,6 +16,7 @@ import {
   deleteTask,
   uploadResource
 } from '../controllers/teamController';
+import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -38,25 +39,25 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Routes
-router.post('/', createTeam);
-router.get('/project/:projectId', getTeamByProject);
-router.get('/:id', getTeamDetails);
+router.post('/', authenticate, createTeam);
+router.get('/project/:projectId', authenticate, getTeamByProject);
+router.get('/:id', authenticate, getTeamDetails);
 
 // Invites & Applications
-router.post('/:id/invite', sendInvite);
-router.post('/:id/apply', applyToTeam);
-router.put('/:id/invite/:inviteId', respondToInvite);
+router.post('/:id/invite', authenticate, sendInvite);
+router.post('/:id/apply', authenticate, applyToTeam);
+router.put('/:id/invite/:inviteId', authenticate, respondToInvite);
 
 // Members
-router.put('/:id/members/:userId/role', updateMemberRole);
-router.delete('/:id/members/:userId', removeMember);
+router.put('/:id/members/:userId/role', authenticate, updateMemberRole);
+router.delete('/:id/members/:userId', authenticate, removeMember);
 
 // Kanban tasks
-router.post('/:id/tasks', createTask);
-router.put('/:id/tasks/:taskId', updateTask);
-router.delete('/:id/tasks/:taskId', deleteTask);
+router.post('/:id/tasks', authenticate, createTask);
+router.put('/:id/tasks/:taskId', authenticate, updateTask);
+router.delete('/:id/tasks/:taskId', authenticate, deleteTask);
 
 // Resources
-router.post('/:id/resources', upload.single('file'), uploadResource);
+router.post('/:id/resources', authenticate, upload.single('file'), uploadResource);
 
 export default router;

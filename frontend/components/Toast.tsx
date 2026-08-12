@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 
-export default function Toast({ message, type = 'success', onClose, duration = 3000 }) {
+interface ToastProps {
+  message: string;
+  type?: 'success' | 'error' | 'info';
+  onClose: () => void;
+  duration?: number;
+}
+
+export default function Toast({ message, type = 'success', onClose, duration = 3000 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {

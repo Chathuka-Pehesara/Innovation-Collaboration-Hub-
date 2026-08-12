@@ -1,9 +1,16 @@
 import { useState } from 'react';
 
-export default function TagInput({ tags, onChange, placeholder, label }) {
+interface TagInputProps {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+  placeholder?: string;
+  label?: string;
+}
+
+export default function TagInput({ tags, onChange, placeholder, label }: TagInputProps) {
   const [inputValue, setInputValue] = useState('');
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = inputValue.trim();
@@ -14,8 +21,8 @@ export default function TagInput({ tags, onChange, placeholder, label }) {
     }
   };
 
-  const removeTag = (tagToRemove) => {
-    onChange(tags.filter(t => t !== tagToRemove));
+  const removeTag = (tagToRemove: string) => {
+    onChange(tags.filter((t: string) => t !== tagToRemove));
   };
 
   return (

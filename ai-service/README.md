@@ -1,6 +1,6 @@
 # AI Service - FastAPI Microservice
 
-This service is a FastAPI application managing Gemini model interfaces, matchmaking models, embedding logic, and skills management for the **Innovation & Collaboration Hub**.
+This service is a FastAPI application for AI-powered features — provider-backed LLM calls (mock by default, optional Ollama or Gemini), matchmaking models, embedding logic, and skills management for the **Innovation & Collaboration Hub**.
 
 ## Ownership & Responsibility
 
@@ -23,11 +23,11 @@ A comprehensive skill management system for validating, categorizing, and matchi
 **Key Endpoints:**
 - `POST /skills/validate` - Validate and normalize skill names
 - `GET /skills/categories` - List all skill categories
-- `POST /profile/{user_id}/skills` - Add user skills
-- `GET /profile/{user_id}/skills` - Retrieve user skills
-- `DELETE /profile/{user_id}/skills/{skill_name}` - Remove skill
-- `POST /skills/match/{user1_id}/{user2_id}` - Calculate skill match for team matching
-- `GET /profile/{user_id}/recommendations` - Get skill recommendations
+- `POST /skills/profile/{user_id}/skills` - Add user skills (MVP: mock response, no persistence)
+- `GET /skills/profile/{user_id}/skills` - Retrieve user skills (MVP: mock data)
+- `DELETE /skills/profile/{user_id}/skills/{skill_name}` - Remove skill (MVP: mock, no persistence)
+- `POST /skills/match/{user1_id}/{user2_id}` - Calculate skill match for team matching (MVP: mock skill sets)
+- `GET /skills/profile/{user_id}/recommendations` - Get skill recommendations (MVP: mock data)
 
 **Key Components:**
 - `routers/skills.py` - API endpoints
@@ -38,21 +38,36 @@ A comprehensive skill management system for validating, categorizing, and matchi
 
 ### **Team Matching Engine**
 ```
-routers/matching.py + services/similarity_service.py + services/embedding_service.py
+routers/matching.py + utils/helpers.py (Jaccard skill match, complementary skills, proficiency alignment)
 ```
-(To be implemented - will use Skills Engine for compatibility assessment)
+Implemented MVP endpoints use the Skills Engine helpers directly. See `MATCHING_API_DOCUMENTATION.md`.
+
+**MVP:** Matching endpoints use hardcoded mock users (`user1`–`user4`) and teams (`team1`, `team2`); communication/timezone fields in duo compatibility are deterministic placeholders.
+
+`services/similarity_service.py` and `services/embedding_service.py` are **standalone utilities** for free-text similarity and batch ranking — not part of the current matching algorithm. Matching scores normalized skill names only; embeddings are reserved for future semantic features (e.g. project-description similarity).
 
 ### **Idea Evaluation**
 ```
-routers/evaluation.py + services/gemini_service.py
+routers/evaluation.py + services/provider_factory.py
 ```
-(To be implemented)
+`POST /ideas/evaluate` and `POST /ideas/batch-evaluate` call the configured AI provider.  
+`GET /ideas/{idea_id}/suggestions` and `GET /ideas/{idea_id}/required-skills` use **mock idea content** in MVP (no database lookup by `idea_id`).
 
 ### **AI Mentor & Description Generator**
 ```
-routers/mentor.py + routers/generator.py
+routers/mentor.py + routers/generator.py + services/providers/
 ```
-(To be implemented)
+
+### **AI Providers**
+LLM features use a pluggable provider layer (`services/providers/`). **Mock** is the default and requires no external API keys.
+
+| Provider | `AI_PROVIDER` | Requirements |
+|----------|---------------|--------------|
+| Mock (default) | `mock` | None |
+| Ollama (local) | `ollama` | Running Ollama server |
+| Gemini (optional) | `gemini` | `GEMINI_API_KEY` + `pip install -r requirements-gemini.txt` |
+
+Startup and runtime fallback: if the requested provider is misconfigured or unavailable, the service falls back to `MockProvider` automatically.
 
 ## Setup Instructions
 
@@ -82,11 +97,21 @@ cp .env.example .env
 
 **Environment Variables:**
 ```
+# AI provider (mock | ollama | gemini)
+AI_PROVIDER=mock
+
+# Ollama — when AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+
+# Gemini — optional; when AI_PROVIDER=gemini (also: pip install -r requirements-gemini.txt)
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+
 # Database Configuration
 DATABASE_URL=postgresql://postgres:password@localhost:5432/innovation_hub?schema=public
 
 # API Configuration
-GEMINI_API_KEY=your_gemini_api_key_here
 BACKEND_URL=http://localhost:5000
 
 # Application Configuration
@@ -332,15 +357,24 @@ CREATE TABLE skill_taxonomy (
 
 ## API Error Handling
 
-All endpoints return consistent error responses:
+Validation errors (422) return:
 
 ```json
 {
-  "detail": "Error message describing the issue",
-  "error_code": "INVALID_SKILL_NAME",
-  "timestamp": "2026-06-24T18:32:00"
+  "detail": "Request validation failed",
+  "errors": [ ... ]
 }
 ```
+
+HTTP errors (400, 404, 500) return FastAPI's standard shape:
+
+```json
+{
+  "detail": "Error message describing the issue"
+}
+```
+
+The `ErrorResponse` schema in `models/schemas.py` is reserved for future structured errors.
 
 **Status Codes:**
 - `200` - Successful GET/POST
@@ -366,15 +400,16 @@ ai-service/
 │
 ├── routers/
 │   ├── skills.py                    # Skills Engine endpoints ✅
-│   ├── matching.py                  # Team matching endpoints (TODO)
-│   ├── evaluation.py                # Idea evaluation endpoints (TODO)
-│   ├── mentor.py                    # Mentor chatbot endpoints (TODO)
-│   └── generator.py                 # Description generator endpoints (TODO)
+│   ├── matching.py                  # Team matching endpoints
+│   ├── evaluation.py                # Idea evaluation endpoints
+│   ├── mentor.py                    # Mentor chatbot endpoints
+│   └── generator.py                 # Description generator endpoints
 │
 ├── services/
-│   ├── similarity_service.py        # (TODO) Skill/interest similarity
-│   ├── embedding_service.py         # (TODO) Skill embeddings
-│   └── gemini_service.py            # (TODO) Gemini API integration
+│   ├── provider_factory.py          # AI provider selection & fallback
+│   ├── providers/                     # mock, ollama, optional gemini
+│   ├── similarity_service.py        # Standalone similarity helpers (not used by matching MVP)
+│   └── embedding_service.py         # Standalone text embeddings (not used by matching MVP)
 │
 └── utils/
     ├── constants.py                 # Skill taxonomy & enums ✅
@@ -428,7 +463,21 @@ Check service health:
 ```bash
 curl http://localhost:8000/health
 curl http://localhost:8000/skills/health
+curl http://localhost:8000/matching/health
+curl http://localhost:8000/ideas/health
+curl http://localhost:8000/mentor/health
+curl http://localhost:8000/generator/health
 ```
+
+AI-backed routes include provider-agnostic status fields:
+
+| Field | Meaning |
+|-------|---------|
+| `requested_provider` | Value of `AI_PROVIDER` (`mock`, `ollama`, or `gemini`) |
+| `active_provider` | Provider currently handling LLM calls |
+| `provider_configured` | Live LLM backend is configured and reachable |
+| `provider_available` | Requested provider is active (no startup fallback to mock) |
+| `fallback_applied` | `true` when startup fell back to mock due to misconfiguration |
 
 ## Deployment
 
@@ -441,7 +490,7 @@ docker build -t innovation-hub-ai:1.0.0 .
 # Run container
 docker run -p 8000:8000 \
   -e DATABASE_URL="postgresql://user:pass@db:5432/hub" \
-  -e GEMINI_API_KEY="your-key" \
+  -e AI_PROVIDER="mock" \
   -e LOG_LEVEL="WARNING" \
   innovation-hub-ai:1.0.0
 ```
@@ -503,6 +552,6 @@ This project is part of the Innovation & Collaboration Hub developed by OPMS tea
 
 ---
 
-**Last Updated:** 2026-06-24  
+**Last Updated:** 2026-06-26  
 **Version:** 1.0.0  
 **Maintainer:** AI Team

@@ -25,10 +25,10 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         {isOwn ? 'You' : message.senderId}
       </span>
 
-      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200 ${
+      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200 border ${
         isOwn 
-          ? 'bg-indigo-600 text-white rounded-tr-none' 
-          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-150 rounded-tl-none'
+          ? 'bg-indigo-600/10 border-indigo-600/20 text-textPrimary dark:bg-indigo-600 dark:text-white dark:border-transparent rounded-tr-none' 
+          : 'bg-slate-100 border-transparent text-slate-800 dark:bg-slate-800 dark:border-transparent dark:text-slate-150 rounded-tl-none'
       }`}>
         {/* Render Text message */}
         {message.content && <p className="text-sm leading-relaxed break-words">{message.content}</p>}
@@ -93,11 +93,11 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       <div className="flex items-center gap-1.5 mt-1 px-1 text-3xs text-slate-400 dark:text-slate-500">
         <span>{timeString}</span>
         {isOwn && (
-          <span>
+          <span title={isRead ? "Read by participant" : "Sent successfully"}>
             {isRead ? (
-              <CheckCheck className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" title="Read by participant" />
+              <CheckCheck className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
             ) : (
-              <Check className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 shrink-0" title="Sent successfully" />
+              <Check className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
             )}
           </span>
         )}

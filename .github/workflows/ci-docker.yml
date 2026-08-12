@@ -1,0 +1,26 @@
+name: Docker Compose Validation
+
+on:
+  push:
+    paths:
+      - 'docker-compose.yml'
+      - '**/Dockerfile'
+  pull_request:
+    paths:
+      - 'docker-compose.yml'
+      - '**/Dockerfile'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: docker compose config --quiet
+
+      - name: Check all Dockerfiles exist
+        run: |
+          test -f frontend/Dockerfile && echo "✅ frontend/Dockerfile"
+          test -f backend/Dockerfile && echo "✅ backend/Dockerfile"
+          test -f ai-service/Dockerfile && echo "✅ ai-service/Dockerfile"

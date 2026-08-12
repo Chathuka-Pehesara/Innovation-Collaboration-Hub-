@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Notification } from '../../types/chat';
+import type { Notification } from '../../types/chat';
 import * as chatApi from '../api/chatApi';
 
 interface NotificationState {

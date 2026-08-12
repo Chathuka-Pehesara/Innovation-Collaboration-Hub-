@@ -327,7 +327,9 @@ complementary = calculate_complementary_skills(skills1, skills2)
 
 ## Database Integration Notes
 
-All endpoints include `# TODO: Query from database` comments for integration points:
+**MVP:** All matching endpoints use in-memory mock profiles (`user1`–`user4`, teams `team1`/`team2`). Replace `_get_mock_user_skills()` and mock team maps when the backend provides real data.
+
+Integration points:
 
 1. **`_get_mock_user_skills(user_id)`**: Replace with `users_skills` table query
 2. **`validate_team()`**: Query from `users_skills` and join with `users` table
@@ -401,14 +403,13 @@ curl -X POST "http://localhost:8000/matching/compatibility/user1/user2"
 ## Performance Considerations
 
 - Algorithm is O(n) in number of skills
-- Caching is applied to embedding scores
-- Database queries should have user_id index
+- Database queries should have user_id index when persistence is added
 - Maximum suggestions: 20
 - Maximum team size: 20
 
 ## Future Enhancements
 
-- Embedding-based semantic skill matching
+- Embedding-based semantic skill matching (see `services/embedding_service.py`)
 - Historical team performance metrics
 - Timezone-aware availability scheduling
 - Communication style questionnaire integration

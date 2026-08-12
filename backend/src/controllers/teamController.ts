@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { AuthRequest } from '../middleware/auth';
 
 const prisma = new PrismaClient();
-
-const MOCK_USER_ID = "user_123"; // TODO: Replace with req.user.id
 
 // Helper to log team activity
 async function logActivity(teamId: string, action: string, userId: string) {
@@ -13,10 +12,14 @@ async function logActivity(teamId: string, action: string, userId: string) {
 }
 
 // Create a new team linked to a project
-export const createTeam = async (req: Request, res: Response, next: NextFunction) => {
+export const createTeam = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { projectId } = req.body;
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
     // Check if team already exists
     const existingTeam = await prisma.team.findUnique({ where: { projectId } });
@@ -43,7 +46,7 @@ export const createTeam = async (req: Request, res: Response, next: NextFunction
 };
 
 // Get team details, members, invites, and activity
-export const getTeamDetails = async (req: Request, res: Response, next: NextFunction) => {
+export const getTeamDetails = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const team = await prisma.team.findUnique({
       where: { id: req.params.id },
@@ -67,10 +70,14 @@ export const getTeamDetails = async (req: Request, res: Response, next: NextFunc
 };
 
 // Send an invite to a user
-export const sendInvite = async (req: Request, res: Response, next: NextFunction) => {
+export const sendInvite = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.body;
-    const actorId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const actorId = req.user?.userId;
+    if (!actorId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
     
     const invite = await prisma.teamInvite.create({
       data: {
@@ -92,9 +99,13 @@ export const sendInvite = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const applyToTeam = async (req: Request, res: Response, next: NextFunction) => {
+export const applyToTeam = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const actorId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const actorId = req.user?.userId;
+    if (!actorId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
     
     const existing = await prisma.teamInvite.findUnique({
       where: {
@@ -141,10 +152,14 @@ export const applyToTeam = async (req: Request, res: Response, next: NextFunctio
 };
 
 // Accept or decline an invite
-export const respondToInvite = async (req: Request, res: Response, next: NextFunction) => {
+export const respondToInvite = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { status } = req.body; // ACCEPTED or DECLINED
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
     const inviteId = req.params.inviteId;
 
     const invite = await prisma.teamInvite.update({
@@ -168,10 +183,14 @@ export const respondToInvite = async (req: Request, res: Response, next: NextFun
 };
 
 // Manage Kanban Tasks
-export const createTask = async (req: Request, res: Response, next: NextFunction) => {
+export const createTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { title, description, assigneeId } = req.body;
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
     const task = await prisma.task.create({
       data: { teamId: req.params.id, title, description, assigneeId }
@@ -184,10 +203,14 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const updateTask = async (req: Request, res: Response, next: NextFunction) => {
+export const updateTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { status, assigneeId, title, description } = req.body;
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
     const task = await prisma.task.update({
       where: { id: req.params.taskId },
@@ -201,9 +224,13 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const deleteTask = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteTask = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
     const task = await prisma.task.delete({
       where: { id: req.params.taskId }
     });
@@ -216,14 +243,18 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
 };
 
 // Upload resource (Local storage placeholder)
-export const uploadResource = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadResource = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!(req as any).file) {
         res.status(400).json({ error: 'No file uploaded' });
         return;
     }
     
-    const userId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
     // req.file path is provided by multer middleware
     const fileUrl = `/uploads/${(req as any).file.filename}`;
 
@@ -244,7 +275,7 @@ export const uploadResource = async (req: Request, res: Response, next: NextFunc
 };
 
 // Get Team by Project ID (convenience helper)
-export const getTeamByProject = async (req: Request, res: Response, next: NextFunction) => {
+export const getTeamByProject = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const team = await prisma.team.findUnique({
       where: { projectId: req.params.projectId },
@@ -265,10 +296,14 @@ export const getTeamByProject = async (req: Request, res: Response, next: NextFu
 };
 
 // Manage Team Members (Lead only)
-export const updateMemberRole = async (req: Request, res: Response, next: NextFunction) => {
+export const updateMemberRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { role } = req.body;
-    const actorId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const actorId = req.user?.userId;
+    if (!actorId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
     const member = await prisma.teamMember.update({
       where: { 
@@ -284,9 +319,13 @@ export const updateMemberRole = async (req: Request, res: Response, next: NextFu
   }
 };
 
-export const removeMember = async (req: Request, res: Response, next: NextFunction) => {
+export const removeMember = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const actorId = MOCK_USER_ID; // TODO: Replace with req.user.id
+    const actorId = req.user?.userId;
+    if (!actorId) {
+      res.status(401).json({ error: 'Unauthorized: User not authenticated' });
+      return;
+    }
 
     await prisma.teamMember.delete({
       where: { 

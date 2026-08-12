@@ -1,11 +1,16 @@
-const statusColors = {
+const statusColors: Record<string, string> = {
   DRAFT: 'bg-slate-100 text-slate-800 border-slate-200',
   OPEN: 'bg-blue-50 text-blue-700 border-blue-200',
   IN_PROGRESS: 'bg-amber-50 text-amber-700 border-amber-200',
   COMPLETED: 'bg-green-50 text-green-700 border-green-200',
 };
 
-export default function StatusBadge({ status, className = '' }) {
+interface StatusBadgeProps {
+  status: string;
+  className?: string;
+}
+
+export default function StatusBadge({ status, className = '' }: StatusBadgeProps) {
   const normalizedStatus = status.toUpperCase().replace(' ', '_');
   const colorClass = statusColors[normalizedStatus] || statusColors.DRAFT;
   

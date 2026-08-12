@@ -10,7 +10,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
+import { verifyPoW } from '../security/powService';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
@@ -56,7 +58,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       select: { id: true, email: true, name: true, specialization: true, role: true },
     });
 
-    // Send verification email (non-blocking)
+    // Send verification email
     await sendVerificationEmail(email, verificationToken);
 
     return res.status(201).json({
@@ -72,19 +74,54 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, powNonce, powTimestamp, website, fingerprint } = req.body;
+
+    // Honeypot check
+    if (website && website.trim() !== '') {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'HONEYPOT', severity: 'CRITICAL', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
+      return res.status(403).json({ message: 'Bot detected by honeypot.' });
+    }
+
+    // Proof of Work validation
+    if (!powNonce || !powTimestamp) {
+      return res.status(403).json({ message: 'Proof of work is required.' });
+    }
+
+    const isValidPow = verifyPoW(email, Number(powTimestamp), powNonce);
+    if (!isValidPow) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'INVALID_POW', severity: 'MEDIUM', fingerprint: fingerprint || null, metadata: JSON.stringify({ email, powNonce }) }
+      });
+      return res.status(403).json({ message: `Proof of work failed or expired.` });
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
+      await prisma.threatLog.create({
+        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+      });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     if (!user.isVerified) {
+      let token = user.verificationToken;
+      if (!token) {
+        token = crypto.randomBytes(32).toString('hex');
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { verificationToken: token },
+        });
+      }
       return res.status(403).json({
         message: 'Please verify your email address before logging in.',
         code: 'EMAIL_NOT_VERIFIED',
@@ -130,7 +167,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || parseCookies(req).refreshToken;
 
     if (token) {
       await prisma.refreshToken.deleteMany({ where: { token } });
@@ -147,7 +184,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies?.refreshToken;
+    const token = req.cookies?.refreshToken || parseCookies(req).refreshToken;
     if (!token) {
       return res.status(401).json({ message: 'No refresh token provided.' });
     }
@@ -202,8 +239,11 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       data: { resetPasswordToken: resetToken, resetPasswordExpires: expiresAt },
     });
 
-    await sendPasswordResetEmail(email, resetToken);
-    return res.json(genericResponse);
+    const emailResult = await sendPasswordResetEmail(email, resetToken);
+    return res.json({
+      ...genericResponse,
+      resetUrl: process.env.NODE_ENV !== 'production' || !emailResult.sent ? emailResult.url : undefined,
+    });
   } catch (err) {
     next(err);
   }
@@ -251,12 +291,17 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { token } = req.params;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const isHtmlRequest = req.headers.accept?.includes('text/html');
 
     const user = await prisma.user.findFirst({
       where: { verificationToken: token },
     });
 
     if (!user) {
+      if (isHtmlRequest) {
+        return res.redirect(`${frontendUrl}/login?error=invalid_verification_token`);
+      }
       return res.status(400).json({ message: 'Verification link is invalid or has already been used.' });
     }
 
@@ -265,8 +310,328 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
       data: { isVerified: true, verificationToken: null },
     });
 
+    if (isHtmlRequest) {
+      return res.redirect(`${frontendUrl}/login?verified=true`);
+    }
+
     return res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
     next(err);
+  }
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const parseCookies = (req: Request): Record<string, string> => {
+  const list: Record<string, string> = {};
+  const rc = req.headers.cookie;
+
+  if (rc) {
+    rc.split(';').forEach((cookie) => {
+      const parts = cookie.split('=');
+      list[parts.shift()!.trim()] = decodeURI(parts.join('='));
+    });
+  }
+
+  return list;
+};
+
+// ─── GET /auth/google ────────────────────────────────────────────────────────
+
+export const googleAuthRedirect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+
+    if (!client_id || !redirect_uri) {
+      return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    res.cookie('oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(
+      redirect_uri
+    )}&response_type=code&scope=openid%20profile%20email&state=${state}`;
+
+    return res.redirect(googleAuthUrl);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── GET /auth/google/callback ───────────────────────────────────────────────
+
+export const googleAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code, state } = req.query;
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/login?error=no_code`);
+    }
+
+    const cookies = parseCookies(req);
+    const savedState = cookies.oauth_state;
+    res.clearCookie('oauth_state');
+
+    if (savedState && state !== savedState) {
+      console.warn('Google OAuth State mismatch. Proceeding with caution.');
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id,
+      client_secret,
+      code,
+      redirect_uri,
+      grant_type: 'authorization_code',
+    });
+
+    const { access_token } = tokenResponse.data;
+
+    // Retrieve Google profile info
+    const userResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    const { email, name, picture } = userResponse.data;
+
+    if (!email) {
+      return res.redirect(`${frontendUrl}/login?error=no_email`);
+    }
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: placeholderPassword,
+          role: 'student',
+          isVerified: true,
+          avatarUrl: picture || null,
+          specialization: null, // Set to null to trigger first-time onboard selection
+        },
+      });
+    } else {
+      if (!user.isVerified) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { isVerified: true, verificationToken: null },
+        });
+      }
+      if (!user.avatarUrl && picture) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { avatarUrl: picture },
+        });
+      }
+    }
+
+    const localAccessToken = generateAccessToken(user.id, user.role);
+    const localRefreshToken = generateRefreshToken(user.id);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    await prisma.refreshToken.create({
+      data: {
+        token: localRefreshToken,
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    res.cookie('refreshToken', localRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      specialization: user.specialization || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+    };
+
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${localAccessToken}&user=${encodeURIComponent(
+      JSON.stringify(userPayload)
+    )}${isNewUser || !user.specialization ? '&new=true' : ''}`;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error('Google OAuth Callback Error:', err);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+  }
+};
+// ─── GET /auth/github ────────────────────────────────────────────────────────
+
+export const githubAuthRedirect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client_id = process.env.GITHUB_CLIENT_ID;
+    const redirect_uri = process.env.GITHUB_REDIRECT_URI;
+
+    if (!client_id || !redirect_uri) {
+      return res.status(500).json({ message: 'GitHub OAuth configuration is missing on the server.' });
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    res.cookie('github_oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+
+    const githubAuthUrl =
+      `https://github.com/login/oauth/authorize` +
+      `?client_id=${client_id}` +
+      `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
+      `&scope=read:user%20user:email` +
+      `&state=${state}`;
+
+    return res.redirect(githubAuthUrl);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ─── GET /auth/github/callback ────────────────────────────────────────────────
+
+export const githubAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code, state } = req.query;
+    const client_id = process.env.GITHUB_CLIENT_ID;
+    const client_secret = process.env.GITHUB_CLIENT_SECRET;
+    const redirect_uri = process.env.GITHUB_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/login?error=no_code`);
+    }
+
+    // Verify CSRF state
+    const cookies = parseCookies(req);
+    const savedState = cookies.github_oauth_state;
+    res.clearCookie('github_oauth_state');
+
+    if (savedState && state !== savedState) {
+      console.warn('GitHub OAuth State mismatch. Proceeding with caution.');
+    }
+
+    // Exchange code for access token
+    const tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      { client_id, client_secret, code, redirect_uri },
+      { headers: { Accept: 'application/json' } }
+    );
+
+    const { access_token } = tokenResponse.data;
+    if (!access_token) {
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
+
+    const githubHeaders = {
+      Authorization: `Bearer ${access_token}`,
+      Accept: 'application/vnd.github+json',
+    };
+
+    // Retrieve GitHub user profile
+    const profileResponse = await axios.get('https://api.github.com/user', { headers: githubHeaders });
+    const { login, name, avatar_url, html_url, email: primaryEmail } = profileResponse.data;
+
+    // Determine email — fallback to /user/emails endpoint, then noreply address
+    let email: string = primaryEmail;
+    if (!email) {
+      try {
+        const emailsResponse = await axios.get('https://api.github.com/user/emails', { headers: githubHeaders });
+        const emails: { email: string; primary: boolean; verified: boolean }[] = emailsResponse.data;
+        const verifiedPrimary = emails.find((e) => e.primary && e.verified);
+        const anyVerified = emails.find((e) => e.verified);
+        email = verifiedPrimary?.email || anyVerified?.email || `${login}@users.noreply.github.com`;
+      } catch {
+        email = `${login}@users.noreply.github.com`;
+      }
+    }
+
+    // Provision or link user
+    let user = await prisma.user.findUnique({ where: { email } });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || login,
+          password: placeholderPassword,
+          role: 'student',
+          isVerified: true,
+          avatarUrl: avatar_url || null,
+          githubUrl: html_url || null,
+          githubUsername: login || null,
+          specialization: null, // Triggers onboarding selection
+        },
+      });
+    } else {
+      // Existing user — link GitHub profile if not already linked
+      const updates: Record<string, string | boolean | null> = {};
+      if (!user.isVerified) {
+        updates.isVerified = true;
+        updates.verificationToken = null;
+      }
+      if (!user.githubUsername && login) updates.githubUsername = login;
+      if (!user.githubUrl && html_url) updates.githubUrl = html_url;
+      if (!user.avatarUrl && avatar_url) updates.avatarUrl = avatar_url;
+
+      if (Object.keys(updates).length > 0) {
+        user = await prisma.user.update({ where: { id: user.id }, data: updates });
+      }
+    }
+
+    // Issue JWT tokens
+    const localAccessToken = generateAccessToken(user.id, user.role);
+    const localRefreshToken = generateRefreshToken(user.id);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    await prisma.refreshToken.create({
+      data: { token: localRefreshToken, userId: user.id, expiresAt },
+    });
+
+    res.cookie('refreshToken', localRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      specialization: user.specialization || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+    };
+
+    const redirectUrl =
+      `${frontendUrl}/auth/callback?token=${localAccessToken}` +
+      `&user=${encodeURIComponent(JSON.stringify(userPayload))}` +
+      `${isNewUser || !user.specialization ? '&new=true' : ''}`;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error('GitHub OAuth Callback Error:', err);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
 };

@@ -2,22 +2,28 @@
 Team Matching Engine endpoints for finding complementary teammates and validating team composition.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional, Dict
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+from sqlalchemy.orm import Session
 
-from models.schemas import (
-    UserSkill,
+from utils.db import get_db
+from models.db_models import (
+    UserSkill as DBUserSkill,
+    Team as DBTeam,
+    TeamMember as DBTeamMember,
+    Project as DBProject,
+    Skill as DBSkill,
+    ProjectSkill as DBProjectSkill
 )
 from utils.helpers import (
     calculate_skill_match, calculate_complementary_skills,
     calculate_proficiency_alignment, normalize_skill_name,
 )
 from utils.constants import (
-    SkillCategory, ProficiencyLevel, PREDEFINED_SKILLS,
+    SkillCategory, ProficiencyLevel, PREDEFINED_SKILLS, PREDEFINED_SKILLS_LOWERCASE,
 )
-from services.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matching", tags=["matching"])
@@ -59,13 +65,6 @@ class FindTeammatesResponse(BaseModel):
         ..., description="List of suggested teammates ranked by compatibility"
     )
     total_suggestions: int = Field(..., description="Number of suggestions provided")
-
-
-class TeamMember(BaseModel):
-    """Team member with skills."""
-    user_id: str
-    skills: List[str]
-    proficiency_levels: Dict[str, str]
 
 
 class TeamCompositionAnalysis(BaseModel):
@@ -165,7 +164,7 @@ class DuoCompatibilityResponse(BaseModel):
 # ============================================================================
 
 def _get_mock_user_skills(user_id: str) -> Dict[str, str]:
-    """Get mock user skills for MVP. TODO: Query from database."""
+    """Get mock user skills for MVP (database integration pending)."""
     mock_data = {
         "user1": {
             "Python": "Advanced",
@@ -199,43 +198,12 @@ def _get_mock_user_skills(user_id: str) -> Dict[str, str]:
     return mock_data.get(user_id, {})
 
 
-def _calculate_proficiency_balance_score(
-    skills: List[UserSkill],
-) -> float:
-    """Calculate team balance based on proficiency distribution."""
-    if not skills:
-        return 0.5
-
-    proficiency_levels = [
-        ProficiencyLevel.BEGINNER,
-        ProficiencyLevel.INTERMEDIATE,
-        ProficiencyLevel.ADVANCED,
-        ProficiencyLevel.EXPERT,
-    ]
-
-    proficiency_counts = {level: 0 for level in proficiency_levels}
-    for skill in skills:
-        proficiency_counts[skill.proficiency_level] += 1
-
-    total = len(skills)
-    if total == 0:
-        return 0.5
-
-    ideal_distribution = {
-        ProficiencyLevel.BEGINNER: 0.15,
-        ProficiencyLevel.INTERMEDIATE: 0.35,
-        ProficiencyLevel.ADVANCED: 0.35,
-        ProficiencyLevel.EXPERT: 0.15,
-    }
-
-    score = 0.0
-    for level in proficiency_levels:
-        actual_ratio = proficiency_counts[level] / total
-        ideal_ratio = ideal_distribution[level]
-        diff = abs(actual_ratio - ideal_ratio)
-        score += (1.0 - diff)
-
-    return min(1.0, max(0.0, score / len(proficiency_levels)))
+def _get_user_skills_from_db(user_id: str, db: Session) -> Dict[str, str]:
+    """Get user skills from the database, falling back to mock data if empty (for MVP testing)."""
+    records = db.query(DBUserSkill).filter_by(user_id=user_id).all()
+    if not records:
+        return _get_mock_user_skills(user_id)
+    return {r.skill_name: r.proficiency_level for r in records}
 
 
 def _get_skill_gaps_for_team(team_members: List[Dict]) -> List[SkillGap]:
@@ -282,6 +250,7 @@ def _get_skill_gaps_for_team(team_members: List[Dict]) -> List[SkillGap]:
 async def find_teammates(
     user_id: str = Query(..., description="User requesting teammates"),
     max_suggestions: int = Query(5, ge=1, le=20, description="Maximum number of suggestions"),
+    db: Session = Depends(get_db),
 ) -> FindTeammatesResponse:
     """
     Suggest complementary teammates for a user.
@@ -290,14 +259,13 @@ async def find_teammates(
     - Skill overlap (Jaccard similarity)
     - Complementary skills (unique skills each offers)
     - Proficiency balance (teams need junior/senior mix)
-    - Semantic job role matching
+    - Semantic boost from project descriptions using EmbeddingService
     """
     if not user_id or not user_id.strip():
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     try:
-        # TODO: Query user skills from database
-        user_skills = _get_mock_user_skills(user_id)
+        user_skills = _get_user_skills_from_db(user_id, db)
         if not user_skills:
             logger.warning(f"No skills found for user {user_id}")
             raise HTTPException(
@@ -307,15 +275,21 @@ async def find_teammates(
 
         user_skill_list = list(user_skills.keys())
 
-        suggestions: List[TeammateResult] = []
-        candidate_users = ["user1", "user2", "user3", "user4"]
+        # Query all other candidate user IDs who have skills registered in the database,
+        # or fall back to mock users if none are found.
+        candidate_ids = [
+            r[0] for r in db.query(DBUserSkill.user_id).distinct().filter(DBUserSkill.user_id != user_id).all()
+        ]
+        if not candidate_ids:
+            candidate_ids = ["user1", "user2", "user3", "user4"]
 
-        for candidate_id in candidate_users:
+        suggestions: List[TeammateResult] = []
+
+        for candidate_id in candidate_ids:
             if candidate_id == user_id:
                 continue
 
-            # TODO: Query candidate skills from database
-            candidate_skills = _get_mock_user_skills(candidate_id)
+            candidate_skills = _get_user_skills_from_db(candidate_id, db)
             candidate_skill_list = list(candidate_skills.keys())
 
             if not candidate_skill_list:
@@ -326,17 +300,23 @@ async def find_teammates(
 
             # Calculate complementary skills
             complementary = calculate_complementary_skills(user_skill_list, candidate_skill_list)
-            complementary_value = len(complementary.get("user2_unique", [])) / max(
-                len(candidate_skill_list), 1
+            unique_for_user = len(complementary.get("user1_unique", []))
+            unique_for_candidate = len(complementary.get("user2_unique", []))
+            complementary_value = (unique_for_user + unique_for_candidate) / max(
+                len(user_skill_list) + len(candidate_skill_list), 1
             )
 
             # Calculate proficiency balance
-            user_prof_levels = [
-                ProficiencyLevel(user_skills[s]) for s in user_skill_list
-            ]
-            candidate_prof_levels = [
-                ProficiencyLevel(candidate_skills[s]) for s in candidate_skill_list
-            ]
+            try:
+                user_prof_levels = [
+                    ProficiencyLevel(user_skills[s]) for s in user_skill_list
+                ]
+                candidate_prof_levels = [
+                    ProficiencyLevel(candidate_skills[s]) for s in candidate_skill_list
+                ]
+            except ValueError:
+                user_prof_levels = [ProficiencyLevel.INTERMEDIATE]
+                candidate_prof_levels = [ProficiencyLevel.INTERMEDIATE]
 
             balance_diffs = []
             for prof1 in user_prof_levels:
@@ -347,7 +327,7 @@ async def find_teammates(
 
             balance_score = sum(balance_diffs) / len(balance_diffs) if balance_diffs else 0.5
 
-            # Multi-factor compatibility score
+            # Multi-factor compatibility score calculation
             weights = {
                 "skill_match": 0.35,
                 "complementary": 0.35,
@@ -358,6 +338,18 @@ async def find_teammates(
                 complementary_value * weights["complementary"] +
                 balance_score * weights["balance"]
             )
+
+            # Optional: Unstructured text compatibility boost using EmbeddingService / SimilarityService
+            try:
+                from services.similarity_service import SimilarityService
+                project = db.query(DBProject).filter_by(ownerId=user_id).first()
+                if project and project.description:
+                    sim_service = SimilarityService()
+                    candidate_text = " ".join(candidate_skill_list)
+                    text_sim = sim_service.text_similarity(project.description, candidate_text)
+                    compatibility += text_sim * 0.1  # boost up to 10%
+            except Exception as e:
+                logger.debug(f"Failed semantic project description match: {str(e)}")
 
             # Get proficiency distribution
             proficiency_dist = {}
@@ -400,6 +392,7 @@ async def find_teammates(
 @router.post("/validate-team", response_model=ValidateTeamResponse, status_code=200)
 async def validate_team(
     team_ids: List[str] = Query(..., description="List of user IDs forming the team"),
+    db: Session = Depends(get_db),
 ) -> ValidateTeamResponse:
     """
     Score existing team composition.
@@ -418,13 +411,12 @@ async def validate_team(
         raise HTTPException(status_code=400, detail="Team cannot exceed 20 members")
 
     try:
-        # TODO: Query team member skills from database
         team_members = []
         all_skills = {}
         all_skill_names = set()
 
         for user_id in team_ids:
-            skills = _get_mock_user_skills(user_id)
+            skills = _get_user_skills_from_db(user_id, db)
             if not skills:
                 logger.warning(f"User {user_id} has no skills")
                 continue
@@ -453,11 +445,9 @@ async def validate_team(
         # Calculate coverage completeness
         skill_categories_covered = set()
         for skill in all_skill_names:
-            for category, skills_in_cat in PREDEFINED_SKILLS.items():
-                if skill.lower() == category.lower():
-                    skill_categories_covered.add(
-                        skills_in_cat.get("category", SkillCategory.OTHER)
-                    )
+            skill_info = PREDEFINED_SKILLS_LOWERCASE.get(skill.lower())
+            if skill_info:
+                skill_categories_covered.add(skill_info.get("category", SkillCategory.OTHER))
 
         coverage = len(skill_categories_covered) / len(SkillCategory) * 10
 
@@ -465,9 +455,13 @@ async def validate_team(
         gaps = _get_skill_gaps_for_team(team_members)
 
         # Calculate proficiency distribution
-        all_profs = [
-            ProficiencyLevel(prof) for prof in all_skills.values()
-        ]
+        all_profs = []
+        for prof in all_skills.values():
+            try:
+                all_profs.append(ProficiencyLevel(prof))
+            except ValueError:
+                all_profs.append(ProficiencyLevel.INTERMEDIATE)
+
         prof_balance = {}
         for prof in ProficiencyLevel:
             count = sum(1 for p in all_profs if p == prof)
@@ -525,6 +519,7 @@ async def validate_team(
 @router.get("/team-gaps/{team_id}", response_model=TeamGapsResponse, status_code=200)
 async def get_team_gaps(
     team_id: str,
+    db: Session = Depends(get_db),
 ) -> TeamGapsResponse:
     """
     Identify missing expertise in a team and suggest proficiency levels needed.
@@ -535,14 +530,18 @@ async def get_team_gaps(
         raise HTTPException(status_code=400, detail="Invalid team ID")
 
     try:
-        # TODO: Query team members from database using team_id
-        # For MVP, mock team with team_id
-        mock_teams = {
-            "team1": ["user1", "user2"],
-            "team2": ["user3", "user4"],
-        }
+        # Check TeamMember table in database
+        member_records = db.query(DBTeamMember).filter_by(teamId=team_id).all()
+        member_ids = [m.userId for m in member_records]
 
-        member_ids = mock_teams.get(team_id)
+        # Fallback to mock teams if empty (for MVP testing)
+        if not member_ids:
+            mock_teams = {
+                "team1": ["user1", "user2"],
+                "team2": ["user3", "user4"],
+            }
+            member_ids = mock_teams.get(team_id)
+
         if not member_ids:
             raise HTTPException(
                 status_code=404,
@@ -551,7 +550,7 @@ async def get_team_gaps(
 
         team_members = []
         for user_id in member_ids:
-            skills = _get_mock_user_skills(user_id)
+            skills = _get_user_skills_from_db(user_id, db)
             if skills:
                 team_members.append({
                     "user_id": user_id,
@@ -583,6 +582,7 @@ async def get_team_gaps(
 async def get_duo_compatibility(
     user1_id: str,
     user2_id: str,
+    db: Session = Depends(get_db),
 ) -> DuoCompatibilityResponse:
     """
     Deep dive into two-person compatibility with detailed analysis.
@@ -600,9 +600,8 @@ async def get_duo_compatibility(
         raise HTTPException(status_code=400, detail="Cannot compare user with themselves")
 
     try:
-        # TODO: Query skills from database
-        user1_skills = _get_mock_user_skills(user1_id)
-        user2_skills = _get_mock_user_skills(user2_id)
+        user1_skills = _get_user_skills_from_db(user1_id, db)
+        user2_skills = _get_user_skills_from_db(user2_id, db)
 
         if not user1_skills or not user2_skills:
             raise HTTPException(
@@ -627,15 +626,15 @@ async def get_duo_compatibility(
         # Category breakdown
         category_breakdown: List[CompatibilityBreakdown] = []
 
+        def _skills_in_category(skill_list: List[str], category: SkillCategory) -> List[str]:
+            return [
+                skill for skill in skill_list
+                if PREDEFINED_SKILLS_LOWERCASE.get(skill.lower(), {}).get("category") == category
+            ]
+
         for category in SkillCategory:
-            category_skills1 = [
-                s for s in user1_skill_list
-                if s.lower() in [sk.lower() for sk in PREDEFINED_SKILLS.keys()]
-            ]
-            category_skills2 = [
-                s for s in user2_skill_list
-                if s.lower() in [sk.lower() for sk in PREDEFINED_SKILLS.keys()]
-            ]
+            category_skills1 = _skills_in_category(user1_skill_list, category)
+            category_skills2 = _skills_in_category(user2_skill_list, category)
 
             matching_in_cat = len(
                 set(category_skills1) & set(category_skills2)
@@ -676,7 +675,6 @@ async def get_duo_compatibility(
             "Limited overlap (3+ hours difference)",
         ]
 
-        import random
         communication_style = communication_styles[
             hash(user1_id + user2_id) % len(communication_styles)
         ]
@@ -718,5 +716,5 @@ async def health_check() -> dict:
     return {
         "status": "healthy",
         "service": "Team Matching Engine",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

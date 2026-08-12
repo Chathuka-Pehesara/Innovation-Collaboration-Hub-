@@ -46,46 +46,46 @@ export default function Footer() {
               <Sparkles size={14} className="text-[var(--accent-secondary)] animate-pulse" /> Platform
             </h4>
             <ul className="space-y-4">
-              {[
-                { name: 'Explore Projects', href: '/explore' },
-                { name: 'Find Innovators', href: '/students' },
-                { name: 'Leaderboard', href: '/leaderboard' },
-                { name: 'Team Matching', href: '/match' },
-                { name: 'Contributors', href: '/contributors' },
-              ].map((item) => (
-                <li key={item.name}>
-                  <Link href={item.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all duration-300 inline-flex items-center gap-3 group/link hover:translate-x-2 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-[var(--border-color)] group-hover/link:bg-[var(--accent-primary)] transition-colors shadow-[0_0_0_var(--accent-primary-glow)] group-hover/link:shadow-[0_0_10px_var(--accent-primary-glow)] group-hover/link:scale-125" />
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+            {[
+              { name: 'Explore Projects', href: '/explore' },
+              { name: 'Find Innovators', href: '/students' },
+              { name: 'Leaderboard', href: '/leaderboard' },
+              { name: 'Team Matching', href: '/match' },
+              { name: 'Contributors', href: '/contributors' },
+            ].map((item) => (
+              <li key={item.name}>
+                <Link href={item.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all duration-300 inline-flex items-center gap-3 group/link hover:translate-x-2 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-[var(--border-color)] group-hover/link:bg-[var(--accent-primary)] transition-colors shadow-[0_0_0_var(--accent-primary-glow)] group-hover/link:shadow-[0_0_10px_var(--accent-primary-glow)] group-hover/link:scale-125" />
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          {/* Legal / Connect */}
-          <div className="md:col-span-4 space-y-6">
-            <h4 className="text-[var(--text-primary)] font-bold tracking-widest uppercase text-xs flex items-center gap-2 drop-shadow-sm">
-              <Mail size={14} className="text-[var(--accent-secondary)] animate-pulse" /> Connect
-            </h4>
-            <div className="bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group/form transition-all duration-500 hover:border-[var(--accent-primary)]/50 hover:bg-[var(--surface-elevated)]/80">
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent opacity-0 group-hover/form:opacity-100 transition-opacity duration-500" />
-              <p className="text-sm text-[var(--text-secondary)] mb-5 relative z-10 font-medium">Subscribe to our newsletter for the latest hackathon updates and team requests.</p>
-              <div className="flex gap-3 relative z-10">
-                <input type="email" placeholder="Your email address" className="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] w-full focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-glow)] transition-all placeholder:text-[var(--text-secondary)]/50" />
-                <button className="bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white p-3 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_var(--accent-primary-glow)] hover:shadow-[0_8px_25px_var(--accent-primary-glow)] border border-white/20 hover:border-white/40">
-                  <ArrowRight size={20} className="group-hover/form:translate-x-1 transition-transform" />
-                </button>
-              </div>
+        {/* Legal / Connect */}
+        <div className="md:col-span-4 space-y-6">
+          <h4 className="text-[var(--text-primary)] font-bold tracking-widest uppercase text-xs flex items-center gap-2 drop-shadow-sm">
+            <Mail size={14} className="text-[var(--accent-secondary)] animate-pulse" /> Connect
+          </h4>
+          <div suppressHydrationWarning className="bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group/form transition-all duration-500 hover:border-[var(--accent-primary)]/50 hover:bg-[var(--surface-elevated)]/80">
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent opacity-0 group-hover/form:opacity-100 transition-opacity duration-500" />
+            <p className="text-sm text-[var(--text-secondary)] mb-5 relative z-10 font-medium">Subscribe to our newsletter for the latest hackathon updates and team requests.</p>
+            <div className="flex gap-3 relative z-10">
+              <input suppressHydrationWarning type="email" placeholder="Your email address" className="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] w-full focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-glow)] transition-all placeholder:text-[var(--text-secondary)]/50" />
+              <button className="bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white p-3 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_var(--accent-primary-glow)] hover:shadow-[0_8px_25px_var(--accent-primary-glow)] border border-white/20 hover:border-white/40">
+                <ArrowRight size={20} className="group-hover/form:translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-[var(--border-color)] flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
-          <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--text-secondary)] font-medium">
-            <span>&copy; {new Date().getFullYear()} Innovation Hub. All rights reserved.</span>
-            <Link href="/contributors" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4 text-[var(--accent-secondary)] font-bold">Contributors</Link>
+      {/* Bottom Bar */}
+      <div className="pt-8 border-t border-[var(--border-color)] flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+        <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--text-secondary)] font-medium">
+          <span suppressHydrationWarning>&copy; {new Date().getFullYear()} Innovation Hub. All rights reserved.</span>
+          <Link href="/contributors" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4 text-[var(--accent-secondary)] font-bold">Contributors</Link>
             <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
             <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
           </div>
