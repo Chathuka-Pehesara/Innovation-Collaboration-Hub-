@@ -15,9 +15,9 @@ interface DepartmentData {
 }
 
 export default function ContributorsPage() {
-  const [selectedDept, setSelectedDept] = useState<string>('it-department');
+  const [selectedDept, setSelectedDept] = useState<string>('all');
 
-  // IT Department Data matching user provided mockup Image 2
+  // IT Department Data
   const itDepartment: DepartmentData = {
     id: 'it-department',
     badge: 'IT',
@@ -57,13 +57,61 @@ export default function ContributorsPage() {
     ],
   };
 
+  // AI & Data Science Department Data
+  const aidsDepartment: DepartmentData = {
+    id: 'aids-department',
+    badge: 'AI/DS',
+    name: 'AI & Data Science Department',
+    badgeBgColor: 'bg-purple-100 dark:bg-purple-950/70',
+    badgeTextColor: 'text-purple-600 dark:text-purple-400',
+    leader: {
+      id: 'aids-lead',
+      name: 'Chathuka Pahasara',
+      role: 'AI & Data Science Lead',
+      description: 'Leads artificial intelligence research, machine learning integration, and data science strategy across the Innovation Collaboration Hub.',
+      isLead: true,
+      department: 'AI & Data Science Department',
+    },
+    members: [
+      {
+        id: 'aids-member-1',
+        name: 'Adeepa Udayanga',
+        role: 'Machine Learning Engineer',
+        description: 'Develops predictive models and recommendation algorithms for skill compatibility and team matching.',
+        department: 'AI & Data Science Department',
+      },
+      {
+        id: 'aids-member-2',
+        name: 'Archana Panchali',
+        role: 'Data Engineer',
+        description: 'Builds scalable data pipelines, manages datasets, and ensures seamless data access for analytical models.',
+        department: 'AI & Data Science Department',
+      },
+      {
+        id: 'aids-member-3',
+        name: 'Dinithi Yasasvi',
+        role: 'AI Research Associate',
+        description: 'Researches emerging AI frameworks and assists in integrating generative AI tools into hub workflows.',
+        department: 'AI & Data Science Department',
+      },
+    ],
+  };
+
+  const departments: DepartmentData[] = [itDepartment, aidsDepartment];
+
   const pillDepartments = [
+    { id: 'all', name: 'All Departments' },
     { id: 'it-department', name: 'IT Department' },
+    { id: 'aids-department', name: 'AI & Data Science' },
   ];
+
+  const filteredDepartments = selectedDept === 'all'
+    ? departments
+    : departments.filter((d) => d.id === selectedDept);
 
   return (
     <div className="max-w-6xl mx-auto space-y-12 pb-16 pt-2">
-      {/* Header Banner matching Image 1 */}
+      {/* Header Banner */}
       <div className="space-y-6">
         {/* Top Tag line */}
         <div className="inline-flex items-center gap-2 text-xs font-black tracking-widest text-amber-600 dark:text-amber-500 uppercase">
@@ -104,17 +152,20 @@ export default function ContributorsPage() {
         </div>
       </div>
 
-      {/* IT Department Section (only IT department displayed currently) */}
+      {/* Department Sections */}
       <div className="space-y-16 pt-4">
-        <DepartmentSection
-          id={itDepartment.id}
-          badge={itDepartment.badge}
-          name={itDepartment.name}
-          badgeBgColor={itDepartment.badgeBgColor}
-          badgeTextColor={itDepartment.badgeTextColor}
-          leader={itDepartment.leader}
-          members={itDepartment.members}
-        />
+        {filteredDepartments.map((dept) => (
+          <DepartmentSection
+            key={dept.id}
+            id={dept.id}
+            badge={dept.badge}
+            name={dept.name}
+            badgeBgColor={dept.badgeBgColor}
+            badgeTextColor={dept.badgeTextColor}
+            leader={dept.leader}
+            members={dept.members}
+          />
+        ))}
       </div>
     </div>
   );
