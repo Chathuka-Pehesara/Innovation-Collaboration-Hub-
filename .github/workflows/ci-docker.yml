@@ -16,8 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare environment file
+        run: test -f backend/.env.example && cp backend/.env.example backend/.env || true
+
       - name: Validate docker-compose syntax
         run: docker compose config --quiet
+
 
       - name: Check all Dockerfiles exist
         run: |

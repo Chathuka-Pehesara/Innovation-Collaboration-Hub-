@@ -90,6 +90,47 @@ services:
       - "1080:1080" # Web UI
       - "1025:1025" # SMTP
 
+  # Prisma Studio - Visual Web DB Management Tool (localhost:5555)
+  prisma-studio:
+    image: node:20-alpine
+    container_name: ih-prisma-studio
+    working_dir: /app
+    env_file:
+      - path: ./backend/.env
+        required: false
+    volumes:
+      - ./backend/prisma:/app/prisma
+      - ./backend/package.json:/app/package.json
+      - ./backend/node_modules:/app/node_modules
+    command: sh -c "(apk add --no-cache openssl || true) && npx --no-install prisma studio --port 5555 --browser none --schema=prisma/schema.prisma"
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/innovation_hub?schema=public}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+
+
+
+
+  # pgAdmin 4 - Advanced Database Administration Dashboard (localhost:5050)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ih-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@innovationhub.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+    depends_on:
+      - postgres
+
 volumes:
   postgres_data:
   redis_data:
+
+
