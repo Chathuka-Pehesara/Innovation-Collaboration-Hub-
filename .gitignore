@@ -45,3 +45,4 @@ Thumbs.db
 
 # User uploads (runtime generated)
 backend/uploads/
+frontend/.env.local
