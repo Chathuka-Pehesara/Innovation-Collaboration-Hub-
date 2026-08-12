@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
@@ -18,6 +19,14 @@ import { useAuthStore } from '@/lib/authStore';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentUser = mounted ? user : null;
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -30,8 +39,7 @@ export default function Sidebar() {
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  const { user } = useAuthStore();
-  if (user?.role === 'admin') {
+  if (currentUser?.role === 'admin') {
     navItems.push({ name: 'Admin Dashboard', href: '/admin', icon: ShieldAlert });
   }
 
