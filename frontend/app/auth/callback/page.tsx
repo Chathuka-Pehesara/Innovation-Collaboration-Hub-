@@ -22,6 +22,8 @@ function AuthCallbackHandler() {
         if (isNew || !user.specialization) {
           // Redirect first-time users to Settings to pick their specialization
           router.push('/settings?onboarding=true');
+        } else if (user.role === 'admin') {
+          router.push('/admin');
         } else {
           router.push('/dashboard');
         }

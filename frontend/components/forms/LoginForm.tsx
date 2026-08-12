@@ -198,7 +198,11 @@ export function LoginForm() {
         website,
       });
       setAuth(data.user, data.accessToken);
-      router.push('/dashboard');
+      if (data.user?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message;
       const code = err.response?.data?.code;
