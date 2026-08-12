@@ -1,6 +1,7 @@
 import './globals.css';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import AutumnBackground from '@/components/theme/AutumnBackground';
+import AuthInitializer from '@/components/auth/AuthInitializer';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -27,6 +28,7 @@ export default function RootLayout({
       <head>
       </head>
       <body suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable} bg-transparent text-foreground min-h-screen antialiased font-sans relative`}>
+        <AuthInitializer />
         <AutumnBackground>
           {/* Subtle high-end texture overlay */}
           <div className="noise-overlay" />
