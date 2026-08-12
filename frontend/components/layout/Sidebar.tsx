@@ -11,7 +11,8 @@ import {
   MessageSquare, 
   Trophy, 
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  HeartHandshake
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/authStore';
 
@@ -25,6 +26,7 @@ export default function Sidebar() {
     { name: 'Team Matching', href: '/match', icon: Zap },
     { name: 'Chat / Mentors', href: '/messages', icon: MessageSquare },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { name: 'Contributors', href: '/contributors', icon: HeartHandshake },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
