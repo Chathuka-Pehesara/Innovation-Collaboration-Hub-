@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
 import fs from 'fs';
 import path from 'path';
+dotenv.config({ path: path.join(__dirname, '../.env') });
 import { GithubService } from '../src/services/githubService';
 import { BadgeGenerator } from '../src/services/badgeGenerator';
 
