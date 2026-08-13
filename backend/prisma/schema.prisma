@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Category {
@@ -27,6 +28,7 @@ model Skill {
   name     String         @unique
   projects ProjectSkill[]
   users    UserSkill[]
+  assessments SkillAssessment[]
 }
 
 model Project {
@@ -223,6 +225,9 @@ model User {
   specialization       String?        // AI, IT, Cybersecurity, Networking, Other
   avatarUrl            String?
   githubUrl            String?
+  githubUsername       String?
+  githubPrCount        Int            @default(0)
+  githubTitle          String?
   linkedinUrl          String?
   portfolioUrl         String?
   twitterUrl           String?
@@ -237,8 +242,10 @@ model User {
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   skills               UserSkill[]
+  skillAssessments     SkillAssessment[]
   portfolioItems       PortfolioItem[]
   refreshTokens        RefreshToken[]
+  badges               UserBadge[]
 }
 
 model RefreshToken {
@@ -257,6 +264,7 @@ model UserSkill {
   skillId   String
   skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
   level     String   @default("Beginner") // Beginner, Intermediate, Advanced
+  score     Int      @default(0)
   addedAt   DateTime @default(now())
 
   @@unique([userId, skillId])
@@ -273,4 +281,47 @@ model PortfolioItem {
   tags      String   @default("[]") // JSON array of tag strings
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model SkillAssessment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  score     Int      
+  passed    Boolean
+  createdAt DateTime @default(now())
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique // e.g., "React Novice", "Java Expert"
+  description String?
+  icon        String?     // e.g. a lucide icon name or emoji
+  tier        String      @default("Bronze") // Bronze, Silver, Gold, Platinum
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+// ─── Security Models ──────────────────────────────────────────────
+
+model ThreatLog {
+  id        String   @id @default(uuid())
+  ip        String?
+  type      String   // e.g., HONEYPOT, BRUTE_FORCE, INVALID_POW
+  severity  String   // e.g., LOW, MEDIUM, HIGH, CRITICAL
+  fingerprint String?
+  metadata  String?  @db.Text // JSON string for extra data
+  createdAt DateTime @default(now())
 }

@@ -15,41 +15,44 @@ interface AuthState {
   token: string | null;
   setAuth: (user: User | null, token: string | null) => void;
   logout: () => void;
+  initAuth: () => void;
 }
 
-// Safely get initial auth state from localStorage (browser client-side checks)
-const getInitialAuth = () => {
-  if (typeof window === 'undefined') return { user: null, token: null };
-  try {
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    return {
-      token,
-      user: userStr ? JSON.parse(userStr) : null,
-    };
-  } catch (e) {
-    return { user: null, token: null };
-  }
-};
-
-const initialAuth = getInitialAuth();
-
 export const useAuthStore = create<AuthState>((set) => ({
-  user: initialAuth.user,
-  token: initialAuth.token,
+  user: null,
+  token: null,
   setAuth: (user, token) => {
     set({ user, token });
-    if (token && user) {
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      if (token && user) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userId', user.id);
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userId');
+      }
     }
   },
   logout: () => {
     set({ user: null, token: null });
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
+    }
+  },
+  initAuth: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      if (token && userStr) {
+        set({ token, user: JSON.parse(userStr) });
+      }
+    } catch (e) {
+      // ignore parsing errors
+    }
   },
 }));

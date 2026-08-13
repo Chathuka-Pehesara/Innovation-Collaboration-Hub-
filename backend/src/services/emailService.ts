@@ -9,25 +9,36 @@ import nodemailer from 'nodemailer';
 // Helper to get transporter instance dynamically per call
 const getTransporter = () => {
   const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || '2525', 10);
+  const port = parseInt(process.env.SMTP_PORT || '1025', 10);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  if (host && user && pass && user !== 'your_smtp_user' && pass !== 'your_smtp_password') {
-    return nodemailer.createTransport({
+  if (host) {
+    const config: any = {
       host,
       port,
-      secure: port === 465, // true for 465, false for 2525 / 587
-      auth: { user, pass },
+      secure: port === 465, // true for 465, false for 1025 / 587
       tls: {
         rejectUnauthorized: false, // Avoids self-signed dev certificate failures
       },
-    });
+    };
+
+    if (user && pass && user !== 'your_smtp_user' && pass !== 'your_smtp_password') {
+      config.auth = { user, pass };
+    }
+
+    return nodemailer.createTransport(config);
   }
   return null;
 };
 
-export const sendVerificationEmail = async (email: string, token: string): Promise<boolean> => {
+export interface EmailResult {
+  success: boolean;
+  sent: boolean;
+  url: string;
+}
+
+export const sendVerificationEmail = async (email: string, token: string): Promise<EmailResult> => {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
   const verifyUrl = `${backendUrl}/api/auth/verify-email/${token}`;
 
@@ -57,16 +68,16 @@ export const sendVerificationEmail = async (email: string, token: string): Promi
         `,
       });
       console.log(`[EmailService] Verification email sent to ${email} via SMTP.`);
-      return true;
+      return { success: true, sent: true, url: verifyUrl };
     } catch (err) {
       console.error(`[EmailService] Failed to send SMTP email to ${email}:`, err);
-      return false;
+      return { success: false, sent: false, url: verifyUrl };
     }
   }
-  return true;
+  return { success: true, sent: false, url: verifyUrl };
 };
 
-export const sendPasswordResetEmail = async (email: string, token: string): Promise<boolean> => {
+export const sendPasswordResetEmail = async (email: string, token: string): Promise<EmailResult> => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
@@ -96,11 +107,11 @@ export const sendPasswordResetEmail = async (email: string, token: string): Prom
         `,
       });
       console.log(`[EmailService] Reset email sent to ${email} via SMTP.`);
-      return true;
+      return { success: true, sent: true, url: resetUrl };
     } catch (err) {
       console.error(`[EmailService] Failed to send SMTP email to ${email}:`, err);
-      return false;
+      return { success: false, sent: false, url: resetUrl };
     }
   }
-  return true;
+  return { success: true, sent: false, url: resetUrl };
 };

@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 export const createProject = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = (req as any).user;
-    if (!user || !user.id) {
+    const userId = user?.id || user?.userId;
+    if (!user || !userId) {
       res.status(401).json({ error: 'Unauthorized: User not authenticated' });
       return;
     }
@@ -18,7 +19,7 @@ export const createProject = async (req: Request, res: Response, next: NextFunct
         title,
         description,
         categoryId: categoryId || null,
-        ownerId: user.id,
+        ownerId: userId,
         teamSize: !isNaN(parsedTeamSize) ? parsedTeamSize : 1
       }
     });
@@ -32,7 +33,7 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
   try {
     const { category, tag, status, search, page = '1', limit = '10' } = req.query;
     
-    let whereClause: any = {};
+    const whereClause: any = {};
     if (category) whereClause.categoryId = category;
     if (status) whereClause.status = status;
     if (search) {

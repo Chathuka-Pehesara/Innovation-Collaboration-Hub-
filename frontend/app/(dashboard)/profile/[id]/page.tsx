@@ -132,7 +132,7 @@ export default function ProfilePage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {profile.skills.map((skill) => (
-              <SkillBadge key={skill.id} name={skill.name} level={skill.level} />
+              <SkillBadge key={skill.id} name={skill.name} level={skill.level} score={skill.score} />
             ))}
           </div>
         )}
