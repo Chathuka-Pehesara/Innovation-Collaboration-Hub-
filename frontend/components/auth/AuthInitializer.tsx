@@ -5,7 +5,13 @@ import { useAuthStore } from '@/lib/authStore';
 
 export default function AuthInitializer() {
   useEffect(() => {
-    useAuthStore.getState().initAuth();
+    (async () => {
+      try {
+        await useAuthStore.getState().initAuth();
+      } catch (e) {
+        // swallow to avoid unhandled promise rejections; initAuth handles redirect on 401/403
+      }
+    })();
   }, []);
 
   return null;
