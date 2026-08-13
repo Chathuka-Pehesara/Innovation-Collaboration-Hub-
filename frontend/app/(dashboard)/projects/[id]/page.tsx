@@ -7,6 +7,7 @@ import { evaluateIdeaApi, IdeaEvaluationResponse } from '@/lib/api/aiApi';
 import IdeaEvaluator from '@/components/ai/IdeaEvaluator';
 import StatusBadge from '@/components/StatusBadge';
 import Toast from '@/components/Toast';
+import CommitRankings from '@/components/cards/CommitRankings';
 
 interface Project {
   id: string;
@@ -151,6 +152,8 @@ export default function ProjectDetailsPage() {
           </button>
         </div>
       </div>
+      <div className="glass-panel p-12 rounded-2xl text-center text-gray-500 text-sm">
+        Project detailed information, milestones, and request actions will appear here.
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -241,6 +244,14 @@ export default function ProjectDetailsPage() {
               </div>
             )}
           </div>
+
+          {/* Commit Rankings Card */}
+          <div className="glass-card p-6 border border-white/5 bg-white/[0.01]">
+            <h3 className="text-base font-bold text-white pb-3 border-b border-white/5 mb-6">📊 Contributor Commit Rankings</h3>
+            <CommitRankings projectId={project.id} />
+          </div>
+        </div>
+
         </div>
       </div>
     </div>
