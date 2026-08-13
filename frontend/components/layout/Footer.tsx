@@ -71,9 +71,9 @@ export default function Footer() {
           <div suppressHydrationWarning className="bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] rounded-2xl p-6 backdrop-blur-md relative overflow-hidden group/form transition-all duration-500 hover:border-[var(--accent-primary)]/50 hover:bg-[var(--surface-elevated)]/80">
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 to-transparent opacity-0 group-hover/form:opacity-100 transition-opacity duration-500" />
             <p className="text-sm text-[var(--text-secondary)] mb-5 relative z-10 font-medium">Subscribe to our newsletter for the latest hackathon updates and team requests.</p>
-            <div className="flex gap-3 relative z-10">
+            <div className="flex gap-3 relative z-10" suppressHydrationWarning>
               <input suppressHydrationWarning type="email" placeholder="Your email address" className="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] w-full focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary-glow)] transition-all placeholder:text-[var(--text-secondary)]/50" />
-              <button className="bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white p-3 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_var(--accent-primary-glow)] hover:shadow-[0_8px_25px_var(--accent-primary-glow)] border border-white/20 hover:border-white/40">
+              <button suppressHydrationWarning className="bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white p-3 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_4px_15px_var(--accent-primary-glow)] hover:shadow-[0_8px_25px_var(--accent-primary-glow)] border border-white/20 hover:border-white/40">
                 <ArrowRight size={20} className="group-hover/form:translate-x-1 transition-transform" />
               </button>
             </div>
