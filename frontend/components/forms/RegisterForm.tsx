@@ -201,6 +201,7 @@ export function RegisterForm() {
       animate="show"
       onSubmit={handleSubmit} 
       noValidate 
+      suppressHydrationWarning
       className="space-y-4"
     >
       {/* Name */}
@@ -215,6 +216,7 @@ export function RegisterForm() {
           value={name}
           onChange={(e) => { setName(e.target.value); clearError('name'); }}
           placeholder="Your full name"
+          suppressHydrationWarning
           whileFocus={{ 
             scale: 1.01,
             boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -228,11 +230,11 @@ export function RegisterForm() {
       </motion.div>
 
       {/* Email */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <label htmlFor="email" className="block text-sm font-semibold text-amber-950 mb-1">
           Email address
         </label>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="email"
             type="email"
@@ -240,6 +242,7 @@ export function RegisterForm() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
             placeholder="you@opms.edu"
+            suppressHydrationWarning
             whileFocus={{ 
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -281,11 +284,11 @@ export function RegisterForm() {
       </motion.div>
 
       {/* Password */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <label htmlFor="password" className="block text-sm font-semibold text-amber-950 mb-1">
           Password
         </label>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="password"
             type={showPassword ? 'text' : 'password'}
@@ -293,6 +296,7 @@ export function RegisterForm() {
             value={password}
             onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
             placeholder="Min 8 chars, uppercase, number, symbol"
+            suppressHydrationWarning
             whileFocus={{ 
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",

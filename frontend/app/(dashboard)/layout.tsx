@@ -19,15 +19,31 @@ export default function DashboardLayout({
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
-    // If not authenticated, redirect to login
-    if (!token) {
-      router.push('/login');
+    let activeToken = token;
+    if (typeof window !== 'undefined') {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (storedToken && !token) {
+        try {
+          useAuthStore.getState().setAuth(storedUser ? JSON.parse(storedUser) : null, storedToken);
+        } catch {
+          // parse error fallback
+        }
+      }
+
+      activeToken = token || storedToken;
+      if (!activeToken) {
+        router.push('/login');
+      }
     }
+    setHydrated(true);
   }, [token, router]);
 
+  const hasToken = token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+
   // Render a loading state while hydration/auth check is in progress
-  if (!hydrated || !token) {
+  if (!hydrated || !hasToken) {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
