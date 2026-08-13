@@ -379,7 +379,7 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-500/20 flex-shrink-0 relative">
                             {u.avatarUrl ? (
-                              <Image src={u.avatarUrl} alt={u.name} fill className="object-cover" />
+                              <Image src={u.avatarUrl} alt={u.name} fill sizes="40px" className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center font-bold text-orange-500">
                                 {u.name.charAt(0)}

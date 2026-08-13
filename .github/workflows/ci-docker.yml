@@ -2,10 +2,12 @@ name: Docker Compose Validation
 
 on:
   push:
+    branches: ['**']
     paths:
       - 'docker-compose.yml'
       - '**/Dockerfile'
   pull_request:
+    branches: ['**']
     paths:
       - 'docker-compose.yml'
       - '**/Dockerfile'
