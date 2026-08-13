@@ -115,13 +115,40 @@ export default function ContributorsPage() {
     members: [],
   };
 
-  const departments: DepartmentData[] = [itDepartment, aidsDepartment, cyberDepartment];
+  // Network Department Data
+  const networkDepartment: DepartmentData = {
+    id: 'network-department',
+    badge: 'Network',
+    name: 'Network Department',
+    badgeBgColor: 'bg-cyan-100 dark:bg-cyan-950/70',
+    badgeTextColor: 'text-cyan-600 dark:text-cyan-400',
+    leader: {
+      id: 'network-lead',
+      name: 'Add Leader Name',
+      role: 'Network Department Lead',
+      description: 'Leads network architecture, routing protocols, firewall management, and connectivity infrastructure across the Innovation Collaboration Hub.',
+      isLead: true,
+      department: 'Network Department',
+    },
+    members: [
+      {
+        id: 'network-member-1',
+        name: 'Kushan Dewmina',
+        role: 'Network Engineer',
+        description: 'Manages physical and virtual network switches, routers, and VPN gateways to guarantee high availability and throughput.',
+        department: 'Network Department',
+      },
+    ],
+  };
+
+  const departments: DepartmentData[] = [itDepartment, aidsDepartment, cyberDepartment, networkDepartment];
 
   const pillDepartments = [
     { id: 'all', name: 'All Departments' },
     { id: 'it-department', name: 'IT Department' },
     { id: 'aids-department', name: 'AI & Data Science' },
     { id: 'cyber-department', name: 'Cyber Security' },
+    { id: 'network-department', name: 'Network Department' },
   ];
 
   const filteredDepartments = selectedDept === 'all'
