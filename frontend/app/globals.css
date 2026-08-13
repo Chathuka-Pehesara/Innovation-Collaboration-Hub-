@@ -134,6 +134,15 @@
   display: none;
 }
 
+h3.lv-srvc, .lv-srvc {
+  color: var(--accent-primary) !important;
+  font-family: var(--font-display), monospace, sans-serif !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 1rem !important;
+  display: block;
+}
 /* Elevated glass panels & cards with layered shadows */
 .glass-panel {
   background: var(--panel-bg);
