@@ -2,9 +2,7 @@
  * @file        commitApi.ts
  * @description API utilities for commit operations
  */
-
-import { api } from './api';
-
+import { api } from '../api';
 export interface CommitPayload {
   projectId: string;
   message: string;
