@@ -6,6 +6,8 @@ import Toast from '@/components/Toast';
 
 interface CommitStats {
   userId: string;
+  userName: string;
+  avatarUrl: string | null;
   commitCount: number;
   additions: number;
   deletions: number;
@@ -193,10 +195,28 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
 
                 {/* User Info */}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-gray-900">
-                      User ID: {contributor.userId.slice(0, 8)}...
-                    </span>
+                  <div className="flex items-center gap-3 mb-1">
+                    {/* User Avatar */}
+                    {contributor.avatarUrl ? (
+                      <img
+                        src={contributor.avatarUrl}
+                        alt={contributor.userName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                        {contributor.userName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    {/* User Name */}
+                    <div className="flex-1">
+                      <span className="font-semibold text-gray-900 block">
+                        {contributor.userName}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ID: {contributor.userId.slice(0, 8)}...
+                      </span>
+                    </div>
                     <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-semibold">
                       Rank #{contributor.rank}
                     </span>
@@ -254,8 +274,8 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
                       <span className="text-sm font-semibold text-gray-900">
                         {commit.message || 'Untitled commit'}
                       </span>
-                      <span className="text-xs text-gray-500">
-                        by {commit.userId.slice(0, 8)}...
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        by {commit.userName || commit.userId.slice(0, 8)}
                       </span>
                     </div>
                     <div className="flex gap-4 text-xs text-gray-600">
