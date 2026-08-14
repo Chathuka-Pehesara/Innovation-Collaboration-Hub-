@@ -26,8 +26,8 @@ sequenceDiagram
     end
 ```
 
-- **Frontend Client**: [frontend/lib/security/pow.ts](file:///c:/Users/HP/Documents/GitHub/Innovation-Collaboration-Hub-/frontend/lib/security/pow.ts)
-- **Backend Verifier**: [backend/src/security/powService.ts](file:///c:/Users/HP/Documents/GitHub/Innovation-Collaboration-Hub-/backend/src/security/powService.ts)
+- **Frontend Client**: [`frontend/lib/security/pow.ts`](https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-/blob/main/frontend/lib/security/pow.ts)
+- **Backend Verifier**: [`backend/src/security/powService.ts`](https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-/blob/main/backend/src/security/powService.ts)
 
 ---
 
