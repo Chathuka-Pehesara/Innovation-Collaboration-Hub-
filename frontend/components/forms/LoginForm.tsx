@@ -295,6 +295,15 @@ export function LoginForm() {
         </motion.div>
       )}
 
+      {errorParam === 'session_expired' && (
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <svg className="w-4 h-4 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-800 text-xs font-semibold">Your session has expired. Please sign in again.</p>
+        </motion.div>
+      )}
+
       {errorParam === 'oauth_failed' && (
         <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
           <svg className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
