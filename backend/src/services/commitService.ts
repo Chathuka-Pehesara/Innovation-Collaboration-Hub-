@@ -7,6 +7,48 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+/**
+ * Calculate consecutive days with at least one commit
+ */
+const calculateStreak = (commits: any[]): number => {
+  if (!commits.length) return 0;
+
+  // Sort commits by date descending (newest first)
+  const sorted = commits.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  // Group commits by date (YYYY-MM-DD)
+  const dateSet = new Set<string>();
+  sorted.forEach(c => {
+    const date = new Date(c.createdAt);
+    const dateStr = date.toISOString().split('T')[0];
+    dateSet.add(dateStr);
+  });
+
+  // Convert to sorted array
+  const dates = Array.from(dateSet).sort().reverse(); // Newest first
+  
+  if (dates.length === 0) return 0;
+
+  let streak = 0;
+  let currentDate = new Date();
+  currentDate.setHours(0, 0, 0, 0);
+  
+  // Count backward from today
+  for (let i = 0; i < 365; i++) {
+    const dateStr = currentDate.toISOString().split('T')[0];
+    
+    if (dates.includes(dateStr)) {
+      streak++;
+    } else {
+      break; // Streak broken
+    }
+    
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  return streak;
+};
+
 export interface CommitStats {
   userId: string;
   userName: string;
@@ -17,6 +59,7 @@ export interface CommitStats {
   filesChanged: number;
   lastCommitDate: Date;
   rank: number;
+  streak: number;
 }
 
 export interface CommitAnalytics {
@@ -99,9 +142,31 @@ export const getCommitRankings = async (projectId: string): Promise<CommitStats[
     });
     const lastCommitMap = new Map(lastCommits.map(c => [c.userId, c.createdAt]));
 
-    // Build rankings with user info
+    // Fetch all commits for streak calculation
+    const allCommits = await prisma.commit.findMany({
+      where: {
+        projectId,
+        userId: { in: userIds },
+      },
+      select: { userId: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Group commits by userId for streak calculation
+    const commitsByUser = new Map<string, any[]>();
+    allCommits.forEach(c => {
+      if (!commitsByUser.has(c.userId)) {
+        commitsByUser.set(c.userId, []);
+      }
+      commitsByUser.get(c.userId)!.push(c);
+    });
+
+    // Build rankings with user info and streak
     const rankings: CommitStats[] = stats.map((stat, index) => {
       const user = userMap.get(stat.userId);
+      const userCommits = commitsByUser.get(stat.userId) || [];
+      const streak = calculateStreak(userCommits);
+
       return {
         userId: stat.userId,
         userName: user?.name || 'Unknown User',
@@ -112,6 +177,7 @@ export const getCommitRankings = async (projectId: string): Promise<CommitStats[
         filesChanged: stat._sum.filesChanged || 0,
         lastCommitDate: lastCommitMap.get(stat.userId) || new Date(),
         rank: index + 1,
+        streak,
       };
     });
 
@@ -222,9 +288,10 @@ export const getUserCommitStats = async (
       select: { name: true, avatarUrl: true }
     });
 
-    // Get user's rank
+    // Get user's rank and streak
     const rankings = await getCommitRankings(projectId);
     const userRank = rankings.find((r) => r.userId === userId)?.rank || 0;
+    const userStreak = rankings.find((r) => r.userId === userId)?.streak || 0;
 
     return {
       userId,
@@ -236,6 +303,7 @@ export const getUserCommitStats = async (
       filesChanged: stat._sum.filesChanged || 0,
       lastCommitDate: lastCommit?.createdAt || new Date(),
       rank: userRank,
+      streak: userStreak,
     };
   } catch (error) {
     console.error('Error getting user commit stats:', error);
