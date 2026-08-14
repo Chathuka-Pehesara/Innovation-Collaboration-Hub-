@@ -1,6 +1,6 @@
 ### 🧭 Navigation
 
-- **[[Home]]**
+- 🏠 [[Home|Home]]
 
 ---
 
@@ -27,4 +27,3 @@
 - 💻 [GitHub Repository](https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-)
 - 🐛 [Issue Tracker](https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-/issues)
 - 🔀 [Pull Requests](https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-/pulls)
-
