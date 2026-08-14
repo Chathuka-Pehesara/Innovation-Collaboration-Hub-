@@ -3,16 +3,16 @@
 import { useEffect, useState, useRef } from 'react';
 import { useAuthStore } from '@/lib/authStore';
 import { api } from '@/lib/api';
-import { 
-  Shield, 
-  Mail, 
-  Calendar, 
-  TrendingUp, 
-  Search, 
-  Users, 
-  Activity, 
-  ShieldAlert, 
-  RefreshCw, 
+import {
+  Shield,
+  Mail,
+  Calendar,
+  TrendingUp,
+  Search,
+  Users,
+  Activity,
+  ShieldAlert,
+  RefreshCw,
   AlertTriangle,
   Zap,
   CheckCircle2,
@@ -248,10 +248,9 @@ export default function AdminDashboardPage() {
         {/* System Quick Status Badge */}
         <div className="flex items-center gap-3 bg-white/5 border border-[var(--border-color)] px-4 py-2 rounded-xl">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full animate-pulse ${
-              healthReport?.overall === 'healthy' ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' :
-              healthReport?.overall === 'degraded' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'
-            }`} />
+            <div className={`w-3 h-3 rounded-full animate-pulse ${healthReport?.overall === 'healthy' ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' :
+                healthReport?.overall === 'degraded' ? 'bg-amber-500 shadow-[0_0_8px_#f59e0b]' : 'bg-red-500 shadow-[0_0_8px_#ef4444]'
+              }`} />
             <span className="text-xs font-bold text-slate-300 uppercase">
               {healthReport?.overall || 'ONLINE'}
             </span>
@@ -263,11 +262,10 @@ export default function AdminDashboardPage() {
       <div className="flex border-b border-[var(--border-color)] space-x-2">
         <button
           onClick={() => setActiveTab('users')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-            activeTab === 'users'
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'users'
               ? 'border-orange-500 text-orange-400 bg-orange-500/10 rounded-t-xl'
               : 'border-transparent text-[var(--text-secondary)] hover:text-white'
-          }`}
+            }`}
         >
           <Users size={18} />
           User Management ({users.length})
@@ -275,11 +273,10 @@ export default function AdminDashboardPage() {
 
         <button
           onClick={() => setActiveTab('network')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-            activeTab === 'network'
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'network'
               ? 'border-indigo-500 text-indigo-400 bg-indigo-500/10 rounded-t-xl'
               : 'border-transparent text-[var(--text-secondary)] hover:text-white'
-          }`}
+            }`}
         >
           <Activity size={18} />
           Network Control Center
@@ -287,11 +284,10 @@ export default function AdminDashboardPage() {
 
         <button
           onClick={() => setActiveTab('security')}
-          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
-            activeTab === 'security'
+          className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${activeTab === 'security'
               ? 'border-red-500 text-red-400 bg-red-500/10 rounded-t-xl'
               : 'border-transparent text-[var(--text-secondary)] hover:text-white'
-          }`}
+            }`}
         >
           <ShieldAlert size={18} />
           Security Audit & Threat Logs ({threatLogs.length})
@@ -379,7 +375,7 @@ export default function AdminDashboardPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-500/20 flex-shrink-0 relative">
                             {u.avatarUrl ? (
-                              <Image src={u.avatarUrl} alt={u.name} fill className="object-cover" />
+                              <Image src={u.avatarUrl} alt={u.name} fill sizes="40px" className="object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center font-bold text-orange-500">
                                 {u.name.charAt(0)}
@@ -400,11 +396,10 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${
-                            u.role === 'admin'
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${u.role === 'admin'
                               ? 'bg-red-500/20 text-red-400 border-red-500/30'
                               : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-                          }`}
+                            }`}
                         >
                           {u.role.toUpperCase()}
                         </span>
@@ -450,7 +445,7 @@ export default function AdminDashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-2 bg-slate-900 rounded-2xl border border-slate-800 p-6 flex flex-col relative">
-              <h3 className="text-sm font-bold text-white font-mono mb-4 tracking-wider">LIVE_SERVICE_TOPOLOGY</h3>
+              <h3 className="lv-srvc">LIVE_SERVICE_TOPOLOGY</h3>
               <TopologyMap services={healthReport?.services} />
             </div>
             <div className="lg:col-span-1">
@@ -555,13 +550,12 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2.5 py-0.5 text-xs font-bold rounded-md border ${
-                            log.severity === 'CRITICAL'
+                          className={`px-2.5 py-0.5 text-xs font-bold rounded-md border ${log.severity === 'CRITICAL'
                               ? 'bg-red-500/20 text-red-400 border-red-500/40 animate-pulse'
                               : log.severity === 'HIGH'
-                              ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
-                              : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                          }`}
+                                ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
+                                : 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                            }`}
                         >
                           {log.severity}
                         </span>

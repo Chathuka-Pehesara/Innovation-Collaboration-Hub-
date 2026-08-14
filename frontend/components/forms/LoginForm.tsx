@@ -273,6 +273,7 @@ export function LoginForm() {
       animate="show"
       onSubmit={handleSubmit}
       noValidate
+      suppressHydrationWarning
       className="space-y-4"
     >
       {/* Verification alerts */}
@@ -294,6 +295,35 @@ export function LoginForm() {
         </motion.div>
       )}
 
+      {errorParam === 'session_expired' && (
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <svg className="w-4 h-4 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-800 text-xs font-semibold">Your session has expired. Please sign in again.</p>
+        </motion.div>
+      )}
+
+      {errorParam === 'oauth_failed' && (
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <svg className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-amber-900 text-xs font-semibold">Social login failed or was cancelled. Please try signing in again.</p>
+        </motion.div>
+      )}
+
+      {(errorParam === 'github_oauth_not_configured' || errorParam === 'google_oauth_not_configured') && (
+        <motion.div variants={itemVariants} className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <svg className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-blue-900 text-xs font-semibold">
+            {errorParam === 'github_oauth_not_configured' ? 'GitHub' : 'Google'} OAuth credentials are not configured on the server yet.
+          </p>
+        </motion.div>
+      )}
+
       {/* Honeypot field (invisible to users, filled by automated bot scanners) */}
       <input
         type="text"
@@ -302,15 +332,16 @@ export function LoginForm() {
         onChange={(e) => setWebsite(e.target.value)}
         tabIndex={-1}
         autoComplete="new-password"
+        suppressHydrationWarning
         style={{ display: 'none', position: 'absolute', left: '-9999px' }}
       />
 
       {/* Email */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <label htmlFor="email" className="block text-sm font-semibold text-amber-950 mb-1">
           Email address
         </label>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="email"
             type="email"
@@ -319,6 +350,7 @@ export function LoginForm() {
             onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })); }}
             onBlur={(e) => triggerPow(e.target.value)}
             placeholder="you@opms.edu"
+            suppressHydrationWarning
             whileFocus={{
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -333,7 +365,7 @@ export function LoginForm() {
       </motion.div>
 
       {/* Password */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <div className="flex justify-between items-center mb-1">
           <label htmlFor="password" className="block text-sm font-semibold text-amber-950">
             Password
@@ -342,7 +374,7 @@ export function LoginForm() {
             Forgot password?
           </Link>
         </div>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="password"
             type={showPassword ? 'text' : 'password'}
@@ -350,6 +382,7 @@ export function LoginForm() {
             value={password}
             onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: undefined })); }}
             placeholder="••••••••"
+            suppressHydrationWarning
             whileFocus={{
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",

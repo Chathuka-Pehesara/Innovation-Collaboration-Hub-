@@ -46,6 +46,7 @@ export default function ContributorCard({ contributor }: ContributorCardProps) {
               src={avatar}
               alt={contributor.name}
               fill
+              sizes="96px"
               className="object-cover"
             />
           ) : (

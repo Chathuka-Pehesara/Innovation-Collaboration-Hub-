@@ -342,13 +342,20 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
   try {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-    if (!client_id || !redirect_uri) {
-      return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
+    if (!client_id || !redirect_uri || client_id.includes('your_')) {
+      return res.redirect(`${frontendUrl}/login?error=google_oauth_not_configured`);
     }
 
     const state = crypto.randomBytes(16).toString('hex');
-    res.cookie('oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+    res.cookie('oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 300000, // 5 minutes
+    });
 
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(
       redirect_uri
@@ -364,11 +371,16 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
 
 export const googleAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { code, state } = req.query;
+    const { code, state, error: queryError } = req.query;
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const client_secret = process.env.GOOGLE_CLIENT_SECRET;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (queryError) {
+      console.warn('Google OAuth returned error query param:', queryError);
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
 
     if (!code) {
       return res.redirect(`${frontendUrl}/login?error=no_code`);
@@ -376,7 +388,7 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
 
     const cookies = parseCookies(req);
     const savedState = cookies.oauth_state;
-    res.clearCookie('oauth_state');
+    res.clearCookie('oauth_state', { path: '/' });
 
     if (savedState && state !== savedState) {
       console.warn('Google OAuth State mismatch. Proceeding with caution.');
@@ -453,6 +465,7 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     });
 
@@ -470,8 +483,8 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
     )}${isNewUser || !user.specialization ? '&new=true' : ''}`;
 
     return res.redirect(redirectUrl);
-  } catch (err) {
-    console.error('Google OAuth Callback Error:', err);
+  } catch (err: any) {
+    console.error('Google OAuth Callback Error Details:', err.response?.data || err.message || err);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
@@ -482,13 +495,20 @@ export const githubAuthRedirect = async (req: Request, res: Response, next: Next
   try {
     const client_id = process.env.GITHUB_CLIENT_ID;
     const redirect_uri = process.env.GITHUB_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-    if (!client_id || !redirect_uri) {
-      return res.status(500).json({ message: 'GitHub OAuth configuration is missing on the server.' });
+    if (!client_id || !redirect_uri || client_id.includes('your_')) {
+      return res.redirect(`${frontendUrl}/login?error=github_oauth_not_configured`);
     }
 
     const state = crypto.randomBytes(16).toString('hex');
-    res.cookie('github_oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+    res.cookie('github_oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 300000, // 5 minutes
+    });
 
     const githubAuthUrl =
       `https://github.com/login/oauth/authorize` +
