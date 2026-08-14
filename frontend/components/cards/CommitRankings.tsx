@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import Toast from '@/components/Toast';
 
 interface CommitStats {
+  streak: number;
   userId: string;
   userName: string;
   avatarUrl: string | null;
@@ -226,6 +227,9 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
                     <span>📝 {contributor.filesChanged} files changed</span>
                     <span className="text-green-600">+{contributor.additions}</span>
                     <span className="text-red-600">-{contributor.deletions}</span>
+                    {contributor.streak > 0 && (
+                      <span className="text-orange-600 font-semibold">🔥 {contributor.streak} day streak</span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     Last commit: {formatDate(contributor.lastCommitDate)} at{' '}
