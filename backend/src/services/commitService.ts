@@ -9,6 +9,8 @@ const prisma = new PrismaClient();
 
 export interface CommitStats {
   userId: string;
+  userName: string;
+  avatarUrl: string | null;
   commitCount: number;
   additions: number;
   deletions: number;
@@ -77,31 +79,41 @@ export const getCommitRankings = async (projectId: string): Promise<CommitStats[
       },
     });
 
-    // Get the most recent commit for each user and add user info
-    const rankings: CommitStats[] = await Promise.all(
-      stats.map(async (stat, index) => {
-        const lastCommit = await prisma.commit.findFirst({
-          where: {
-            projectId,
-            userId: stat.userId,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          select: { createdAt: true },
-        });
+    // 🚀 PERFORMANCE FIX: Batch fetch all users in single query (not N queries)
+    const userIds = stats.map(s => s.userId);
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, avatarUrl: true }
+    });
+    const userMap = new Map(users.map(u => [u.id, u]));
 
-        return {
-          userId: stat.userId,
-          commitCount: stat._count.id,
-          additions: stat._sum.additions || 0,
-          deletions: stat._sum.deletions || 0,
-          filesChanged: stat._sum.filesChanged || 0,
-          lastCommitDate: lastCommit?.createdAt || new Date(),
-          rank: index + 1,
-        };
-      })
-    );
+    // Get most recent commit for each user - batch query
+    const lastCommits = await prisma.commit.findMany({
+      where: {
+        projectId,
+        userId: { in: userIds },
+      },
+      select: { userId: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      distinct: ['userId'],
+    });
+    const lastCommitMap = new Map(lastCommits.map(c => [c.userId, c.createdAt]));
+
+    // Build rankings with user info
+    const rankings: CommitStats[] = stats.map((stat, index) => {
+      const user = userMap.get(stat.userId);
+      return {
+        userId: stat.userId,
+        userName: user?.name || 'Unknown User',
+        avatarUrl: user?.avatarUrl || null,
+        commitCount: stat._count.id,
+        additions: stat._sum.additions || 0,
+        deletions: stat._sum.deletions || 0,
+        filesChanged: stat._sum.filesChanged || 0,
+        lastCommitDate: lastCommitMap.get(stat.userId) || new Date(),
+        rank: index + 1,
+      };
+    });
 
     return rankings;
   } catch (error) {
@@ -131,7 +143,7 @@ export const getProjectCommitAnalytics = async (projectId: string): Promise<Comm
     const topContributors = await getCommitRankings(projectId);
 
     // Get recent commits with user info
-    const recentCommits = await prisma.commit.findMany({
+    const recentCommitsRaw = await prisma.commit.findMany({
       where: { projectId },
       orderBy: { createdAt: 'desc' },
       take: 10,
@@ -145,6 +157,21 @@ export const getProjectCommitAnalytics = async (projectId: string): Promise<Comm
         createdAt: true,
       },
     });
+
+    // Batch fetch user info for recent commits
+    const userIds = recentCommitsRaw.map(c => c.userId);
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, avatarUrl: true }
+    });
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    // Enrich recent commits with user info
+    const recentCommits = recentCommitsRaw.map(commit => ({
+      ...commit,
+      userName: userMap.get(commit.userId)?.name || 'Unknown User',
+      avatarUrl: userMap.get(commit.userId)?.avatarUrl || null,
+    }));
 
     return {
       projectId,
@@ -189,12 +216,20 @@ export const getUserCommitStats = async (
       select: { createdAt: true },
     });
 
+    // Fetch user info
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, avatarUrl: true }
+    });
+
     // Get user's rank
     const rankings = await getCommitRankings(projectId);
     const userRank = rankings.find((r) => r.userId === userId)?.rank || 0;
 
     return {
       userId,
+      userName: user?.name || 'Unknown User',
+      avatarUrl: user?.avatarUrl || null,
       commitCount: stat._count.id,
       additions: stat._sum.additions || 0,
       deletions: stat._sum.deletions || 0,
