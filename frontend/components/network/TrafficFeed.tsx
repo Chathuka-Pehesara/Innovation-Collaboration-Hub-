@@ -30,19 +30,19 @@ export default function TrafficFeed() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Generate initial logs
-    const initialLogs: LogEntry[] = Array.from({ length: 15 }).map((_, i) => generateMockLog(new Date(Date.now() - (15 - i) * 1000)));
+    // Generate initial 15 logs (newest at index 0)
+    const initialLogs: LogEntry[] = Array.from({ length: 15 }).map((_, i) => 
+      generateMockLog(new Date(Date.now() - i * 1000))
+    );
     setLogs(initialLogs);
 
-    // Add a new log every 800ms - 2500ms randomly
+    // Add a new log every 800ms - 2500ms randomly at the top of the queue
     let timeout: NodeJS.Timeout;
     
     const tick = () => {
       setLogs((prev) => {
-        const newLogs = [...prev, generateMockLog(new Date())];
-        // Keep max 50 logs in memory
-        if (newLogs.length > 50) return newLogs.slice(newLogs.length - 50);
-        return newLogs;
+        const newLog = generateMockLog(new Date());
+        return [newLog, ...prev.slice(0, 14)];
       });
       
       const nextDelay = Math.random() * 1500 + 500;
@@ -54,10 +54,10 @@ export default function TrafficFeed() {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Auto-scroll to bottom when new logs arrive
+  // Ensure view remains at top for incoming top traffic
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTop = 0;
     }
   }, [logs]);
 

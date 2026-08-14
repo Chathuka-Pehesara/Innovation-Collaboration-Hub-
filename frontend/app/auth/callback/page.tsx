@@ -51,7 +51,7 @@ function AuthCallbackHandler() {
           <div className="absolute w-6 h-6 rounded-full bg-indigo-600/5 animate-pulse" />
         </div>
         <div>
-          <h3 className="text-textPrimary font-bold text-lg tracking-tight">Authenticating with Google</h3>
+          <h3 className="text-textPrimary font-bold text-lg tracking-tight">Authenticating account...</h3>
           <p className="text-textSecondary text-xs mt-1">Please wait while we set up your secure session...</p>
         </div>
       </div>
