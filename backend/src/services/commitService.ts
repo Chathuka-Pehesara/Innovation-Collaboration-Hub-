@@ -62,12 +62,20 @@ export interface CommitStats {
   streak: number;
 }
 
+export interface WeeklyActivityDay {
+  date: string;
+  label: string;
+  weekday: string;
+  count: number;
+}
+
 export interface CommitAnalytics {
   projectId: string;
   totalCommits: number;
   totalContributors: number;
   topContributors: CommitStats[];
   recentCommits: any[];
+  weeklyActivity: WeeklyActivityDay[];
 }
 
 /**
@@ -189,6 +197,59 @@ export const getCommitRankings = async (projectId: string): Promise<CommitStats[
 };
 
 /**
+ * Get a weekly heatmap for project activity across the last 5 weeks
+ */
+export const getWeeklyActivity = async (
+  projectId: string,
+  weeks: number = 5
+): Promise<WeeklyActivityDay[]> => {
+  try {
+    const totalDays = weeks * 7;
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - (totalDays - 1));
+
+    const commits = await prisma.commit.findMany({
+      where: {
+        projectId,
+        createdAt: { gte: startDate },
+      },
+      select: { createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const countsByDay = new Map<string, number>();
+    commits.forEach(commit => {
+      const date = new Date(commit.createdAt);
+      const dayKey = date.toISOString().split('T')[0];
+      countsByDay.set(dayKey, (countsByDay.get(dayKey) || 0) + 1);
+    });
+
+    const result: WeeklyActivityDay[] = [];
+
+    for (let i = 0; i < totalDays; i++) {
+      const current = new Date(startDate);
+      current.setDate(startDate.getDate() + i);
+
+      const isoDate = current.toISOString().split('T')[0];
+      const count = countsByDay.get(isoDate) || 0;
+
+      result.push({
+        date: isoDate,
+        label: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        weekday: current.toLocaleDateString('en-US', { weekday: 'short' }),
+        count,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error getting weekly activity:', error);
+    throw error;
+  }
+};
+
+/**
  * Get detailed analytics for a project
  */
 export const getProjectCommitAnalytics = async (projectId: string): Promise<CommitAnalytics> => {
@@ -239,12 +300,15 @@ export const getProjectCommitAnalytics = async (projectId: string): Promise<Comm
       avatarUrl: userMap.get(commit.userId)?.avatarUrl || null,
     }));
 
+    const weeklyActivity = await getWeeklyActivity(projectId);
+
     return {
       projectId,
       totalCommits,
       totalContributors: contributors.length,
       topContributors: topContributors.slice(0, 10), // Top 10 contributors
       recentCommits,
+      weeklyActivity,
     };
   } catch (error) {
     console.error('Error getting commit analytics:', error);
