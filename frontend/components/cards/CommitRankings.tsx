@@ -17,12 +17,20 @@ interface CommitStats {
   rank: number;
 }
 
+interface WeeklyActivityDay {
+  date: string;
+  label: string;
+  weekday: string;
+  count: number;
+}
+
 interface CommitAnalytics {
   projectId: string;
   totalCommits: number;
   totalContributors: number;
   topContributors: CommitStats[];
   recentCommits: any[];
+  weeklyActivity: WeeklyActivityDay[];
 }
 
 interface CommitRankingsProps {
@@ -33,7 +41,7 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
   const [analytics, setAnalytics] = useState<CommitAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'rankings' | 'timeline'>('rankings');
+  const [activeTab, setActiveTab] = useState<'rankings' | 'timeline' | 'heatmap'>('rankings');
 
   useEffect(() => {
     const fetchCommitAnalytics = async () => {
@@ -87,6 +95,22 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
     if (rank === 3) return '🥉';
     return `#${rank}`;
   };
+
+  const getHeatmapColor = (count: number, maxCount: number) => {
+    if (count === 0) return 'bg-slate-100 text-slate-400 border border-slate-200';
+    if (maxCount <= 1) return 'bg-indigo-500 text-white border border-indigo-400';
+    if (count / maxCount >= 0.75) return 'bg-indigo-700 text-white border border-indigo-600';
+    if (count / maxCount >= 0.5) return 'bg-indigo-500 text-white border border-indigo-400';
+    if (count / maxCount >= 0.25) return 'bg-indigo-300 text-indigo-900 border border-indigo-300';
+    return 'bg-indigo-100 text-indigo-900 border border-indigo-200';
+  };
+
+  const heatmapData = analytics?.weeklyActivity || [];
+  const heatmapRows = [] as WeeklyActivityDay[][];
+  for (let i = 0; i < heatmapData.length; i += 7) {
+    heatmapRows.push(heatmapData.slice(i, i + 7));
+  }
+  const maxHeatmapCount = Math.max(...heatmapData.map(day => day.count), 1);
 
   if (loading) {
     return (
@@ -153,7 +177,7 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-gray-200">
+      <div className="flex flex-wrap gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('rankings')}
           className={`px-4 py-3 font-semibold transition-all ${
@@ -173,6 +197,16 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
           }`}
         >
           📅 Recent Activity
+        </button>
+        <button
+          onClick={() => setActiveTab('heatmap')}
+          className={`px-4 py-3 font-semibold transition-all ${
+            activeTab === 'heatmap'
+              ? 'text-indigo-600 border-b-2 border-indigo-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          🔥 Weekly Heatmap
         </button>
       </div>
 
@@ -298,6 +332,78 @@ export default function CommitRankings({ projectId }: CommitRankingsProps) {
           ) : (
             <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg">
               No commit activity yet 📭
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Heatmap Tab */}
+      {activeTab === 'heatmap' && (
+        <div className="space-y-4">
+          {heatmapData.length > 0 ? (
+            <>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Last 5 weeks</span>
+                <span>
+                  {heatmapData.filter(day => day.count > 0).length} active days
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <div className="min-w-[500px] space-y-3">
+                  <div className="grid grid-cols-7 gap-2 text-[10px] text-gray-500">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                      <div key={day} className="text-center font-medium">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  {heatmapRows.map((week, weekIndex) => (
+                    <div key={weekIndex} className="grid grid-cols-7 gap-2">
+                      {week.map(day => (
+                        <div
+                          key={day.date}
+                          title={`${day.weekday}, ${day.label} · ${day.count} commit${day.count === 1 ? '' : 's'}`}
+                          className={`flex h-12 items-center justify-center rounded-md text-[10px] font-semibold transition-all ${getHeatmapColor(
+                            day.count,
+                            maxHeatmapCount
+                          )}`}
+                        >
+                          {day.count > 0 ? day.count : ''}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span>Less</span>
+                <div className="flex gap-1">
+                  {[0, 1, 2, 3, 4].map(level => (
+                    <div
+                      key={level}
+                      className={`h-3 w-3 rounded-sm ${
+                        level === 0
+                          ? 'bg-slate-100 border border-slate-200'
+                          : level === 1
+                            ? 'bg-indigo-100 border border-indigo-200'
+                            : level === 2
+                              ? 'bg-indigo-300 border border-indigo-300'
+                              : level === 3
+                                ? 'bg-indigo-500 border border-indigo-400'
+                                : 'bg-indigo-700 border border-indigo-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span>More</span>
+              </div>
+            </>
+          ) : (
+            <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg">
+              No weekly activity data yet 📉
             </div>
           )}
         </div>
