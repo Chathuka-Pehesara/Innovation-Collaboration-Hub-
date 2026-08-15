@@ -46,33 +46,38 @@ export default function SecurityDashboard() {
     }, [isLive]);
 
     return (
-        <div className="min-h-screen bg-[#07090b] text-[#ffffff] p-6 relative overflow-hidden font-mono z-0 mt-16 rounded-2xl border border-[#064e3b]/30">
+        <div className="min-h-screen p-6 relative overflow-hidden font-mono z-0 mt-16 rounded-2xl border" style={{ backgroundColor: '#07090b', color: '#ffffff', borderColor: '#064e3b' }}>
             {/* Background Grid Pattern */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+            <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
+            <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.03) 1px,transparent 1px)", backgroundSize: '40px 40px' }} />
 
             {/* Header */}
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-[#34d399] tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3" style={{ color: '#34d399' }}>
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.1.9-2 2-2m-2 2v5m0-5a2 2 0 00-2-2m10 2a8 8 0 11-16 0 8 8 0 0116 0z" />
                         </svg>
                         SOC Threat Intelligence
                     </h1>
-                    <p className="text-[#064e3b]/60 mt-1 uppercase text-xs tracking-widest font-bold">Live System Monitoring & Threat Detection</p>
+                    <p className="mt-1 uppercase text-xs tracking-widest font-bold" style={{ color: '#064e3b' }}>Live System Monitoring & Threat Detection</p>
                 </div>
 
                 <div className="flex gap-3">
                     <button
                         onClick={() => setIsLive(!isLive)}
-                        className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide border transition-all flex items-center gap-2
-              ${isLive ? 'bg-emerald-950/40 border-[#10b981]/50 text-[#34d399] shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'bg-gray-900 border-gray-700 text-gray-500'}`}
+                        className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide border transition-all flex items-center gap-2"
+                        style={{
+                            backgroundColor: isLive ? 'rgba(6,78,59,0.4)' : '#111827',
+                            borderColor: isLive ? '#10b981' : '#374151',
+                            color: isLive ? '#34d399' : '#6b7280',
+                            boxShadow: isLive ? '0 0 15px rgba(16,185,129,0.15)' : 'none'
+                        }}
                     >
                         {isLive ? (
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34d399] opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]"></span>
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#34d399' }}></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: '#10b981' }}></span>
                             </span>
                         ) : (
                             <span className="h-2 w-2 rounded-full bg-gray-500" />
@@ -82,7 +87,8 @@ export default function SecurityDashboard() {
 
                     <button
                         onClick={seedThreats}
-                        className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide bg-red-950/30 border border-[#f87171]/30 text-[#f87171] hover:bg-red-900/50 hover:border-[#f87171]/60 transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)] flex items-center gap-2"
+                        className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide border transition-all flex items-center gap-2"
+                        style={{ backgroundColor: 'rgba(127,29,29,0.3)', borderColor: 'rgba(248,113,113,0.3)', color: '#f87171', boxShadow: '0 0 15px rgba(239,68,68,0.1)' }}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -94,35 +100,32 @@ export default function SecurityDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
 
-                {/* Real-time Threat Map / Radar */}
-                <div className="col-span-1 lg:col-span-2 bg-[#0c0e12] border border-[#064e3b]/20 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-900/5 pointer-events-none" />
+                <div className="col-span-1 lg:col-span-2 border rounded-2xl p-6 relative overflow-hidden shadow-2xl" style={{ backgroundColor: '#0c0e12', borderColor: 'rgba(6,78,59,0.2)' }}>
+                    <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(to bottom, transparent, rgba(6,78,59,0.05))' }} />
 
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-[#10b981] font-semibold tracking-widest text-xs uppercase">Global Attack Vectors</h2>
-                        <div className="text-[10px] text-[#064e3b]/40 uppercase tracking-widest">Sys_Status: Valid</div>
+                        <h2 className="font-semibold tracking-widest text-xs uppercase" style={{ color: '#10b981' }}>Global Attack Vectors</h2>
+                        <div className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(6,78,59,0.4)' }}>Sys_Status: Valid</div>
                     </div>
 
                     <div className="relative w-full h-[400px] flex items-center justify-center">
                         {/* The Radar Sweep Effect */}
-                        <div className="absolute w-[300px] h-[300px] rounded-full border border-[#10b981]/10 flex items-center justify-center z-10">
-                            <div className="w-[200px] h-[200px] rounded-full border border-[#10b981]/20 flex items-center justify-center">
-                                <div className="w-[100px] h-[100px] rounded-full border border-[#10b981]/30 flex items-center justify-center">
-                                    <div className="w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_20px_rgba(16,185,129,1)]" />
+                        <div className="absolute w-[300px] h-[300px] rounded-full border flex items-center justify-center z-10" style={{ borderColor: 'rgba(16,185,129,0.1)' }}>
+                            <div className="w-[200px] h-[200px] rounded-full border flex items-center justify-center" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
+                                <div className="w-[100px] h-[100px] rounded-full border flex items-center justify-center" style={{ borderColor: 'rgba(16,185,129,0.3)' }}>
+                                    <div className="w-2 h-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,1)]" style={{ backgroundColor: '#10b981' }} />
                                 </div>
                             </div>
                             <motion.div
-                                className="absolute top-0 w-1/2 h-1/2 bg-gradient-to-br from-[#10b981]/0 to-[#10b981]/20 origin-bottom-right"
-                                style={{ borderRight: '2px solid rgba(16, 185, 129, 0.5)' }}
+                                className="absolute top-0 w-1/2 h-1/2 origin-bottom-right"
+                                style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(16,185,129,0), rgba(16,185,129,0.2))', borderRight: '2px solid rgba(16, 185, 129, 0.5)' }}
                                 animate={{ rotate: 360 }}
                                 transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
                             />
                         </div>
 
-                        {/* Blips / Attacks */}
                         <AnimatePresence>
                             {logs.slice(0, 10).map((log, i) => {
-                                // Random position just for visualization if coords aren't set
                                 let top = '50%';
                                 let left = '50%';
                                 try {
@@ -147,7 +150,6 @@ export default function SecurityDashboard() {
                                             boxShadow: `0 0 15px ${log.severity === 'CRITICAL' ? '#ef4444' : '#10b981'}`,
                                         }}
                                     >
-                                        {/* Ring animation */}
                                         <span className="absolute inline-flex h-full w-full rounded-full animate-ping opacity-75"
                                             style={{ backgroundColor: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981' }}>
                                         </span>
@@ -158,15 +160,14 @@ export default function SecurityDashboard() {
                     </div>
                 </div>
 
-                {/* Live Attack Feed */}
-                <div className="col-span-1 bg-[#0c0e12] border border-[#064e3b]/20 rounded-2xl p-6 relative flex flex-col h-[500px]">
-                    <h2 className="text-[#10b981] font-semibold tracking-widest text-xs uppercase mb-4 sticky top-0 bg-[#0c0e12] pb-2 z-10 border-b border-[#064e3b]/20">
+                <div className="col-span-1 border rounded-2xl p-6 relative flex flex-col h-[500px]" style={{ backgroundColor: '#0c0e12', borderColor: 'rgba(6,78,59,0.2)' }}>
+                    <h2 className="font-semibold tracking-widest text-xs uppercase mb-4 sticky top-0 pb-2 z-10 border-b" style={{ color: '#10b981', backgroundColor: '#0c0e12', borderColor: 'rgba(6,78,59,0.2)' }}>
                         Real-Time Intercept Logs
                     </h2>
 
-                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-emerald-900/30 scrollbar-track-transparent">
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-track-transparent" style={{ overflowY: 'auto' }}>
                         {logs.length === 0 ? (
-                            <div className="text-center text-[#064e3b]/40 text-xs mt-10 uppercase">Awaiting Events...</div>
+                            <div className="text-center text-xs mt-10 uppercase" style={{ color: 'rgba(6,78,59,0.4)' }}>Awaiting Events...</div>
                         ) : null}
                         <AnimatePresence>
                             {logs.map((log, i) => (
@@ -175,24 +176,27 @@ export default function SecurityDashboard() {
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.05 }}
-                                    className="p-3 bg-emerald-950/20 border border-[#064e3b]/30 rounded-xl hover:bg-emerald-900/20 transition-colors"
+                                    className="p-3 border rounded-xl transition-colors"
+                                    style={{ backgroundColor: 'rgba(6,78,59,0.2)', borderColor: 'rgba(6,78,59,0.3)' }}
                                 >
                                     <div className="flex justify-between items-start mb-1">
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase
-                      ${log.severity === 'CRITICAL' ? 'text-red-400 border-[#f87171]/30 bg-red-950/40' :
-                                                log.severity === 'HIGH' ? 'text-orange-400 border-[#fb923c]/30 bg-orange-950/40' :
-                                                    'text-[#34d399] border-[#10b981]/30 bg-emerald-950/40'}`}
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase"
+                                            style={{
+                                                color: log.severity === 'CRITICAL' ? '#f87171' : log.severity === 'HIGH' ? '#fb923c' : '#34d399',
+                                                borderColor: log.severity === 'CRITICAL' ? 'rgba(248,113,113,0.3)' : log.severity === 'HIGH' ? 'rgba(251,146,60,0.3)' : 'rgba(16,185,129,0.3)',
+                                                backgroundColor: log.severity === 'CRITICAL' ? 'rgba(127,29,29,0.4)' : log.severity === 'HIGH' ? 'rgba(194,65,12,0.4)' : 'rgba(6,78,59,0.4)'
+                                            }}
                                         >
                                             {log.severity}
                                         </span>
-                                        <span className="text-[10px] text-[#064e3b]/50">
+                                        <span className="text-[10px]" style={{ color: 'rgba(6,78,59,0.5)' }}>
                                             {new Date(log.createdAt).toLocaleTimeString()}
                                         </span>
                                     </div>
-                                    <p className="text-sm font-semibold text-[#ffffff] mt-1 uppercase tracking-tight">{log.type.replace(/_/g, ' ')}</p>
+                                    <p className="text-sm font-semibold mt-1 uppercase tracking-tight" style={{ color: '#ffffff' }}>{log.type.replace(/_/g, ' ')}</p>
                                     <div className="flex justify-between items-end mt-2 opacity-60">
                                         <span className="text-[10px]">SRC: {log.ip || 'Unknown'}</span>
-                                        <span className="text-[9px] text-[#10b981]/50">FP: {log.fingerprint?.slice(0, 8)}...</span>
+                                        <span className="text-[9px]" style={{ color: 'rgba(16,185,129,0.5)' }}>FP: {log.fingerprint?.slice(0, 8)}...</span>
                                     </div>
                                 </motion.div>
                             ))}
