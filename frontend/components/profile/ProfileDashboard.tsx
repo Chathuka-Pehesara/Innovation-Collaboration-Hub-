@@ -29,6 +29,7 @@ export default function ProfileDashboard({ userId, defaultTab = 'overview' }: Pr
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'avatar' | 'skills' | 'portfolio' | 'availability'>(defaultTab);
 
   useEffect(() => {
@@ -78,10 +79,11 @@ export default function ProfileDashboard({ userId, defaultTab = 'overview' }: Pr
             whileHover={{ scale: 1.05, rotate: 2 }}
             className="relative"
           >
-            {profile.avatarUrl ? (
+            {profile.avatarUrl && !imgError ? (
               <img
                 src={profile.avatarUrl}
                 alt={profile.name}
+                onError={() => setImgError(true)}
                 className="w-24 h-24 rounded-2xl object-cover border-4 border-white/60 shadow-lg"
               />
             ) : (

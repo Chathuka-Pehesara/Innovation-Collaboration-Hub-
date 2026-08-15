@@ -1,15 +1,41 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/authStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function AuthCallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
+  
+  const [showTransition, setShowTransition] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [targetPath, setTargetPath] = useState('');
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    if (showTransition && videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.volume = 1.0;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // Autoplay with sound was blocked. Fallback to muted playback so it doesn't freeze.
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch(e => console.error("Video play failed:", e));
+          }
+        });
+      }
+    }
+  }, [showTransition]);
+
+  useEffect(() => {
+    // Only run this logic if we haven't already initiated the transition
+    if (showTransition) return;
+
     const token = searchParams.get('token');
     const userStr = searchParams.get('user');
     const isNew = searchParams.get('new') === 'true';
@@ -25,14 +51,22 @@ function AuthCallbackHandler() {
 
         setAuth(user, token);
 
-        let targetUrl = '/dashboard';
+        let path = '/dashboard';
         if (isNew || !user.specialization) {
-          targetUrl = '/settings?onboarding=true';
-        } else if (user.role === 'admin') {
-          targetUrl = '/admin';
+          // Redirect first-time users to Settings to pick their specialization
+          path = '/settings?onboarding=true';
         }
-
-        window.location.replace(targetUrl);
+        
+        setTargetPath(path);
+        setShowTransition(true);
+        router.prefetch(path);
+        
+        // Fallback in case video fails to load or play
+        setTimeout(() => {
+          if (!isFadingOut) {
+            router.push(path);
+          }
+        }, 15000); // Increased timeout to allow full video playback
       } catch (err) {
         console.error('Error parsing OAuth user payload', err);
         window.location.replace('/login?error=oauth_parse_error');
@@ -40,9 +74,10 @@ function AuthCallbackHandler() {
     } else {
       window.location.replace('/login?error=oauth_missing_parameters');
     }
-  }, [searchParams, setAuth]);
+  }, [searchParams, setAuth, router, showTransition, isFadingOut]);
 
   return (
+    <>
     <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-center gap-4 max-w-sm text-center">
         {/* Elegant spinner */}
@@ -56,6 +91,31 @@ function AuthCallbackHandler() {
         </div>
       </div>
     </div>
+    
+    <AnimatePresence>
+      {showTransition && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isFadingOut ? 0 : 1 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black"
+        >
+          <video 
+            ref={videoRef}
+            src="/Logo CH.mp4" 
+            playsInline
+            className="w-full h-full object-cover"
+            onEnded={() => {
+              setIsFadingOut(true);
+              setTimeout(() => {
+                router.push(targetPath || '/dashboard');
+              }, 800);
+            }}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 

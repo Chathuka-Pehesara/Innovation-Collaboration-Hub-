@@ -36,8 +36,8 @@ export class GithubService {
   static getTitleFromPRCount(prCount: number): string {
     if (prCount < 5) return 'Contributor';
     if (prCount >= 5 && prCount <= 9) return 'Named Developer';
-    if (prCount >= 10 && prCount <= 24) return 'Advanced Developer';
-    if (prCount >= 25 && prCount <= 49) return 'Lead Developer';
+    if (prCount >= 10 && prCount <= 19) return 'Advanced Developer';
+    if (prCount >= 20 && prCount <= 29) return 'Lead Developer';
     return 'Co-Owner'; // 50+
   }
 }
