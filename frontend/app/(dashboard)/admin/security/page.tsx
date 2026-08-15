@@ -109,7 +109,7 @@ export default function SecurityDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
 
-                <div className="col-span-1 lg:col-span-2 border rounded-2xl p-6 relative overflow-hidden shadow-2xl" style={{ backgroundColor: '#0a0d14', borderColor: '#0f3a2b' }}>
+                <div className="col-span-1 lg:col-span-2 border rounded-2xl p-6 relative overflow-hidden shadow-2xl flex flex-col h-[500px]" style={{ backgroundColor: '#0a0d14', borderColor: '#0f3a2b' }}>
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.05))' }} />
 
                     <div className="flex justify-between items-center mb-6">
@@ -117,58 +117,81 @@ export default function SecurityDashboard() {
                         <div className="text-[10px] uppercase tracking-widest soc-override-secondary">Sys_Status: Valid</div>
                     </div>
 
-                    <div className="relative w-full h-[400px] flex items-center justify-center">
-                        {/* The Radar Sweep Effect - Fixed Overflow and Positioning */}
-                        <div className="absolute w-[300px] h-[300px] rounded-full border z-10 overflow-hidden" style={{ borderColor: 'rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <div className="w-[200px] h-[200px] rounded-full border z-20" style={{ borderColor: 'rgba(16,185,129,0.4)', position: 'absolute' }}></div>
-                            <div className="w-[100px] h-[100px] rounded-full border flex items-center justify-center z-20" style={{ borderColor: 'rgba(16,185,129,0.6)', position: 'absolute' }}>
-                                <div className="w-2 h-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,1)]" style={{ backgroundColor: '#10b981' }} />
+                    <div className="relative w-full flex-1 flex items-center justify-center pointer-events-none group">
+                        {/* The Radar Sweep Effect - Professional Full 360 Smooth */}
+                        <div className="absolute w-[350px] h-[350px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                            {/* Radar Grid Circles */}
+                            <div className="absolute w-[350px] h-[350px] rounded-full border border-dashed opacity-30" style={{ borderColor: '#10b981' }}></div>
+                            <div className="absolute w-[250px] h-[250px] rounded-full border opacity-40" style={{ borderColor: '#10b981' }}></div>
+                            <div className="absolute w-[150px] h-[150px] rounded-full border opacity-50" style={{ borderColor: '#10b981' }}></div>
+                            <div className="absolute w-[50px] h-[50px] rounded-full border flex items-center justify-center opacity-60" style={{ borderColor: '#10b981' }}>
+                                <div className="w-2 h-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,1)]" style={{ backgroundColor: '#34d399' }} />
                             </div>
 
+                            {/* Crosshairs */}
+                            <div className="absolute w-full h-[1px] opacity-20" style={{ backgroundColor: '#10b981' }}></div>
+                            <div className="absolute h-full w-[1px] opacity-20" style={{ backgroundColor: '#10b981' }}></div>
+
+                            {/* Smooth Sweeper */}
                             <motion.div
-                                className="absolute top-0 left-0 w-[150px] h-[150px] origin-bottom-right"
+                                className="absolute inset-0 w-full h-full rounded-full"
                                 style={{
-                                    backgroundImage: 'conic-gradient(from 180deg at 100% 100%, rgba(16,185,129,0) 0deg, rgba(16,185,129,0.4) 90deg)',
+                                    background: 'conic-gradient(from 0deg at 50% 50%, rgba(16, 185, 129, 0) 65%, rgba(16, 185, 129, 0.05) 85%, rgba(16, 185, 129, 0.4) 100%)',
                                     borderRight: '2px solid rgba(52, 211, 153, 0.8)'
                                 }}
                                 animate={{ rotate: 360 }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                                transition={{ repeat: Infinity, duration: 3.5, ease: "linear" }}
                             />
+
+                            {/* Threat Dots Map */}
+                            <AnimatePresence>
+                                {logs.slice(0, 15).map((log, i) => {
+                                    let top = '50%';
+                                    let left = '50%';
+
+                                    // Generate deterministic pseudo-random spread so dots always appear!
+                                    // Uses the UUID to create unique but consistent x/y percentages
+                                    const charCode = log.id.charCodeAt(0) + log.id.charCodeAt(8) + log.id.charCodeAt(15);
+                                    const angle = (charCode * 137.5) * (Math.PI / 180);
+                                    const radius = (charCode % 40) + 5; // 5% to 45% radius logic
+
+                                    top = `${50 + (radius * Math.sin(angle))}%`;
+                                    left = `${50 + (radius * Math.cos(angle))}%`;
+
+                                    // Overwrite with real coordinates if available
+                                    try {
+                                        const meta = JSON.parse(log.metadata || '{}');
+                                        if (meta.coordinates) {
+                                            top = `${50 + (meta.coordinates[0] / 90) * 45}%`;
+                                            left = `${50 + (meta.coordinates[1] / 180) * 45}%`;
+                                        }
+                                    } catch (e) { }
+
+                                    return (
+                                        <motion.div
+                                            key={log.id}
+                                            initial={{ scale: 0, opacity: 0 }}
+                                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0.8, 1] }}
+                                            transition={{ duration: 1.5, repeat: Infinity, delay: (Math.random() * 2) }}
+                                            className="absolute z-20 w-3 h-3 rounded-full"
+                                            style={{
+                                                top,
+                                                left,
+                                                marginTop: '-6px',
+                                                marginLeft: '-6px',
+                                                backgroundColor: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981',
+                                                boxShadow: `0 0 15px ${log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981'}`,
+                                            }}
+                                        >
+                                            <span className="absolute inline-flex h-full w-full rounded-full animate-ping opacity-75"
+                                                style={{ backgroundColor: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981' }}>
+                                            </span>
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
                         </div>
-
-                        <AnimatePresence>
-                            {logs.slice(0, 10).map((log, i) => {
-                                let top = '50%';
-                                let left = '50%';
-                                try {
-                                    const meta = JSON.parse(log.metadata || '{}');
-                                    if (meta.coordinates) {
-                                        top = `${50 + (meta.coordinates[0] / 90) * 50}%`;
-                                        left = `${50 + (meta.coordinates[1] / 180) * 50}%`;
-                                    }
-                                } catch (e) { }
-
-                                return (
-                                    <motion.div
-                                        key={log.id}
-                                        initial={{ scale: 0, opacity: 0 }}
-                                        animate={{ scale: [1, 1.5, 1], opacity: [1, 0.8, 1] }}
-                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                        className="absolute z-20 w-3 h-3 rounded-full"
-                                        style={{
-                                            top,
-                                            left,
-                                            backgroundColor: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981',
-                                            boxShadow: `0 0 15px ${log.severity === 'CRITICAL' ? '#ef4444' : '#10b981'}`,
-                                        }}
-                                    >
-                                        <span className="absolute inline-flex h-full w-full rounded-full animate-ping opacity-75"
-                                            style={{ backgroundColor: log.severity === 'CRITICAL' ? '#ef4444' : log.severity === 'HIGH' ? '#f97316' : '#10b981' }}>
-                                        </span>
-                                    </motion.div>
-                                );
-                            })}
-                        </AnimatePresence>
                     </div>
                 </div>
 
