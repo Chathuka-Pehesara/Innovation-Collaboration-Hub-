@@ -19,140 +19,167 @@ interface TopologyMapProps {
   };
 }
 
-const statusColors = {
-  healthy: "text-green-500 border-green-500/50 bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.3)]",
-  degraded: "text-amber-500 border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
-  down: "text-red-500 border-red-500/50 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.3)]",
-  unknown: "text-gray-500 border-gray-500/50 bg-gray-500/10",
+type StatusKey = "healthy" | "degraded" | "down" | "unknown";
+
+const statusStyle: Record<StatusKey, string> = {
+  healthy: "border-emerald-500/50 text-emerald-300 bg-emerald-500/10 backdrop-blur-xl shadow-[0_0_10px_rgba(16,185,129,0.2)]",
+  degraded: "border-amber-500/50 text-amber-300 bg-amber-500/10 backdrop-blur-xl shadow-[0_0_10px_rgba(245,158,11,0.2)]",
+  down:    "border-red-500/50   text-red-300   bg-red-500/10   backdrop-blur-xl shadow-[0_0_10px_rgba(239,68,68,0.2)]",
+  unknown: "border-slate-700/50 text-slate-400  bg-white/5      backdrop-blur-xl",
 };
 
-const pulseColors = {
-  healthy: "#22c55e",
+const pulseColors: Record<StatusKey, string> = {
+  healthy: "#10b981",
   degraded: "#f59e0b",
-  down: "#ef4444",
-  unknown: "#6b7280",
+  down:    "#ef4444",
+  unknown: "#64748b",
 };
 
-const Node = ({ 
-  icon: Icon, 
-  label, 
-  status = "unknown", 
-  latency, 
-  x, 
-  y 
-}: { 
-  icon: any, 
-  label: string, 
-  status?: "healthy" | "degraded" | "down" | "unknown", 
-  latency?: number | null,
-  x: number, 
-  y: number 
-}) => {
+/** Small glassy card for a single service node */
+function NodeCard({
+  icon: Icon,
+  label,
+  status = "unknown",
+  latency,
+}: {
+  icon: React.ElementType;
+  label: string;
+  status?: StatusKey;
+  latency?: number | null;
+}) {
   return (
     <motion.div
-      initial={{ scale: 0, opacity: 0 }}
+      initial={{ scale: 0.7, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100, damping: 15 }}
-      style={{ left: `${x}%`, top: `${y}%` }}
+      transition={{ type: "spring", stiffness: 150, damping: 18 }}
       className={clsx(
-        "absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center p-4 rounded-xl border-2 backdrop-blur-md z-10 w-32",
-        statusColors[status]
+        "flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-xl border",
+        "min-w-[76px] text-center",
+        statusStyle[status]
       )}
     >
-      <Icon className="w-8 h-8 mb-2" />
-      <span className="font-semibold text-sm text-center">{label}</span>
-      {latency !== undefined && latency !== null && (
-        <span className="text-xs opacity-75 mt-1">{latency}ms</span>
+      <Icon className="w-4 h-4 shrink-0" />
+      <span className="text-[10px] font-bold leading-tight whitespace-nowrap">{label}</span>
+      {latency != null && (
+        <span className="text-[9px] opacity-70 font-mono">{latency}ms</span>
       )}
-      {status === 'down' && (
-        <span className="text-[10px] font-bold uppercase mt-1 px-2 py-0.5 bg-red-500/20 text-red-500 rounded-full">Offline</span>
+      {status === "down" && (
+        <span className="text-[8px] font-bold px-1.5 py-px rounded-full border border-red-500/40 bg-red-500/20 text-red-300 animate-pulse">
+          DOWN
+        </span>
       )}
     </motion.div>
   );
-};
+}
 
-const Connection = ({ 
-  startX, 
-  startY, 
-  endX, 
-  endY, 
-  status = "unknown" 
-}: { 
-  startX: number, 
-  startY: number, 
-  endX: number, 
-  endY: number, 
-  status?: "healthy" | "degraded" | "down" | "unknown" 
-}) => {
-  const isDown = status === 'down';
+/**
+ * Horizontal line connector with a travelling dot using CSS animation.
+ * Avoids motion.circle inside SVG which causes TypeScript errors in strict builds.
+ */
+function PulseLine({ color, dashed }: { color: string; dashed?: boolean }) {
   return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-      {/* Base Line */}
-      <line
-        x1={`${startX}%`}
-        y1={`${startY}%`}
-        x2={`${endX}%`}
-        y2={`${endY}%`}
-        stroke={isDown ? pulseColors.down : "rgba(100, 116, 139, 0.3)"}
-        strokeWidth="2"
-        strokeDasharray={isDown ? "4 4" : "none"}
+    <div className="relative self-center shrink-0 w-8 h-0.5">
+      <div
+        className="absolute inset-0"
+        style={{ background: dashed ? color : "rgba(255,255,255,0.15)" }}
       />
-      
-      {/* Animated Pulse (only if healthy/degraded) */}
-      {!isDown && status !== "unknown" && (
-        <motion.circle
-          r="4"
-          fill={pulseColors[status]}
-          initial={{ cx: `${startX}%`, cy: `${startY}%`, opacity: 1 }}
-          animate={{
-            cx: [`${startX}%`, `${endX}%`],
-            cy: [`${startY}%`, `${endY}%`],
-            opacity: [0, 1, 0]
+      {!dashed && (
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full"
+          style={{
+            background: color,
+            boxShadow: `0 0 5px ${color}`,
+            animation: "slideX 1.6s linear infinite",
           }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-            delay: Math.random() * 2 // Stagger animations
-          }}
-          style={{ filter: `drop-shadow(0 0 8px ${pulseColors[status]})` }}
         />
       )}
-    </svg>
+      <style>{`
+        @keyframes slideX {
+          0%   { left: 0%;   opacity: 0; }
+          20%  { opacity: 1; }
+          80%  { opacity: 1; }
+          100% { left: 100%; opacity: 0; }
+        }
+      `}</style>
+    </div>
   );
-};
+}
+
+/**
+ * Vertical line connector with a travelling dot using CSS animation.
+ * Avoids motion.circle inside SVG which causes TypeScript errors in strict builds.
+ */
+function VConnector({ color, dashed }: { color: string; dashed?: boolean }) {
+  return (
+    <div className="relative self-center shrink-0 w-0.5 h-7">
+      <div
+        className="absolute inset-0"
+        style={{ background: dashed ? color : "rgba(255,255,255,0.15)" }}
+      />
+      {!dashed && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+          style={{
+            background: color,
+            boxShadow: `0 0 5px ${color}`,
+            animation: "slideY 1.4s linear infinite",
+          }}
+        />
+      )}
+      <style>{`
+        @keyframes slideY {
+          0%   { top: 0%;   opacity: 0; }
+          20%  { opacity: 1; }
+          80%  { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default function TopologyMap({ services }: TopologyMapProps) {
-  // Define node positions (percentages)
-  const nodes = {
-    client: { x: 50, y: 15 },
-    api: { x: 50, y: 50 },
-    db: { x: 20, y: 85 },
-    redis: { x: 50, y: 85 },
-    ai: { x: 80, y: 85 },
-  };
-
-  const apiStatus = services 
-    ? (Object.values(services).some(s => s.status === 'down') ? 'degraded' : 'healthy') 
-    : 'unknown';
+  const dbStatus: StatusKey    = services?.database?.status  ?? "unknown";
+  const redisStatus: StatusKey = services?.redis?.status     ?? "unknown";
+  const aiStatus: StatusKey    = services?.aiService?.status ?? "unknown";
+  const apiStatus: StatusKey   = services
+    ? (Object.values(services).every((s) => s.status === "down")
+        ? "down"
+        : Object.values(services).some((s) => s.status === "down")
+          ? "degraded"
+          : "healthy")
+    : "unknown";
 
   return (
-    <div className="relative w-full h-[450px] bg-slate-900/40 dark:bg-slate-900/60 rounded-2xl border border-slate-700/50 overflow-hidden shadow-xl">
-      {/* Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+    <div className="w-full rounded-xl border border-white/10 bg-white/5 backdrop-blur-2xl p-4">
+      {/* Row 1: Client */}
+      <div className="flex justify-center">
+        <NodeCard icon={Globe} label="Client" status="healthy" />
+      </div>
 
-      {/* Connections */}
-      <Connection startX={nodes.client.x} startY={nodes.client.y} endX={nodes.api.x} endY={nodes.api.y} status={apiStatus} />
-      <Connection startX={nodes.api.x} startY={nodes.api.y} endX={nodes.db.x} endY={nodes.db.y} status={services?.database?.status} />
-      <Connection startX={nodes.api.x} startY={nodes.api.y} endX={nodes.redis.x} endY={nodes.redis.y} status={services?.redis?.status} />
-      <Connection startX={nodes.api.x} startY={nodes.api.y} endX={nodes.ai.x} endY={nodes.ai.y} status={services?.aiService?.status} />
+      {/* Connector: Client → API */}
+      <div className="flex justify-center">
+        <VConnector color={pulseColors[apiStatus]} dashed={apiStatus === "down"} />
+      </div>
 
-      {/* Nodes */}
-      <Node icon={Globe} label="Client" status="healthy" x={nodes.client.x} y={nodes.client.y} />
-      <Node icon={Server} label="API Gateway" status={apiStatus as any} latency={null} x={nodes.api.x} y={nodes.api.y} />
-      <Node icon={Database} label="PostgreSQL" status={services?.database?.status} latency={services?.database?.latencyMs} x={nodes.db.x} y={nodes.db.y} />
-      <Node icon={HardDrive} label="Redis Cache" status={services?.redis?.status} latency={services?.redis?.latencyMs} x={nodes.redis.x} y={nodes.redis.y} />
-      <Node icon={Brain} label="AI Service" status={services?.aiService?.status} latency={services?.aiService?.latencyMs} x={nodes.ai.x} y={nodes.ai.y} />
+      {/* Row 2: API Gateway */}
+      <div className="flex justify-center">
+        <NodeCard icon={Server} label="API Gateway" status={apiStatus} />
+      </div>
+
+      {/* Connector: API → bottom row */}
+      <div className="flex justify-center">
+        <VConnector color={pulseColors[dbStatus]} dashed={dbStatus === "down"} />
+      </div>
+
+      {/* Row 3: PostgreSQL · Redis Cache · AI Service */}
+      <div className="flex items-center justify-center gap-1.5">
+        <NodeCard icon={Database}  label="PostgreSQL"  status={dbStatus}    latency={services?.database?.latencyMs} />
+        <PulseLine color={pulseColors[redisStatus]} dashed={redisStatus === "down"} />
+        <NodeCard icon={HardDrive} label="Redis Cache" status={redisStatus} latency={services?.redis?.latencyMs} />
+        <PulseLine color={pulseColors[aiStatus]} dashed={aiStatus === "down"} />
+        <NodeCard icon={Brain}     label="AI Service"  status={aiStatus}    latency={services?.aiService?.latencyMs} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/ui/Logo';
@@ -11,12 +12,22 @@ import {
   MessageSquare, 
   Trophy, 
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  HeartHandshake,
+  Activity
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/authStore';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentUser = mounted ? user : null;
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -25,13 +36,15 @@ export default function Sidebar() {
     { name: 'Team Matching', href: '/match', icon: Zap },
     { name: 'Chat / Mentors', href: '/messages', icon: MessageSquare },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { name: 'Contributors', href: '/contributors', icon: HeartHandshake },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
-  const { user } = useAuthStore();
-  if (user?.role === 'admin') {
+  if (currentUser?.role === 'admin') {
     navItems.push({ name: 'Admin Dashboard', href: '/admin', icon: ShieldAlert });
+    navItems.push({ name: 'Network Status', href: '/status', icon: Activity });
   }
+
 
   return (
     <aside className="w-72 bg-[var(--panel-bg)]/70 backdrop-blur-3xl border-r border-[var(--border-color)] flex flex-col justify-between shrink-0 shadow-[4px_0_30px_rgba(0,0,0,0.1)] relative z-20 transition-all duration-300">

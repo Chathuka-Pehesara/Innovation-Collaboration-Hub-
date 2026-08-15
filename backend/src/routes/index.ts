@@ -20,6 +20,8 @@ import aiRoutes from './aiRoutes';
 import healthRoutes from './healthRoutes';
 import quizRoutes from './quizRoutes';
 import securityRoutes from './securityRoutes';
+import commitRoutes from './commits';
+
 
 const router = Router();
 
@@ -50,5 +52,6 @@ router.use('/ai', aiRoutes);
 router.use('/health', healthRoutes);
 router.use('/quizzes', quizRoutes);
 router.use('/security', securityRoutes);
+router.use('/commits', commitRoutes);
 
 export default router;

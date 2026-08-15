@@ -3,6 +3,8 @@
 ## Project Overview
 The **Innovation & Collaboration Hub** is a multi-service web platform designed to facilitate student collaboration, project ideation, team matching, and academic growth. The application integrates modern frontend experiences, a reliable backend infrastructure, and advanced AI utilities to evaluate ideas, parse student skills, suggest teammates, and provide real-time chatbot mentorship.
 
+> 📚 **Official Project Wiki**: Check out our comprehensive documentation in the [docs/](./docs/README.md) directory for [Setup Guide](./docs/SETUP_GUIDE.md), [Architecture](./docs/ARCHITECTURE.md), [Security](./docs/SECURITY.md), and [Git Guidelines](./docs/GIT_WORKFLOW.md).
+
 ---
 
 ## Team Structure & Ownership

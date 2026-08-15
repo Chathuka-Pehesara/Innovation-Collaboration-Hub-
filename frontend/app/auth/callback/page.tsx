@@ -42,7 +42,13 @@ function AuthCallbackHandler() {
 
     if (token && userStr) {
       try {
-        const user = JSON.parse(decodeURIComponent(userStr));
+        let user;
+        try {
+          user = JSON.parse(userStr);
+        } catch {
+          user = JSON.parse(decodeURIComponent(userStr));
+        }
+
         setAuth(user, token);
 
         let path = '/dashboard';
@@ -63,10 +69,10 @@ function AuthCallbackHandler() {
         }, 15000); // Increased timeout to allow full video playback
       } catch (err) {
         console.error('Error parsing OAuth user payload', err);
-        router.push('/login?error=oauth_parse_error');
+        window.location.replace('/login?error=oauth_parse_error');
       }
     } else {
-      router.push('/login?error=oauth_missing_parameters');
+      window.location.replace('/login?error=oauth_missing_parameters');
     }
   }, [searchParams, setAuth, router, showTransition, isFadingOut]);
 
@@ -80,7 +86,7 @@ function AuthCallbackHandler() {
           <div className="absolute w-6 h-6 rounded-full bg-indigo-600/5 animate-pulse" />
         </div>
         <div>
-          <h3 className="text-textPrimary font-bold text-lg tracking-tight">Authenticating with Google</h3>
+          <h3 className="text-textPrimary font-bold text-lg tracking-tight">Authenticating account...</h3>
           <p className="text-textSecondary text-xs mt-1">Please wait while we set up your secure session...</p>
         </div>
       </div>

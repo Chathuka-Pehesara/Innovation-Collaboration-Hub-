@@ -1,5 +1,6 @@
 """Pydantic schemas for request/response validation."""
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Dict
 from datetime import datetime, timezone

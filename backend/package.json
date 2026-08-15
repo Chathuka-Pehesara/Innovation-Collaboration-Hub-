@@ -8,6 +8,11 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio --schema=prisma/schema.prisma",
+    "db:push": "prisma db push",
+    "db:check": "ts-node scripts/checkDb.ts",
+    "admin:create": "ts-node scripts/createAdmin.ts",
+    "admin:set": "ts-node scripts/setAdmin.ts",
     "lint": "eslint src/**/*.ts"
   },
   "dependencies": {
