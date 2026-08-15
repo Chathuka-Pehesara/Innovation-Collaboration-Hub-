@@ -47,6 +47,15 @@ export default function SecurityDashboard() {
 
     return (
         <div className="min-h-screen p-6 relative overflow-hidden font-mono z-0 mt-16 rounded-2xl border" style={{ backgroundColor: '#07090b', color: '#ffffff', borderColor: '#10b981' }}>
+
+            {/* FORCE OVERRIDES FOR EXTRANEOUS GLOBAL !IMPORTANT CSS */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+        .soc-override { color: #34d399 !important; }
+        .soc-override-secondary { color: #6ee7b7 !important; }
+        .soc-text-white { color: #ffffff !important; }
+      `}} />
+
             {/* Background Grid Pattern */}
             <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')" }} />
             <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(16,185,129,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,0.05) 1px,transparent 1px)", backgroundSize: '40px 40px' }} />
@@ -54,13 +63,13 @@ export default function SecurityDashboard() {
             {/* Header */}
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3" style={{ color: '#34d399' }}>
+                    <div className="text-3xl font-bold tracking-tight flex items-center gap-3 soc-override">
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0-1.1.9-2 2-2m-2 2v5m0-5a2 2 0 00-2-2m10 2a8 8 0 11-16 0 8 8 0 0116 0z" />
                         </svg>
                         SOC Threat Intelligence
-                    </h1>
-                    <p className="mt-2 uppercase text-xs tracking-widest font-bold" style={{ color: '#6ee7b7' }}>Live System Monitoring & Threat Detection</p>
+                    </div>
+                    <p className="mt-2 uppercase text-xs tracking-widest font-bold soc-override-secondary">Live System Monitoring & Threat Detection</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -104,8 +113,8 @@ export default function SecurityDashboard() {
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.05))' }} />
 
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="font-semibold tracking-widest text-xs uppercase" style={{ color: '#34d399' }}>Global Attack Vectors</h2>
-                        <div className="text-[10px] uppercase tracking-widest" style={{ color: '#6ee7b7' }}>Sys_Status: Valid</div>
+                        <div className="font-semibold tracking-widest text-xs uppercase soc-override">Global Attack Vectors</div>
+                        <div className="text-[10px] uppercase tracking-widest soc-override-secondary">Sys_Status: Valid</div>
                     </div>
 
                     <div className="relative w-full h-[400px] flex items-center justify-center">
@@ -164,13 +173,13 @@ export default function SecurityDashboard() {
                 </div>
 
                 <div className="col-span-1 border rounded-2xl p-6 relative flex flex-col h-[500px]" style={{ backgroundColor: '#0a0d14', borderColor: '#0f3a2b' }}>
-                    <h2 className="font-semibold tracking-widest text-xs uppercase mb-4 sticky top-0 pb-2 z-10 border-b" style={{ color: '#34d399', backgroundColor: '#0a0d14', borderColor: '#0f3a2b' }}>
+                    <div className="font-semibold tracking-widest text-xs uppercase mb-4 sticky top-0 pb-2 z-10 border-b soc-override" style={{ backgroundColor: '#0a0d14', borderColor: '#0f3a2b' }}>
                         Real-Time Intercept Logs
-                    </h2>
+                    </div>
 
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-track-transparent" style={{ overflowY: 'auto' }}>
                         {logs.length === 0 ? (
-                            <div className="text-center text-xs mt-10 uppercase font-bold" style={{ color: '#6ee7b7' }}>Awaiting Events...</div>
+                            <div className="text-center text-xs mt-10 uppercase font-bold soc-override-secondary">Awaiting Events...</div>
                         ) : null}
                         <AnimatePresence>
                             {logs.map((log, i) => (
@@ -192,14 +201,14 @@ export default function SecurityDashboard() {
                                         >
                                             {log.severity}
                                         </span>
-                                        <span className="text-[10px]" style={{ color: '#6ee7b7' }}>
+                                        <span className="text-[10px] soc-override-secondary">
                                             {new Date(log.createdAt).toLocaleTimeString()}
                                         </span>
                                     </div>
-                                    <p className="text-sm font-bold mt-1 uppercase tracking-tight" style={{ color: '#ffffff' }}>{log.type.replace(/_/g, ' ')}</p>
+                                    <p className="text-sm font-bold mt-1 uppercase tracking-tight soc-text-white">{log.type.replace(/_/g, ' ')}</p>
                                     <div className="flex justify-between items-end mt-2 opacity-80">
                                         <span className="text-[10px]" style={{ color: '#e5e7eb' }}>SRC: {log.ip || 'Unknown'}</span>
-                                        <span className="text-[9px]" style={{ color: '#6ee7b7' }}>FP: {log.fingerprint?.slice(0, 8)}...</span>
+                                        <span className="text-[9px] soc-override-secondary">FP: {log.fingerprint?.slice(0, 8)}...</span>
                                     </div>
                                 </motion.div>
                             ))}
