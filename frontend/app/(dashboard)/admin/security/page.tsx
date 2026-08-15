@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/lib/api';
 
@@ -36,6 +36,31 @@ export default function SecurityDashboard() {
         }
     };
 
+    const exportToCSV = () => {
+        if (logs.length === 0) return;
+
+        // Create CSV Headers
+        const headers = ['Timestamp', 'Severity', 'Type', 'Source IP', 'Fingerprint', 'Raw Metadata'];
+
+        // Map log array to CSV row format
+        const csvRows = logs.map(log => {
+            const date = new Date(log.createdAt).toISOString();
+            return `"${date}","${log.severity}","${log.type}","${log.ip || 'Unknown'}","${log.fingerprint || 'N/A'}","${(log.metadata || '').replace(/"/g, '""')}"`;
+        });
+
+        const csvContent = [headers.join(','), ...csvRows].join('\n');
+
+        // Trigger Browser Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `SOC_Threat_Intelligence_Export_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     useEffect(() => {
         fetchLogs();
         let interval: NodeJS.Timeout;
@@ -45,10 +70,15 @@ export default function SecurityDashboard() {
         return () => clearInterval(interval);
     }, [isLive]);
 
+    // Compute strictly recent logs (within the last 10 minutes) to keep the dashboard clean
+    const recentLogs = useMemo(() => {
+        const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+        return logs.filter(log => new Date(log.createdAt).getTime() > tenMinutesAgo);
+    }, [logs]);
+
     return (
         <div className="min-h-screen p-6 relative overflow-hidden font-mono z-0 mt-16 rounded-2xl border" style={{ backgroundColor: '#07090b', color: '#ffffff', borderColor: '#10b981' }}>
 
-            {/* FORCE OVERRIDES FOR EXTRANEOUS GLOBAL !IMPORTANT CSS */}
             <style dangerouslySetInnerHTML={{
                 __html: `
         .soc-override { color: #34d399 !important; }
@@ -69,10 +99,21 @@ export default function SecurityDashboard() {
                         </svg>
                         SOC Threat Intelligence
                     </div>
-                    <p className="mt-2 uppercase text-xs tracking-widest font-bold soc-override-secondary">Live System Monitoring & Threat Detection</p>
+                    <p className="mt-2 text-xs tracking-widest font-bold soc-override-secondary uppercase">Live System Monitoring & Threat Detection</p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
+                    <button
+                        onClick={exportToCSV}
+                        className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide border transition-all flex items-center gap-2"
+                        style={{ backgroundColor: 'rgba(59,130,246,0.15)', borderColor: 'rgba(59,130,246,0.3)', color: '#93c5fd', boxShadow: '0 0 15px rgba(59,130,246,0.1)' }}
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export Sheet
+                    </button>
+
                     <button
                         onClick={() => setIsLive(!isLive)}
                         className="px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide border transition-all flex items-center gap-2"
@@ -113,7 +154,7 @@ export default function SecurityDashboard() {
                     <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(to bottom, transparent, rgba(16,185,129,0.05))' }} />
 
                     <div className="flex justify-between items-center mb-6">
-                        <div className="font-semibold tracking-widest text-xs uppercase soc-override">Global Attack Vectors</div>
+                        <div className="font-semibold tracking-widest text-xs uppercase soc-override">Global Attack Vectors ({recentLogs.length} Active in last 10m)</div>
                         <div className="text-[10px] uppercase tracking-widest soc-override-secondary">Sys_Status: Valid</div>
                     </div>
 
@@ -121,7 +162,6 @@ export default function SecurityDashboard() {
                         {/* The Radar Sweep Effect - Professional Full 360 Smooth */}
                         <div className="absolute w-[350px] h-[350px]" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
-                            {/* Radar Grid Circles */}
                             <div className="absolute w-[350px] h-[350px] rounded-full border border-dashed opacity-30" style={{ borderColor: '#10b981' }}></div>
                             <div className="absolute w-[250px] h-[250px] rounded-full border opacity-40" style={{ borderColor: '#10b981' }}></div>
                             <div className="absolute w-[150px] h-[150px] rounded-full border opacity-50" style={{ borderColor: '#10b981' }}></div>
@@ -129,11 +169,9 @@ export default function SecurityDashboard() {
                                 <div className="w-2 h-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,1)]" style={{ backgroundColor: '#34d399' }} />
                             </div>
 
-                            {/* Crosshairs */}
                             <div className="absolute w-full h-[1px] opacity-20" style={{ backgroundColor: '#10b981' }}></div>
                             <div className="absolute h-full w-[1px] opacity-20" style={{ backgroundColor: '#10b981' }}></div>
 
-                            {/* Smooth Sweeper */}
                             <motion.div
                                 className="absolute inset-0 w-full h-full rounded-full"
                                 style={{
@@ -144,22 +182,18 @@ export default function SecurityDashboard() {
                                 transition={{ repeat: Infinity, duration: 3.5, ease: "linear" }}
                             />
 
-                            {/* Threat Dots Map */}
                             <AnimatePresence>
-                                {logs.slice(0, 15).map((log, i) => {
+                                {recentLogs.slice(0, 15).map((log, i) => {
                                     let top = '50%';
                                     let left = '50%';
 
-                                    // Generate deterministic pseudo-random spread so dots always appear!
-                                    // Uses the UUID to create unique but consistent x/y percentages
                                     const charCode = log.id.charCodeAt(0) + log.id.charCodeAt(8) + log.id.charCodeAt(15);
                                     const angle = (charCode * 137.5) * (Math.PI / 180);
-                                    const radius = (charCode % 40) + 5; // 5% to 45% radius logic
+                                    const radius = (charCode % 40) + 5;
 
                                     top = `${50 + (radius * Math.sin(angle))}%`;
                                     left = `${50 + (radius * Math.cos(angle))}%`;
 
-                                    // Overwrite with real coordinates if available
                                     try {
                                         const meta = JSON.parse(log.metadata || '{}');
                                         if (meta.coordinates) {
@@ -173,6 +207,7 @@ export default function SecurityDashboard() {
                                             key={log.id}
                                             initial={{ scale: 0, opacity: 0 }}
                                             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.8, 1] }}
+                                            exit={{ scale: 0, opacity: 0, transition: { duration: 0.5 } }}
                                             transition={{ duration: 1.5, repeat: Infinity, delay: (Math.random() * 2) }}
                                             className="absolute z-20 w-3 h-3 rounded-full"
                                             style={{
@@ -201,15 +236,16 @@ export default function SecurityDashboard() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-track-transparent" style={{ overflowY: 'auto' }}>
-                        {logs.length === 0 ? (
-                            <div className="text-center text-xs mt-10 uppercase font-bold soc-override-secondary">Awaiting Events...</div>
+                        {recentLogs.length === 0 ? (
+                            <div className="text-center text-xs mt-10 uppercase font-bold soc-override-secondary">Clear Area.<br /><br />No threats detected in the last 10 minutes.</div>
                         ) : null}
                         <AnimatePresence>
-                            {logs.map((log, i) => (
+                            {recentLogs.map((log, i) => (
                                 <motion.div
                                     key={log.id}
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
                                     transition={{ delay: i * 0.05 }}
                                     className="p-3 border rounded-xl transition-colors"
                                     style={{ backgroundColor: 'rgba(16,185,129,0.1)', borderColor: 'rgba(16,185,129,0.3)' }}
