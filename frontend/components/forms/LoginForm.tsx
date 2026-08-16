@@ -452,82 +452,126 @@ export function LoginForm() {
       {/* 🛡️ Security Status Strip */}
       <motion.div
         variants={itemVariants}
-        className="mt-4 px-3 py-2.5 rounded-xl border border-amber-900/12 bg-amber-950/[0.04] backdrop-blur-sm"
+        className="mt-4 p-3 rounded-xl border border-amber-900/15 bg-white/40 shadow-inner backdrop-blur-md relative overflow-hidden"
       >
+        {powStatus === 'solving' && (
+          <div className="absolute inset-0 bg-amber-500/5 mix-blend-overlay animate-pulse" />
+        )}
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+        <div className="flex items-center justify-between mb-3 relative z-10">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${powStatus === 'solved' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 shadow-sm ${powStatus === 'solved' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
             </span>
-            <span className="text-[9px] font-bold text-amber-900/45 uppercase tracking-widest">Security Active</span>
+            <span className="text-[10px] font-bold text-amber-950 uppercase tracking-widest shadow-sm">Security Layer</span>
           </div>
+
           {powStatus === 'idle' && (
-            <span className="text-[9px] font-medium text-amber-900/30">—</span>
+            <span className="flex items-center gap-1 text-[9px] font-bold text-amber-900/50 uppercase tracking-widest bg-amber-900/5 px-2 py-0.5 rounded-full">
+              Awaiting Input
+              <span className="flex gap-0.5 ml-1">
+                <span className="w-1 h-1 bg-amber-900/30 rounded-full animate-bounce"></span>
+                <span className="w-1 h-1 bg-amber-900/30 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></span>
+                <span className="w-1 h-1 bg-amber-900/30 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></span>
+              </span>
+            </span>
           )}
+
           {powStatus === 'solving' && (
-            <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-400/25 bg-amber-50">
-              <svg className="w-2 h-2 animate-spin" fill="none" viewBox="0 0 24 24">
+            <span className="flex items-center gap-1.5 text-[9px] font-bold text-amber-700 px-2 py-0.5 rounded-full border border-amber-400/40 bg-amber-100/80 shadow-[0_0_10px_rgba(217,119,6,0.15)] uppercase tracking-wide">
+              <svg className="w-2.5 h-2.5 animate-spin text-amber-600" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Verifying…
+              Computing Hash
             </span>
           )}
+
           {powStatus === 'solved' && (
-            <span className="text-[9px] font-bold text-emerald-600 px-1.5 py-0.5 rounded-full border border-emerald-400/30 bg-emerald-50">
-              ✓ Ready · {powTime}ms
+            <span className="flex items-center gap-1.5 text-[9px] font-bold text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-400/40 bg-emerald-100/90 shadow-[0_0_10px_rgba(16,185,129,0.15)] uppercase tracking-wide">
+              <svg className="w-2.5 h-2.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Verified ({powTime}ms)
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/70 border border-amber-900/10 shadow-sm">
-            <svg className="w-2.5 h-2.5 text-[#702224]/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+
+        <div className="flex flex-wrap gap-2 relative z-10">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-amber-900/10 shadow-sm transition-all hover:bg-amber-50">
+            <svg className="w-3 h-3 text-[#702224]/60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.1.9-2 2-2m-2 2v5m0-5a2 2 0 00-2-2m10 2a8 8 0 11-16 0 8 8 0 0116 0z" />
             </svg>
-            <span className="text-[9px] font-mono text-amber-900/55 truncate max-w-[70px]">
-              {fingerprintSolved ? fingerprintHash.slice(0, 13) + '…' : '—'}
+            <span className="text-[10px] font-mono font-semibold text-amber-900/70 truncate max-w-[80px]">
+              {fingerprintSolved ? fingerprintHash.slice(0, 15) : '—'}
             </span>
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/70 border border-amber-900/10 shadow-sm">
-            <svg className="w-2.5 h-2.5 text-[#702224]/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-amber-900/10 shadow-sm transition-all hover:bg-amber-50">
+            <svg className="w-3 h-3 text-[#702224]/60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <rect x="2" y="3" width="20" height="14" rx="2" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8m-4-4v4" />
             </svg>
-            <span className="text-[9px] font-semibold text-amber-900/65">{osInfo === 'Detecting...' ? '—' : osInfo}</span>
+            <span className="text-[10px] font-semibold text-amber-900/70">{osInfo === 'Detecting...' ? '—' : osInfo}</span>
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/70 border border-amber-900/10 shadow-sm">
-            <svg className="w-2.5 h-2.5 text-[#702224]/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-amber-900/10 shadow-sm transition-all hover:bg-amber-50">
+            <svg className="w-3 h-3 text-[#702224]/60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
             </svg>
-            <span className="text-[9px] font-semibold text-amber-900/65">{browserInfo === 'Detecting...' ? '—' : browserInfo}</span>
+            <span className="text-[10px] font-semibold text-amber-900/70">{browserInfo === 'Detecting...' ? '—' : browserInfo}</span>
           </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50/90 border border-emerald-300/30 shadow-sm">
-            <svg className="w-2.5 h-2.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border shadow-sm transition-colors duration-500 ${powStatus === 'solved' ? 'bg-emerald-50/90 border-emerald-300/40 text-emerald-700' : 'bg-amber-50/90 border-amber-300/40 text-amber-700'}`}>
+            <svg className={`w-3 h-3 shrink-0 ${powStatus === 'solved' ? 'text-emerald-600' : 'text-amber-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            <span className="text-[9px] font-semibold text-emerald-700">Trap On</span>
+            <span className="text-[10px] font-bold">Trap Active</span>
           </div>
-          {powStatus === 'solved' && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#702224]/5 border border-[#702224]/12 shadow-sm">
-              <svg className="w-2.5 h-2.5 text-[#702224]/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        </div>
+
+        {/* Dynamic Proof-of-Work Hashing Visualizer Base Module */}
+        {powStatus === 'solving' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-3 w-full bg-[#111827] rounded-lg p-2.5 overflow-hidden flex flex-col gap-1.5 shadow-inner border border-gray-800"
+          >
+            <div className="flex justify-between items-center text-[8px] font-bold uppercase tracking-wider text-amber-500/70">
+              <span>SHA-256 Brute-Force</span>
+              <span>Target: 0000...</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[9px] text-emerald-400 truncate bg-emerald-400/10 px-1.5 py-0.5 rounded shadow-[0_0_8px_rgba(52,211,153,0.3)] min-w-0" style={{ textShadow: '0 0 5px rgba(52,211,153,0.5)' }}>
+                {powLiveHash || 'Initializing Crypto Context...'}
+              </span>
+              <span className="font-mono text-[9px] text-amber-300 ml-auto bg-amber-900/40 px-1.5 py-0.5 rounded shrink-0">
+                Nonce: <span className="text-amber-100">{powLiveNonce.toLocaleString()}</span>
+              </span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Resolved Module */}
+        {powStatus === 'solved' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mt-3 w-full bg-emerald-950/20 rounded-lg p-2 overflow-hidden flex items-center justify-between gap-1.5 border border-emerald-900/20"
+          >
+            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700/80 pl-1">
+              Hash Locked
+            </span>
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-800 bg-emerald-100/50 px-2 py-1 rounded">
+              <svg className="w-3 h-3 text-emerald-600/70 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span className="text-[9px] font-mono text-[#702224]/60">#{powNonceVal}</span>
+              #{powNonceVal}
             </div>
-          )}
-        </div>
-        {powStatus === 'solving' && (
-          <div className="mt-2 w-full bg-amber-900/8 rounded-full h-0.5 overflow-hidden">
-            <motion.div
-              className="bg-[#702224]/40 h-0.5 rounded-full"
-              initial={{ width: '0%' }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 0.15, repeat: Infinity }}
-            />
-          </div>
+          </motion.div>
         )}
       </motion.div>
     </motion.form>
