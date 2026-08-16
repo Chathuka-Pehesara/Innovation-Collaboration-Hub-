@@ -101,6 +101,7 @@ export default function AvatarUpload({ userId, currentAvatarUrl, onSuccess }: Av
                 src={preview}
                 alt="Avatar preview"
                 fill
+                sizes="192px"
                 className="relative object-cover rounded-2xl shadow-lg border-2 border-white"
               />
             </div>

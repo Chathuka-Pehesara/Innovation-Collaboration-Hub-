@@ -1,0 +1,14 @@
+{
+  "name": "innovation-collaboration-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "db:push": "npm --prefix backend run db:push",
+    "db:generate": "npm --prefix backend run prisma:generate",
+    "db:studio": "npm --prefix backend run prisma:studio",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build"
+  }
+}

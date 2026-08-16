@@ -3,8 +3,13 @@
 import Link from 'next/link';
 import StatsRow from '@/components/dashboard/StatsRow';
 import ActivityFeed from '@/components/dashboard/ActivityFeed';
+import { useAuthStore } from '@/lib/authStore';
+import { Shield, Compass, Zap, Users, MessageSquare, Settings } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div className="space-y-8">
       {/* Welcome header */}
@@ -14,6 +19,15 @@ export default function DashboardPage() {
           <p className="text-[var(--text-secondary)] text-sm mt-1">Manage project requests, matches, and team recommendations.</p>
         </div>
         <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Link 
+              href="/admin" 
+              className="px-4 py-2 text-sm font-bold rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2"
+            >
+              <Shield size={16} />
+              👑 Admin Portal
+            </Link>
+          )}
           <Link href="/explore" className="btn-secondary py-2 px-4 text-sm">
             Explore Ideas
           </Link>
@@ -54,6 +68,20 @@ export default function DashboardPage() {
             Quick Actions
           </h3>
           <div className="space-y-4">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-red-500/10 border border-orange-500/30 hover:border-orange-500/60 transition-all duration-300 text-sm font-semibold group shadow-md relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="flex items-center gap-3 relative z-10 text-white font-bold">
+                  <span className="p-2 rounded-xl bg-orange-500/20 text-orange-400 text-lg">👑</span> 
+                  Admin Control Portal
+                </span>
+                <span className="text-orange-400 group-hover:translate-x-1.5 transition-transform duration-300 relative z-10 font-bold">&rarr;</span>
+              </Link>
+            )}
+
             <Link
               href="/students"
               className="flex items-center justify-between p-5 rounded-2xl bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] hover:border-[var(--accent-primary)]/40 hover:bg-[var(--surface-elevated)] transition-all duration-300 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-semibold group hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden"
@@ -67,7 +95,7 @@ export default function DashboardPage() {
             </Link>
 
             <Link
-              href="/messages"
+              href="/messages?mentor=true"
               className="flex items-center justify-between p-5 rounded-2xl bg-[var(--surface-elevated)]/50 border border-[var(--border-color)] hover:border-[#8B5CF6]/40 hover:bg-[var(--surface-elevated)] transition-all duration-300 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-semibold group hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

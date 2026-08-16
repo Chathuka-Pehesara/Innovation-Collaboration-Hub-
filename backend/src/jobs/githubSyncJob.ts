@@ -1,15 +1,10 @@
-/* eslint-disable */
-// @ts-nocheck
-// @ts-ignore
-import cron from 'node-cron';
 import { PrismaClient } from '@prisma/client';
 import { GithubService } from '../services/githubService';
 
 const prisma = new PrismaClient();
 
 export function startGithubSyncJob() {
-  // Run this job every 6 hours (at minute 0 past every 6th hour)
-  cron.schedule('0 */6 * * *', async () => {
+  const syncTask = async () => {
     console.log('Starting automated GitHub PR sync job...');
     try {
       // Find all users who have a GitHub username linked
@@ -51,7 +46,17 @@ export function startGithubSyncJob() {
     } catch (error) {
       console.error('Error running GitHub PR sync job:', error);
     }
-  });
+  };
 
-  console.log('GitHub Sync Cron Job scheduled (Runs every 6 hours).');
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cron = require('node-cron');
+    cron.schedule('0 */6 * * *', syncTask);
+    console.log('GitHub Sync Cron Job scheduled via node-cron (Runs every 6 hours).');
+  } catch {
+    // Fallback: Run every 6 hours using setInterval
+    const SIX_HOURS = 6 * 60 * 60 * 1000;
+    setInterval(syncTask, SIX_HOURS);
+    console.log('GitHub Sync Job scheduled via setInterval fallback (Runs every 6 hours).');
+  }
 }

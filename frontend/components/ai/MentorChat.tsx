@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { mentorChatApi, ChatMessage, MentorContext } from '@/lib/api/aiApi';
 import { useAuthStore } from '@/lib/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,6 +55,17 @@ const MENTORS: MentorOption[] = [
 export default function MentorChat({ projectContext }: MentorChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeMentor, setActiveMentor] = useState<MentorOption>(MENTORS[0]);
+  const pathname = usePathname();
+
+  // Automatically open the chatbox if routed to /messages?mentor=true
+  useEffect(() => {
+    if (typeof window !== 'undefined' && pathname === '/messages') {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('mentor') === 'true') {
+        setIsOpen(true);
+      }
+    }
+  }, [pathname]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

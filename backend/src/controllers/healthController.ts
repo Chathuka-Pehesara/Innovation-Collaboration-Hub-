@@ -86,12 +86,11 @@ export const getHealth = async (req: Request, res: Response): Promise<void> => {
     checkAiService(),
   ]);
 
-  const statuses = [database.status, redis.status, aiService.status];
-  const overall = statuses.includes('down')
-    ? 'down'
-    : statuses.includes('degraded')
-    ? 'degraded'
-    : 'healthy';
+  // Critical services (database & redis) determine if backend is down
+  const coreDown = database.status === 'down' || redis.status === 'down';
+  const isDegraded = database.status === 'degraded' || redis.status === 'degraded' || aiService.status !== 'healthy';
+
+  const overall = coreDown ? 'down' : isDegraded ? 'degraded' : 'healthy';
 
   const report: HealthReport = {
     overall,
@@ -107,7 +106,7 @@ export const getHealth = async (req: Request, res: Response): Promise<void> => {
     },
   };
 
-  const httpStatus = overall === 'healthy' ? 200 : overall === 'degraded' ? 207 : 503;
+  const httpStatus = overall === 'healthy' ? 200 : overall === 'degraded' ? 200 : 503;
   res.status(httpStatus).json(report);
 };
 

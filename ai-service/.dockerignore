@@ -1,0 +1,10 @@
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+README.md
+MATCHING_API_DOCUMENTATION.md

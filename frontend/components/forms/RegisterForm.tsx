@@ -51,6 +51,9 @@ export function RegisterForm() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [success, setSuccess] = useState(false);
   const [verificationUrl, setVerificationUrl] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const strength = password ? getPasswordStrength(password) : null;
 
@@ -93,6 +96,29 @@ export function RegisterForm() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyNow = async () => {
+    if (!verificationUrl) return;
+    setVerifying(true);
+    setVerificationError(null);
+    setVerificationSuccess(null);
+    try {
+      const token = verificationUrl.split('/').pop();
+      const response = await api.get(`/auth/verify-email/${token}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      setVerificationSuccess(response.data?.message || 'Verification successful!');
+      setTimeout(() => {
+        router.push('/login?verified=true');
+      }, 1500);
+    } catch (err: any) {
+      setVerificationError(err.response?.data?.message || 'Verification failed. Please try again.');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -139,12 +165,20 @@ export function RegisterForm() {
           <div className="p-4 bg-white/50 border border-amber-900/10 rounded-2xl text-left">
             <p className="text-xs text-amber-950 font-bold uppercase tracking-wider mb-1">Development / Sandbox helper</p>
             <p className="text-xs text-amber-900/70 mb-3">Since real emails are not sent in this environment, you can use the button below to verify this account directly:</p>
-            <a 
-              href={verificationUrl}
-              className="inline-block w-full text-center text-xs font-semibold bg-[#702224] hover:bg-[#5C1A1C] text-white px-3 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/15"
+            <button 
+              type="button"
+              onClick={handleVerifyNow}
+              disabled={verifying}
+              className="w-full text-center text-xs font-semibold bg-[#702224] hover:bg-[#5C1A1C] disabled:opacity-50 text-white px-3 py-2.5 rounded-xl transition-all shadow-md shadow-red-950/15 flex items-center justify-center gap-2"
             >
-              Verify Account Now
-            </a>
+              {verifying ? 'Verifying...' : 'Verify Account Now'}
+            </button>
+            {verificationSuccess && (
+              <p className="text-green-800 text-xs mt-2 font-medium">✓ {verificationSuccess}</p>
+            )}
+            {verificationError && (
+              <p className="text-red-600 text-xs mt-2 font-medium">✗ {verificationError}</p>
+            )}
           </div>
         )}
 
@@ -167,6 +201,7 @@ export function RegisterForm() {
       animate="show"
       onSubmit={handleSubmit} 
       noValidate 
+      suppressHydrationWarning
       className="space-y-4"
     >
       {/* Name */}
@@ -181,6 +216,7 @@ export function RegisterForm() {
           value={name}
           onChange={(e) => { setName(e.target.value); clearError('name'); }}
           placeholder="Your full name"
+          suppressHydrationWarning
           whileFocus={{ 
             scale: 1.01,
             boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -194,11 +230,11 @@ export function RegisterForm() {
       </motion.div>
 
       {/* Email */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <label htmlFor="email" className="block text-sm font-semibold text-amber-950 mb-1">
           Email address
         </label>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="email"
             type="email"
@@ -206,6 +242,7 @@ export function RegisterForm() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
             placeholder="you@opms.edu"
+            suppressHydrationWarning
             whileFocus={{ 
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -247,11 +284,11 @@ export function RegisterForm() {
       </motion.div>
 
       {/* Password */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} suppressHydrationWarning>
         <label htmlFor="password" className="block text-sm font-semibold text-amber-950 mb-1">
           Password
         </label>
-        <div className="relative">
+        <div className="relative" suppressHydrationWarning>
           <motion.input
             id="password"
             type={showPassword ? 'text' : 'password'}
@@ -259,6 +296,7 @@ export function RegisterForm() {
             value={password}
             onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
             placeholder="Min 8 chars, uppercase, number, symbol"
+            suppressHydrationWarning
             whileFocus={{ 
               scale: 1.01,
               boxShadow: "0 10px 20px -5px rgba(112, 34, 36, 0.08)",
@@ -392,6 +430,160 @@ export function RegisterForm() {
           <span className="relative z-10 select-none group-hover:text-[#702224] dark:group-hover:text-amber-200 transition-colors duration-300">
             Continue with Google
           </span>
+        </motion.a>
+      </motion.div>
+
+      {/* 🐱 Walking cat keyframes */}
+      <style>{`
+        @keyframes ghCatWalk {
+          0%   { transform: translateX(-70px); }   /* stroll in from left */
+          27%  { transform: translateX(195px); }   /* arrives near center */
+          68%  { transform: translateX(210px); }   /* barely moves — purring pause */
+          100% { transform: translateX(700px); }   /* trots off to the right */
+        }
+        @keyframes ghCatBob {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-2px); }
+        }
+        @keyframes ghTailWag {
+          0%, 100% { transform: rotate(-22deg); }
+          50%       { transform: rotate(22deg); }
+        }
+        @keyframes ghLegA {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-5px); }
+        }
+        @keyframes ghLegB {
+          0%, 100% { transform: translateY(-5px); }
+          50%       { transform: translateY(0px); }
+        }
+        @keyframes ghPurrPulse {
+          0%, 100% { transform: scale(1)     rotate(0deg); }
+          25%       { transform: scale(1.016) rotate(0.5deg); }
+          75%       { transform: scale(1.016) rotate(-0.5deg); }
+        }
+      `}</style>
+
+      {/* GitHub Button */}
+      <motion.div variants={itemVariants} className="relative group rounded-xl">
+        {/* Amber theme glow on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl blur-md z-0" />
+
+        <motion.a
+          id="github-register-btn"
+          href={`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/auth/github`}
+          whileHover={{
+            scale: 1.025,
+            boxShadow: "0 8px 24px -8px rgba(245, 158, 11, 0.25)"
+          }}
+          whileTap={{ scale: 0.97 }}
+          className="relative z-10 flex items-center justify-center gap-3 w-full py-3 px-4 bg-white/70 dark:bg-white/5 backdrop-blur-md border border-amber-900/10 dark:border-white/10 text-amber-950 dark:text-white font-bold rounded-xl text-sm transition-all duration-300 cursor-pointer overflow-hidden"
+        >
+          {/* Amber shimmer sweep */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/15 dark:via-white/10 to-transparent z-0"
+            animate={{ x: ["0%", "200%"] }}
+            transition={{ repeat: Infinity, repeatType: "loop", duration: 2.0, ease: "linear" }}
+          />
+
+          {/* Floating code particles */}
+          {["</>", "{}", "git", "⭐"].map((char, i) => (
+            <motion.span
+              key={i}
+              className="absolute text-[9px] font-mono text-amber-600/40 dark:text-amber-300/40 select-none pointer-events-none"
+              style={{ left: `${15 + i * 20}%`, top: "50%" }}
+              animate={{
+                y: [0, -14, 0],
+                opacity: [0, 0.7, 0],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 2.2,
+                delay: i * 0.45,
+                ease: "easeInOut",
+              }}
+            >
+              {char}
+            </motion.span>
+          ))}
+
+          {/* GitHub Octocat icon with spin on hover */}
+          <motion.div
+            className="relative shrink-0 flex items-center justify-center z-10"
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          >
+            {/* Amber pulse ring */}
+            <span className="absolute inset-0 rounded-full ring-1 ring-amber-400/30 animate-ping" />
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+            </svg>
+          </motion.div>
+
+          <span className="relative z-10 select-none group-hover:text-[#702224] dark:group-hover:text-amber-200 transition-colors duration-300 flex items-center gap-1.5">
+            Continue with GitHub
+            <motion.span
+              animate={{ x: [0, 3, 0] }}
+              transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+              className="text-amber-500 dark:text-amber-300 text-xs"
+            >
+            →
+            </motion.span>
+          </span>
+
+          {/* 🐱 Cat walking on hover — strolls to center, purrs, then trots off */}
+          <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            {/* Outer div: horizontal walk */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, animation: 'ghCatWalk 9s linear infinite' }}>
+              {/* Middle div: gentle body bob */}
+              <div style={{ animation: 'ghCatBob 0.7s ease-in-out infinite' }}>
+                {/* Inner div: purring vibration (scale wobble) */}
+                <div style={{ animation: 'ghPurrPulse 0.22s ease-in-out infinite' }}>
+                  <svg width="58" height="38" viewBox="0 0 58 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Tail — wags from base */}
+                    <g style={{ transformBox: 'fill-box', transformOrigin: 'center bottom', animation: 'ghTailWag 0.6s ease-in-out infinite' }}>
+                      <path d="M10 22 Q2 12 6 2" stroke="#222" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                    </g>
+                    {/* Body */}
+                    <ellipse cx="26" cy="26" rx="15" ry="8" fill="#222"/>
+                    {/* Head */}
+                    <circle cx="39" cy="14" r="9" fill="#222"/>
+                    {/* Ears */}
+                    <polygon points="33,7 36,1 39,7" fill="#222"/>
+                    <polygon points="39,7 42,1 45,7" fill="#222"/>
+                    {/* Inner ear pink */}
+                    <polygon points="34,7 36,3.5 38,7" fill="#fda4af" opacity="0.75"/>
+                    <polygon points="40,7 42,3.5 44,7" fill="#fda4af" opacity="0.75"/>
+                    {/* Eyes — amber to match UI */}
+                    <ellipse cx="37" cy="13" rx="2.2" ry="2.8" fill="#f59e0b"/>
+                    <ellipse cx="43" cy="13" rx="2.2" ry="2.8" fill="#f59e0b"/>
+                    {/* Pupils */}
+                    <ellipse cx="37" cy="13.5" rx="0.85" ry="2.1" fill="#111"/>
+                    <ellipse cx="43" cy="13.5" rx="0.85" ry="2.1" fill="#111"/>
+                    {/* Eye shine */}
+                    <circle cx="37.9" cy="12" r="0.65" fill="white"/>
+                    <circle cx="43.9" cy="12" r="0.65" fill="white"/>
+                    {/* Nose */}
+                    <ellipse cx="46" cy="17" rx="1.4" ry="0.9" fill="#fda4af"/>
+                    {/* Mouth */}
+                    <path d="M45 18.5 Q46 20 47 18.5" stroke="#666" strokeWidth="0.65" strokeLinecap="round" fill="none"/>
+                    {/* Whiskers left */}
+                    <line x1="30" y1="16" x2="37" y2="17" stroke="#bbb" strokeWidth="0.65"/>
+                    <line x1="30" y1="18" x2="37" y2="18" stroke="#bbb" strokeWidth="0.65"/>
+                    {/* Whiskers right */}
+                    <line x1="46" y1="17" x2="54" y2="15.5" stroke="#bbb" strokeWidth="0.65"/>
+                    <line x1="46" y1="18" x2="54" y2="18" stroke="#bbb" strokeWidth="0.65"/>
+                    {/* Legs — slow alternating gait (0.68s = lazy walk) */}
+                    <rect style={{ animation: 'ghLegA 0.68s ease-in-out infinite' }} x="33" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegB 0.68s ease-in-out infinite' }} x="26" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegB 0.68s ease-in-out infinite' }} x="17" y="32" width="4" height="6" rx="2" fill="#222"/>
+                    <rect style={{ animation: 'ghLegA 0.68s ease-in-out infinite' }} x="10" y="32" width="4" height="6" rx="2" fill="#222"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </motion.a>
       </motion.div>
 

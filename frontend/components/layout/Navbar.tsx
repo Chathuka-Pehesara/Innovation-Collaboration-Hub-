@@ -9,9 +9,11 @@ export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Add scroll listener for dynamic navbar styling
+  // Add scroll listener for dynamic navbar styling & mounted check
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -23,6 +25,8 @@ export default function Navbar() {
     logout();
     router.push('/login');
   };
+
+  const currentUser = mounted ? user : null;
 
   return (
     <header 
@@ -37,13 +41,13 @@ export default function Navbar() {
 
       {/* Search Bar / Welcome Indicator */}
       <div className="flex items-center gap-4 relative z-10">
-        {user ? (
+        {currentUser ? (
           <h2 className="text-sm md:text-base font-medium text-[var(--text-secondary)]">
-            Welcome back, <span className="text-[var(--text-primary)] font-bold tracking-wide drop-shadow-sm">{user.name}</span>
-            {user.specialization && (
+            Welcome back, <span className="text-[var(--text-primary)] font-bold tracking-wide drop-shadow-sm">{currentUser.name}</span>
+            {currentUser.specialization && (
               <span className="ml-3 text-xs bg-gradient-to-r from-[var(--accent-primary)]/10 to-[var(--accent-secondary)]/10 text-[var(--accent-secondary)] border border-[var(--accent-secondary)]/20 px-3 py-1.5 rounded-full shadow-[0_0_15px_var(--accent-secondary-glow)] tracking-wider uppercase font-bold relative overflow-hidden group">
                 <span className="absolute inset-0 bg-[var(--accent-secondary)]/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                {user.specialization}
+                {currentUser.specialization}
               </span>
             )}
           </h2>
@@ -56,10 +60,10 @@ export default function Navbar() {
 
       {/* User Actions */}
       <div className="flex items-center gap-5 relative z-10">
-        {user ? (
+        {currentUser ? (
           <div className="flex items-center gap-4">
             <Link 
-              href={`/profile/${user.id}`} 
+              href={`/profile/${currentUser.id}`} 
               className="relative flex items-center gap-2 group transition-all duration-300"
             >
               {/* Avatar Halo */}
@@ -68,7 +72,7 @@ export default function Navbar() {
               {/* Avatar */}
               <div className="relative w-10 h-10 rounded-full bg-[var(--surface-elevated)] border-2 border-[var(--border-color)] group-hover:border-[var(--accent-primary)] flex items-center justify-center font-bold text-sm text-[var(--text-primary)] shadow-lg transition-colors overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/20 to-transparent" />
-                <span className="relative z-10">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="relative z-10">{currentUser.name.charAt(0).toUpperCase()}</span>
               </div>
             </Link>
             

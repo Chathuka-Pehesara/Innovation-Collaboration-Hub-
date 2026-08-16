@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
 import fs from 'fs';
 import path from 'path';
+dotenv.config({ path: path.join(__dirname, '../.env') });
 import { GithubService } from '../src/services/githubService';
 import { BadgeGenerator } from '../src/services/badgeGenerator';
 
@@ -36,12 +36,26 @@ async function generateContributorsTable() {
   let tableMarkdown = `| Contributor | GitHub | PRs | Current Title |\n`;
   tableMarkdown += `| :--- | :--- | :---: | :--- |\n`;
 
+  const stats = [];
+
   for (const username of CONTRIBUTORS) {
     console.log(`Fetching stats for ${username}...`);
     
     // Fetch PR count and Title
     const prCount = await GithubService.getUserPRCount(username);
     const title = GithubService.getTitleFromPRCount(prCount);
+    
+    stats.push({ username, prCount, title });
+    
+    // Slight delay to avoid hitting GitHub API rate limits too quickly
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  // Sort by PR count descending
+  stats.sort((a, b) => b.prCount - a.prCount);
+
+  for (const stat of stats) {
+    const { username, prCount, title } = stat;
     
     // Generate SVG Badge
     const svgContent = BadgeGenerator.generateBadgeSVG(title, prCount);
@@ -57,9 +71,6 @@ async function generateContributorsTable() {
     const badgeImg = `![${title}](badges/${username}.svg)`;
     
     tableMarkdown += `| ${avatar} | ${githubLink} | **${prCount}** | ${badgeImg} |\n`;
-    
-    // Slight delay to avoid hitting GitHub API rate limits too quickly
-    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   // Write the markdown file

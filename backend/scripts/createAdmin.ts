@@ -1,11 +1,23 @@
+/// <reference types="node" />
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = 'admin@innovationhub.com';
-  const password = await bcrypt.hash('admin123', 12);
+  const email = process.env.ADMIN_EMAIL ?? 'admin@innovationhub.com';
+  const rawPassword = process.env.ADMIN_PASSWORD;
+
+  if (!rawPassword) {
+    console.error('❌  Error: ADMIN_PASSWORD is not set in your .env file.');
+    console.log('   Add this to backend/.env:');
+    console.log('   ADMIN_EMAIL=admin@yourdomain.com');
+    console.log('   ADMIN_PASSWORD=your_secure_password_here');
+    process.exit(1);
+  }
+
+  const password = await bcrypt.hash(rawPassword, 12);
 
   const admin = await prisma.user.upsert({
     where: { email },
@@ -27,7 +39,7 @@ async function main() {
     },
   });
 
-  console.log(`Admin user ensured: ${admin.email}`);
+  console.log(`✅  Admin user ensured: ${admin.email} (role: ${admin.role})`);
 }
 
 main()

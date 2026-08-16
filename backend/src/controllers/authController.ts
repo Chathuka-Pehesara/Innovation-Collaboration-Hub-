@@ -1,5 +1,3 @@
-/* eslint-disable */
-/* eslint-disable */
 /**
  * @file        authController.ts
  * @owner       IT Team
@@ -61,12 +59,11 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     });
 
     // Send verification email
-    const emailResult = await sendVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(email, verificationToken);
 
     return res.status(201).json({
       message: 'Account created. Check your email to verify your address.',
       user,
-      verificationUrl: process.env.NODE_ENV !== 'production' || !emailResult.sent ? emailResult.url : undefined,
     });
   } catch (err) {
     next(err);
@@ -125,13 +122,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           data: { verificationToken: token },
         });
       }
-      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-      const verifyUrl = `${backendUrl}/api/auth/verify-email/${token}`;
-
       return res.status(403).json({
         message: 'Please verify your email address before logging in.',
         code: 'EMAIL_NOT_VERIFIED',
-        verificationUrl: process.env.NODE_ENV !== 'production' ? verifyUrl : undefined,
       });
     }
 
@@ -430,13 +423,20 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
   try {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-    if (!client_id || !redirect_uri) {
-      return res.status(500).json({ message: 'Google OAuth configuration is missing on the server.' });
+    if (!client_id || !redirect_uri || client_id.includes('your_')) {
+      return res.redirect(`${frontendUrl}/login?error=google_oauth_not_configured`);
     }
 
     const state = crypto.randomBytes(16).toString('hex');
-    res.cookie('oauth_state', state, { httpOnly: true, maxAge: 300000 }); // 5 minutes
+    res.cookie('oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 300000, // 5 minutes
+    });
 
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(
       redirect_uri
@@ -452,11 +452,16 @@ export const googleAuthRedirect = async (req: Request, res: Response, next: Next
 
 export const googleAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { code, state } = req.query;
+    const { code, state, error: queryError } = req.query;
     const client_id = process.env.GOOGLE_CLIENT_ID;
     const client_secret = process.env.GOOGLE_CLIENT_SECRET;
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI;
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (queryError) {
+      console.warn('Google OAuth returned error query param:', queryError);
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
 
     if (!code) {
       return res.redirect(`${frontendUrl}/login?error=no_code`);
@@ -464,10 +469,11 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
 
     const cookies = parseCookies(req);
     const savedState = cookies.oauth_state;
-    res.clearCookie('oauth_state');
+    res.clearCookie('oauth_state', { path: '/' });
 
-    if (savedState && state !== savedState) {
-      console.warn('Google OAuth State mismatch. Proceeding with caution.');
+    if (!savedState || !state || state !== savedState) {
+      console.warn('[SECURITY] Google OAuth CSRF state mismatch or missing state parameter.');
+      return res.redirect(`${frontendUrl}/login?error=invalid_oauth_state`);
     }
 
     // Exchange code for tokens
@@ -552,6 +558,7 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
     });
 
@@ -569,8 +576,175 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
     )}${isNewUser || !user.specialization ? '&new=true' : ''}`;
 
     return res.redirect(redirectUrl);
+  } catch (err: any) {
+    console.error('Google OAuth Callback Error Details:', err.response?.data || err.message || err);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+  }
+};
+// ─── GET /auth/github ────────────────────────────────────────────────────────
+
+export const githubAuthRedirect = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const client_id = process.env.GITHUB_CLIENT_ID;
+    const redirect_uri = process.env.GITHUB_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!client_id || !redirect_uri || client_id.includes('your_')) {
+      return res.redirect(`${frontendUrl}/login?error=github_oauth_not_configured`);
+    }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    res.cookie('github_oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 300000, // 5 minutes
+    });
+
+    const githubAuthUrl =
+      `https://github.com/login/oauth/authorize` +
+      `?client_id=${client_id}` +
+      `&redirect_uri=${encodeURIComponent(redirect_uri)}` +
+      `&scope=read:user%20user:email` +
+      `&state=${state}`;
+
+    return res.redirect(githubAuthUrl);
   } catch (err) {
-    console.error('Google OAuth Callback Error:', err);
+    next(err);
+  }
+};
+
+// ─── GET /auth/github/callback ────────────────────────────────────────────────
+
+export const githubAuthCallback = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { code, state } = req.query;
+    const client_id = process.env.GITHUB_CLIENT_ID;
+    const client_secret = process.env.GITHUB_CLIENT_SECRET;
+    const redirect_uri = process.env.GITHUB_REDIRECT_URI;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    if (!code) {
+      return res.redirect(`${frontendUrl}/login?error=no_code`);
+    }
+
+    // Verify CSRF state
+    const cookies = parseCookies(req);
+    const savedState = cookies.github_oauth_state;
+    res.clearCookie('github_oauth_state');
+
+    if (!savedState || !state || state !== savedState) {
+      console.warn('[SECURITY] GitHub OAuth CSRF state mismatch or missing state parameter.');
+      return res.redirect(`${frontendUrl}/login?error=invalid_oauth_state`);
+    }
+
+    // Exchange code for access token
+    const tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      { client_id, client_secret, code, redirect_uri },
+      { headers: { Accept: 'application/json' } }
+    );
+
+    const { access_token } = tokenResponse.data;
+    if (!access_token) {
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
+
+    const githubHeaders = {
+      Authorization: `Bearer ${access_token}`,
+      Accept: 'application/vnd.github+json',
+    };
+
+    // Retrieve GitHub user profile
+    const profileResponse = await axios.get('https://api.github.com/user', { headers: githubHeaders });
+    const { login, name, avatar_url, html_url, email: primaryEmail } = profileResponse.data;
+
+    // Determine email — fallback to /user/emails endpoint, then noreply address
+    let email: string = primaryEmail;
+    if (!email) {
+      try {
+        const emailsResponse = await axios.get('https://api.github.com/user/emails', { headers: githubHeaders });
+        const emails: { email: string; primary: boolean; verified: boolean }[] = emailsResponse.data;
+        const verifiedPrimary = emails.find((e) => e.primary && e.verified);
+        const anyVerified = emails.find((e) => e.verified);
+        email = verifiedPrimary?.email || anyVerified?.email || `${login}@users.noreply.github.com`;
+      } catch {
+        email = `${login}@users.noreply.github.com`;
+      }
+    }
+
+    // Provision or link user
+    let user = await prisma.user.findUnique({ where: { email } });
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || login,
+          password: placeholderPassword,
+          role: 'student',
+          isVerified: true,
+          avatarUrl: avatar_url || null,
+          githubUrl: html_url || null,
+          githubUsername: login || null,
+          specialization: null, // Triggers onboarding selection
+        },
+      });
+    } else {
+      // Existing user — link GitHub profile if not already linked
+      const updates: Record<string, string | boolean | null> = {};
+      if (!user.isVerified) {
+        updates.isVerified = true;
+        updates.verificationToken = null;
+      }
+      if (!user.githubUsername && login) updates.githubUsername = login;
+      if (!user.githubUrl && html_url) updates.githubUrl = html_url;
+      if (!user.avatarUrl && avatar_url) updates.avatarUrl = avatar_url;
+
+      if (Object.keys(updates).length > 0) {
+        user = await prisma.user.update({ where: { id: user.id }, data: updates });
+      }
+    }
+
+    // Issue JWT tokens
+    const localAccessToken = generateAccessToken(user.id, user.role);
+    const localRefreshToken = generateRefreshToken(user.id);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    await prisma.refreshToken.create({
+      data: { token: localRefreshToken, userId: user.id, expiresAt },
+    });
+
+    res.cookie('refreshToken', localRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    });
+
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      specialization: user.specialization || undefined,
+      avatarUrl: user.avatarUrl || undefined,
+    };
+
+    const redirectUrl =
+      `${frontendUrl}/auth/callback?token=${localAccessToken}` +
+      `&user=${encodeURIComponent(JSON.stringify(userPayload))}` +
+      `${isNewUser || !user.specialization ? '&new=true' : ''}`;
+
+    return res.redirect(redirectUrl);
+  } catch (err) {
+    console.error('GitHub OAuth Callback Error:', err);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
   }
