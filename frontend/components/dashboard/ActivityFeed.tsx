@@ -11,7 +11,7 @@ export interface ActivityItem {
   action: string;
   time?: string;
   timestamp?: string | number | Date;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number | string; className?: string }> | any;
   color: string;
   glow: string;
   bg: string;
