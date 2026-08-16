@@ -79,7 +79,7 @@ export const rateLimiter = (options: RateLimitOptions) => {
               actionTaken: 'HTTP 429 TEMP_BLOCK'
             }),
           }
-        }).catch(e => console.error('[ThreatLog] Rate Limit Log Failed', e));
+        }).catch((e: any) => console.error('[ThreatLog] Rate Limit Log Failed', e));
 
         // If severe abuse, extend the ban penalty automatically (Progressive Delay)
         if (isSevere) {

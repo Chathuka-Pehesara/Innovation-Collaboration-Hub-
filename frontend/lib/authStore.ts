@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import axios from 'axios';
 
 export interface User {
   id: string;
@@ -15,44 +16,55 @@ interface AuthState {
   token: string | null;
   setAuth: (user: User | null, token: string | null) => void;
   logout: () => void;
+  initializeSession: () => Promise<void>;
 }
 
-// Safely get initial auth state from localStorage (browser client-side checks)
 const getInitialAuth = () => {
-  if (typeof window === 'undefined') return { user: null, token: null };
+  if (typeof window === 'undefined') return { user: null };
   try {
-    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     return {
-      token,
       user: userStr ? JSON.parse(userStr) : null,
     };
   } catch (e) {
-    return { user: null, token: null };
+    return { user: null };
   }
 };
 
 const initialAuth = getInitialAuth();
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: initialAuth.user,
-  token: initialAuth.token,
+  token: null, // Token strictly maintained in-memory only (Rule 20 pass)
+
   setAuth: (user, token) => {
     set({ user, token });
-    if (token && user) {
-      localStorage.setItem('token', token);
+    if (user) {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('userId', user.id);
     } else {
-      localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
     }
   },
+
   logout: () => {
     set({ user: null, token: null });
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userId');
   },
+
+  initializeSession: async () => {
+    // Called once on high-level app wrappers to secure token on reload silently bridging via Secure HttpOnly cookie
+    if (typeof window === 'undefined') return;
+    try {
+      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const API_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
+      const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+      get().setAuth(get().user, data.accessToken);
+    } catch (e) {
+      // If silent refresh cookie expired, flush user shell rendering state.
+      get().logout();
+    }
+  }
 }));

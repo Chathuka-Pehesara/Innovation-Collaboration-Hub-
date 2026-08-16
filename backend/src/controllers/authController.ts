@@ -156,7 +156,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         fingerprint: fingerprint || 'sys_auth',
         metadata: JSON.stringify({ userId: user.id, method: 'password', device: req.headers['user-agent']?.substring(0, 50) })
       }
-    }).catch(e => console.error('[ThreatLog] Failed to log session creation', e));
+    }).catch((e: any) => console.error('[ThreatLog] Failed to log session creation', e));
 
     // Set refresh token as HttpOnly cookie
     res.cookie('refreshToken', refreshTokenValue, {
@@ -202,7 +202,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
           fingerprint: 'sys_auth',
           metadata: JSON.stringify({ userId: decodedUserId })
         }
-      }).catch(e => console.error('[ThreatLog] Failed to log logout', e));
+      }).catch((e: any) => console.error('[ThreatLog] Failed to log logout', e));
     }
 
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict' });
@@ -225,13 +225,40 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     let payload: { userId: string };
     try {
       payload = jwt.verify(token, JWT_REFRESH_SECRET) as { userId: string };
-    } catch {
+    } catch (err: any) {
+      if (err.name === 'TokenExpiredError') {
+        let decodedUserId = 'unknown';
+        try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { }
+
+        // 🛡️ SOC Security Event: Session Expired (caught by JWT boundary)
+        prisma.threatLog.create({
+          data: {
+            ip: req.ip || 'Unknown',
+            type: 'SESSION_EXPIRED',
+            severity: 'LOW',
+            fingerprint: 'sys_auth',
+            metadata: JSON.stringify({ userId: decodedUserId, reason: 'jwt_expired' })
+          }
+        }).catch((e: any) => console.error(e));
+      }
       return res.status(401).json({ message: 'Invalid or expired refresh token.' });
     }
 
     // Check token exists in DB
     const stored = await prisma.refreshToken.findUnique({ where: { token } });
     if (!stored || stored.expiresAt < new Date()) {
+      if (stored && stored.expiresAt < new Date()) {
+        // 🛡️ SOC Security Event: Session Expired (caught by DB boundary)
+        prisma.threatLog.create({
+          data: {
+            ip: req.ip || 'Unknown',
+            type: 'SESSION_EXPIRED',
+            severity: 'LOW',
+            fingerprint: 'sys_auth',
+            metadata: JSON.stringify({ userId: payload.userId, reason: 'db_expired' })
+          }
+        }).catch((e: any) => console.error(e));
+      }
       return res.status(401).json({ message: 'Refresh token has been revoked or expired.' });
     }
 
@@ -339,7 +366,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
         fingerprint: 'sys_auth',
         metadata: JSON.stringify({ userId: user.id, reason: 'password_reset' })
       }
-    }).catch(e => console.error('[ThreatLog] Failed to log session revocation', e));
+    }).catch((e: any) => console.error('[ThreatLog] Failed to log session revocation', e));
 
     return res.json({ message: 'Password reset successfully. Please log in with your new password.' });
   } catch (err) {
@@ -519,7 +546,7 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
         fingerprint: 'sys_oauth',
         metadata: JSON.stringify({ userId: user.id, method: 'google_oauth' })
       }
-    }).catch(e => console.error('[ThreatLog] Failed to log OAuth session creation', e));
+    }).catch((e: any) => console.error('[ThreatLog] Failed to log OAuth session creation', e));
 
     res.cookie('refreshToken', localRefreshToken, {
       httpOnly: true,

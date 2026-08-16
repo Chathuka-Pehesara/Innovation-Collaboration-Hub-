@@ -42,7 +42,7 @@ export const validate = (schema: ZodTypeAny) => {
             fingerprint: 'sys_val_fail',
             metadata: JSON.stringify({ errors }),
           }
-        }).catch(e => console.error('[ThreatLog] Failed to record validation error', e));
+        }).catch((e: any) => console.error('[ThreatLog] Failed to record validation error', e));
 
         return res.status(422).json({ message: 'Validation failed.', errors });
       }

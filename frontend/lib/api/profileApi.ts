@@ -16,9 +16,11 @@ const apiClient = axios.create({
   },
 });
 
+import { useAuthStore } from '../authStore';
+
 // Add JWT token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
