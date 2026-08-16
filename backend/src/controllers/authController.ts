@@ -390,8 +390,9 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
     const savedState = cookies.oauth_state;
     res.clearCookie('oauth_state', { path: '/' });
 
-    if (savedState && state !== savedState) {
-      console.warn('Google OAuth State mismatch. Proceeding with caution.');
+    if (!savedState || !state || state !== savedState) {
+      console.warn('[SECURITY] Google OAuth CSRF state mismatch or missing state parameter.');
+      return res.redirect(`${frontendUrl}/login?error=invalid_oauth_state`);
     }
 
     // Exchange code for tokens
@@ -542,8 +543,9 @@ export const githubAuthCallback = async (req: Request, res: Response, next: Next
     const savedState = cookies.github_oauth_state;
     res.clearCookie('github_oauth_state');
 
-    if (savedState && state !== savedState) {
-      console.warn('GitHub OAuth State mismatch. Proceeding with caution.');
+    if (!savedState || !state || state !== savedState) {
+      console.warn('[SECURITY] GitHub OAuth CSRF state mismatch or missing state parameter.');
+      return res.redirect(`${frontendUrl}/login?error=invalid_oauth_state`);
     }
 
     // Exchange code for access token
