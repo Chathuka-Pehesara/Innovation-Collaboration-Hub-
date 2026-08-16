@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth';
+import { generalRateLimiter } from '../middleware/rateLimit';
 import {
   evaluateIdea,
   mentorChat,
@@ -22,7 +23,7 @@ router.use(authenticate as any);
  * POST /api/ai/evaluate
  * Evaluates a project idea's title and description.
  */
-router.post('/evaluate', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/evaluate', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description } = req.body;
     if (!title || !description) {
@@ -40,7 +41,7 @@ router.post('/evaluate', async (req: Request, res: Response, next: NextFunction)
  * POST /api/ai/mentor/chat
  * Chats with the AI mentor, sending history and context.
  */
-router.post('/mentor/chat', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/mentor/chat', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { message, conversation_history, context } = req.body;
     if (!message) {
@@ -58,7 +59,7 @@ router.post('/mentor/chat', async (req: Request, res: Response, next: NextFuncti
  * POST /api/ai/mentor/quick-tip
  * Retrieves a quick tip on a specific topic.
  */
-router.post('/mentor/quick-tip', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/mentor/quick-tip', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { topic, project_title } = req.body;
     if (!topic) {
@@ -140,7 +141,7 @@ router.get('/find-teammates', async (req: Request, res: Response, next: NextFunc
  * POST /api/ai/generate-desc
  * AI description generator.
  */
-router.post('/generate-desc', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/generate-desc', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, brief_concept, keywords, target_audience, template } = req.body;
     if (!title) {
@@ -164,7 +165,7 @@ router.post('/generate-desc', async (req: Request, res: Response, next: NextFunc
  * POST /api/ai/refine-desc
  * AI description polisher.
  */
-router.post('/refine-desc', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/refine-desc', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description, focus } = req.body;
     if (!title || !description) {
@@ -182,7 +183,7 @@ router.post('/refine-desc', async (req: Request, res: Response, next: NextFuncti
  * POST /api/ai/from-keywords
  * AI project description builder from keywords.
  */
-router.post('/from-keywords', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/from-keywords', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { keywords, domain } = req.body;
     if (!keywords || !Array.isArray(keywords)) {
@@ -200,7 +201,7 @@ router.post('/from-keywords', async (req: Request, res: Response, next: NextFunc
  * POST /api/ai/extract-skills
  * Extract skills keywords from text.
  */
-router.post('/extract-skills', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/extract-skills', generalRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { description } = req.body;
     if (!description) {
