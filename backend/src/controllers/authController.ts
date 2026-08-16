@@ -147,6 +147,17 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       data: { token: refreshTokenValue, userId: user.id, expiresAt },
     });
 
+    // 🛡️ SOC Security Event: Session Initialized
+    prisma.threatLog.create({
+      data: {
+        ip: req.ip || 'Unknown',
+        type: 'SESSION_CREATED',
+        severity: 'LOW',
+        fingerprint: fingerprint || 'sys_auth',
+        metadata: JSON.stringify({ userId: user.id, method: 'password', device: req.headers['user-agent']?.substring(0, 50) })
+      }
+    }).catch(e => console.error('[ThreatLog] Failed to log session creation', e));
+
     // Set refresh token as HttpOnly cookie
     res.cookie('refreshToken', refreshTokenValue, {
       httpOnly: true,
@@ -177,7 +188,21 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
     const token = req.cookies?.refreshToken || parseCookies(req).refreshToken;
 
     if (token) {
+      let decodedUserId = 'unknown';
+      try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { }
+
       await prisma.refreshToken.deleteMany({ where: { token } });
+
+      // 🛡️ SOC Security Event: Terminate Session
+      prisma.threatLog.create({
+        data: {
+          ip: req.ip || 'Unknown',
+          type: 'LOGOUT',
+          severity: 'LOW',
+          fingerprint: 'sys_auth',
+          metadata: JSON.stringify({ userId: decodedUserId })
+        }
+      }).catch(e => console.error('[ThreatLog] Failed to log logout', e));
     }
 
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict' });
@@ -214,6 +239,24 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     if (!user) {
       return res.status(401).json({ message: 'User not found.' });
     }
+
+    // 🛡️ REFRESH TOKEN ROTATION POLICY: Revoke old token and issue a completely new one strictly
+    await prisma.refreshToken.deleteMany({ where: { token } });
+
+    const newRefreshToken = generateRefreshToken(user.id);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
+
+    await prisma.refreshToken.create({
+      data: { token: newRefreshToken, userId: user.id, expiresAt }
+    });
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000,
+    });
 
     // Issue new access token
     const accessToken = generateAccessToken(user.id, user.role);
@@ -286,6 +329,17 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 
     // Invalidate all existing refresh tokens for security
     await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
+    // 🛡️ SOC Security Event: Session Revocation due to Password Reset
+    prisma.threatLog.create({
+      data: {
+        ip: req.ip || 'Unknown',
+        type: 'SESSION_REVOKED',
+        severity: 'MEDIUM',
+        fingerprint: 'sys_auth',
+        metadata: JSON.stringify({ userId: user.id, reason: 'password_reset' })
+      }
+    }).catch(e => console.error('[ThreatLog] Failed to log session revocation', e));
 
     return res.json({ message: 'Password reset successfully. Please log in with your new password.' });
   } catch (err) {
@@ -455,6 +509,17 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
         expiresAt,
       },
     });
+
+    // 🛡️ SOC Security Event: Session Initialized (OAuth)
+    prisma.threatLog.create({
+      data: {
+        ip: req.ip || 'unknown',
+        type: 'SESSION_CREATED',
+        severity: 'LOW',
+        fingerprint: 'sys_oauth',
+        metadata: JSON.stringify({ userId: user.id, method: 'google_oauth' })
+      }
+    }).catch(e => console.error('[ThreatLog] Failed to log OAuth session creation', e));
 
     res.cookie('refreshToken', localRefreshToken, {
       httpOnly: true,
