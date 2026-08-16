@@ -15,22 +15,30 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { token, initializeSession } = useAuthStore();
   const [hydrated, setHydrated] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
     setHydrated(true);
-    // If not authenticated, redirect to login
-    if (!token) {
+    initializeSession().finally(() => {
+      setInitializing(false);
+    });
+  }, [initializeSession]);
+
+  useEffect(() => {
+    // If not authenticated after initialization, redirect to login
+    if (hydrated && !initializing && !token) {
       router.push('/login');
     }
-  }, [token, router]);
+  }, [token, router, hydrated, initializing]);
 
   // Render a loading state while hydration/auth check is in progress
-  if (!hydrated || !token) {
+  if (!hydrated || initializing || !token) {
     return (
-      <div className="min-h-screen bg-transparent flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center flex-col gap-4">
         <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+        <span className="text-indigo-900/40 text-xs font-semibold animate-pulse uppercase tracking-widest">Restoring Secure Session...</span>
       </div>
     );
   }
