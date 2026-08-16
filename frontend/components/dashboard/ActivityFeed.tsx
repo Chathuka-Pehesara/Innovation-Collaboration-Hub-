@@ -1,56 +1,127 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Users, Brain, FolderPlus, Lightbulb } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function ActivityFeed() {
-  const activities = [
-    {
-      id: 1,
-      type: 'match',
-      user: 'Sarah Chen (AI)',
-      action: 'joined Project "Eco-Mapper"',
-      time: '10 mins ago',
-      icon: Users,
-      color: 'from-indigo-500 to-blue-500',
-      glow: 'shadow-[0_0_15px_rgba(99,102,241,0.3)]',
-      bg: 'bg-indigo-500/10'
-    },
-    {
-      id: 2,
-      type: 'skill',
-      user: 'You',
-      action: 'validated Python and React skills with AI Engine',
-      time: '1 hour ago',
-      icon: Brain,
-      color: 'from-purple-500 to-pink-500',
-      glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]',
-      bg: 'bg-purple-500/10'
-    },
-    {
-      id: 3,
-      type: 'project',
-      user: 'Marcus Vance (Security)',
-      action: 'created a new project "Auth-Sentinel"',
-      time: '4 hours ago',
-      icon: FolderPlus,
-      color: 'from-blue-500 to-cyan-500',
-      glow: 'shadow-[0_0_15px_rgba(59,130,246,0.3)]',
-      bg: 'bg-blue-500/10'
-    },
-    {
-      id: 4,
-      type: 'mentor',
-      user: 'AI Mentor (Bot)',
-      action: 'suggested recommendations on "Eco-Mapper" requirements',
-      time: '1 day ago',
-      icon: Lightbulb,
-      color: 'from-pink-500 to-rose-500',
-      glow: 'shadow-[0_0_15px_rgba(236,72,153,0.3)]',
-      bg: 'bg-pink-500/10'
-    },
-  ];
+export interface ActivityItem {
+  id: number | string;
+  type: string;
+  user: string;
+  action: string;
+  time?: string;
+  timestamp?: string | number | Date;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  color: string;
+  glow: string;
+  bg: string;
+}
 
+/**
+ * HydrationSafeTime Component
+ * Resolves React hydration mismatch between Server (UTC) and Client (Local browser timezone).
+ * Outputs a standardized format on initial render/SSR and hydrates to the client format once mounted.
+ */
+export function HydrationSafeTime({ 
+  timestamp, 
+  fallback 
+}: { 
+  timestamp?: string | number | Date; 
+  fallback?: string;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!timestamp && fallback) {
+    return <span suppressHydrationWarning>{fallback}</span>;
+  }
+
+  const date = timestamp ? new Date(timestamp) : null;
+  if (!date || isNaN(date.getTime())) {
+    return <span suppressHydrationWarning>{fallback || ''}</span>;
+  }
+
+  // Pre-mount / SSR: Standardized UTC ISO format or fallback to match server render HTML exactly
+  if (!mounted) {
+    return (
+      <span suppressHydrationWarning>
+        {fallback || date.toISOString().replace('T', ' ').slice(0, 16) + ' UTC'}
+      </span>
+    );
+  }
+
+  // Post-mount (Client): Formatted in client local timezone
+  return (
+    <span suppressHydrationWarning>
+      {fallback || date.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })}
+    </span>
+  );
+}
+
+const DEFAULT_ACTIVITIES: ActivityItem[] = [
+  {
+    id: 1,
+    type: 'match',
+    user: 'Sarah Chen (AI)',
+    action: 'joined Project "Eco-Mapper"',
+    time: '10 mins ago',
+    timestamp: '2026-08-16T18:59:00Z',
+    icon: Users,
+    color: 'from-indigo-500 to-blue-500',
+    glow: 'shadow-[0_0_15px_rgba(99,102,241,0.3)]',
+    bg: 'bg-indigo-500/10'
+  },
+  {
+    id: 2,
+    type: 'skill',
+    user: 'You',
+    action: 'validated Python and React skills with AI Engine',
+    time: '1 hour ago',
+    timestamp: '2026-08-16T18:09:00Z',
+    icon: Brain,
+    color: 'from-purple-500 to-pink-500',
+    glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+    bg: 'bg-purple-500/10'
+  },
+  {
+    id: 3,
+    type: 'project',
+    user: 'Marcus Vance (Security)',
+    action: 'created a new project "Auth-Sentinel"',
+    time: '4 hours ago',
+    timestamp: '2026-08-16T15:09:00Z',
+    icon: FolderPlus,
+    color: 'from-blue-500 to-cyan-500',
+    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+    bg: 'bg-blue-500/10'
+  },
+  {
+    id: 4,
+    type: 'mentor',
+    user: 'AI Mentor (Bot)',
+    action: 'suggested recommendations on "Eco-Mapper" requirements',
+    time: '1 day ago',
+    timestamp: '2026-08-15T19:09:00Z',
+    icon: Lightbulb,
+    color: 'from-pink-500 to-rose-500',
+    glow: 'shadow-[0_0_15px_rgba(236,72,153,0.3)]',
+    bg: 'bg-pink-500/10'
+  },
+];
+
+interface ActivityFeedProps {
+  items?: ActivityItem[];
+}
+
+export default function ActivityFeed({ items = DEFAULT_ACTIVITIES }: ActivityFeedProps) {
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -66,7 +137,7 @@ export default function ActivityFeed() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-      {activities.map((act) => {
+      {items.map((act) => {
         const Icon = act.icon;
         return (
           <motion.div 
@@ -89,7 +160,12 @@ export default function ActivityFeed() {
               </p>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]/30 group-hover:bg-[var(--accent-primary)] transition-colors duration-300" />
-                <span className="text-[11px] font-semibold tracking-wider uppercase text-[var(--text-secondary)]/70">{act.time}</span>
+                <span 
+                  suppressHydrationWarning 
+                  className="text-[11px] font-semibold tracking-wider uppercase text-[var(--text-secondary)]/70"
+                >
+                  <HydrationSafeTime timestamp={act.timestamp} fallback={act.time} />
+                </span>
               </div>
             </div>
           </motion.div>
