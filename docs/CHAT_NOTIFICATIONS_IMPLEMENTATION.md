@@ -54,4 +54,4 @@ The Notification Center dispatches real-time alerts for:
 | `/api/chat/messages/:id` | `GET` | Fetch paginated chat history for a conversation |
 | `/api/chat/messages` | `POST` | Send a new message (fallback if WebSocket disconnected) |
 | `/api/notifications` | `GET` | Fetch unread notifications for current user |
-| `/api/notifications/read` | `PUT` | Mark notification as read |
+| `/api/notifications/read` | `PUT` | Mark notification as read✅ |
