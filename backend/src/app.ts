@@ -36,9 +36,9 @@ app.use(cors({
 // Request Logging
 app.use(morgan('combined'));
 
-// Body Parsing Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Body Parsing Middleware (Restricted to 1mb globally to prevent memory exhaustion DoS)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Static Files (for uploads)
 app.use('/uploads', express.static('uploads'));
