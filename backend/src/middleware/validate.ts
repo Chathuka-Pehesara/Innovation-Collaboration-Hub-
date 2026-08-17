@@ -42,7 +42,14 @@ export const validate = (schema: ZodTypeAny) => {
             type,
             severity: 'LOW',
             fingerprint: 'sys_val_fail',
-            metadata: JSON.stringify({ errors }),
+            metadata: JSON.stringify({
+              eventType: type,
+              severity: 'LOW',
+              endpoint: req.originalUrl,
+              timestamp: new Date().toISOString(),
+              requestId: String(Date.now()),
+              actionTaken: 'HTTP_422_REJECT'
+            }),
           }
         }).catch((e: any) => console.error('[ThreatLog] Failed to record validation error', e));
 
