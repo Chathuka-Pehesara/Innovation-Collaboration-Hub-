@@ -2,9 +2,11 @@ name: Backend CI
 
 on:
   push:
+    branches: ['**']
     paths:
       - 'backend/**'
   pull_request:
+    branches: ['**']
     paths:
       - 'backend/**'
 
@@ -23,6 +25,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
+        working-directory: backend
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
         working-directory: backend
 
       - name: TypeScript compile check

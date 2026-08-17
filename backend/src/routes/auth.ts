@@ -16,6 +16,8 @@ import {
   verifyEmail,
   googleAuthRedirect,
   googleAuthCallback,
+  githubAuthRedirect,
+  githubAuthCallback,
 } from '../controllers/authController';
 import { validate } from '../middleware/validate';
 import {
@@ -58,5 +60,11 @@ router.get('/google', googleAuthRedirect);
 
 // GET /auth/google/callback — handle Google OAuth redirect, exchange code, verify identity
 router.get('/google/callback', googleAuthCallback);
+
+// GET /auth/github — redirect to GitHub OAuth authorization
+router.get('/github', githubAuthRedirect);
+
+// GET /auth/github/callback — handle GitHub OAuth redirect, exchange code, verify identity
+router.get('/github/callback', githubAuthCallback);
 
 export default router;

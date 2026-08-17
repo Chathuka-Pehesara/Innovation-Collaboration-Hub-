@@ -1,12 +1,8 @@
 'use client';
 import { motion } from 'framer-motion';
-import { Sparkles, Code2 } from 'lucide-react';
 import { 
-  FaJava, FaPython, FaReact, FaNodeJs, FaAws, FaDocker, FaHtml5, FaCss3, FaJs, FaGithub
-} from 'react-icons/fa';
-import { 
-  SiTypescript, SiMongodb, SiFirebase, SiGraphql 
-} from 'react-icons/si';
+  Sparkles, Code2, Coffee, Terminal, Atom, Server, Cloud, Boxes, FileCode2, FileCode, Github, Database, Flame, Share2
+} from 'lucide-react';
 
 interface SkillBadgeProps {
   name: string;
@@ -17,20 +13,20 @@ interface SkillBadgeProps {
 
 const getSkillIcon = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('java') && !n.includes('javascript')) return FaJava;
-  if (n.includes('python')) return FaPython;
-  if (n.includes('react')) return FaReact;
-  if (n.includes('node')) return FaNodeJs;
-  if (n.includes('aws')) return FaAws;
-  if (n.includes('docker')) return FaDocker;
-  if (n.includes('typescript')) return SiTypescript;
-  if (n.includes('javascript') || n === 'js') return FaJs;
-  if (n.includes('html')) return FaHtml5;
-  if (n.includes('css')) return FaCss3;
-  if (n.includes('github') || n.includes('git')) return FaGithub;
-  if (n.includes('mongo')) return SiMongodb;
-  if (n.includes('firebase')) return SiFirebase;
-  if (n.includes('graphql')) return SiGraphql;
+  if (n.includes('java') && !n.includes('javascript')) return Coffee;
+  if (n.includes('python')) return Terminal;
+  if (n.includes('react')) return Atom;
+  if (n.includes('node')) return Server;
+  if (n.includes('aws')) return Cloud;
+  if (n.includes('docker')) return Boxes;
+  if (n.includes('typescript')) return FileCode2;
+  if (n.includes('javascript') || n === 'js') return FileCode;
+  if (n.includes('html')) return Code2;
+  if (n.includes('css')) return Code2;
+  if (n.includes('github') || n.includes('git')) return Github;
+  if (n.includes('mongo')) return Database;
+  if (n.includes('firebase')) return Flame;
+  if (n.includes('graphql')) return Share2;
   
   return Code2; // fallback
 };

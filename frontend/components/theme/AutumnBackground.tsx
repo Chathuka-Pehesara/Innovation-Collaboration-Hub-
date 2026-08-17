@@ -27,13 +27,14 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden">
+    <div suppressHydrationWarning className="relative min-h-screen w-full overflow-x-hidden">
       {/* 1. Base Layer (Static or Gradient Fallback) */}
       <div className="fixed inset-0 z-[-3] bg-background" />
       
       {/* 2. Parallax Image Layer (Faded for absolute text legibility) */}
       {!prefersReducedMotion ? (
         <motion.div 
+          suppressHydrationWarning
           className="fixed inset-0 z-[-2] bg-cover bg-top bg-no-repeat opacity-[0.15]"
           style={{ 
             backgroundImage: "url('/bg-autumn-light.png')",
@@ -42,6 +43,7 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
         />
       ) : (
         <div 
+          suppressHydrationWarning
           className="fixed inset-0 z-[-2] bg-cover bg-top bg-no-repeat opacity-[0.15]"
           style={{ backgroundImage: "url('/bg-autumn-light.png')" }}
         />
@@ -49,6 +51,7 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
 
       {/* 3. Ambient Glow Overlay (Soft light enhancement) */}
       <div 
+        suppressHydrationWarning
         className="fixed inset-0 z-[-1] opacity-40 pointer-events-none"
         style={{
           background: "radial-gradient(circle at top right, rgba(255, 255, 255, 0.4) 0%, transparent 60%)",
@@ -59,7 +62,7 @@ export default function AutumnBackground({ children }: { children: React.ReactNo
       <AmbientSparks />
 
       {/* Main Content */}
-      <div className="relative z-0">
+      <div suppressHydrationWarning className="relative z-0">
         {children}
       </div>
     </div>
