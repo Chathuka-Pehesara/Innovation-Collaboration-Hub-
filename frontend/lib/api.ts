@@ -15,18 +15,13 @@ export const api = axios.create({
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
-    // Get token from authStore state
-    let token = useAuthStore.getState().token;
-    
-    // If not found in store state, try localStorage as a fallback on the browser
-    if (!token && typeof window !== 'undefined') {
-      token = localStorage.getItem('token');
-    }
-    
+    // Get token from authStore exclusively (No localStorage fallback)
+    const token = useAuthStore.getState().token;
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -39,19 +34,19 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         // Try to get a new token using the httpOnly refresh cookie
         const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
         const newToken = data.accessToken;
-        
+
         // Update the auth store and local storage
         useAuthStore.getState().setAuth(useAuthStore.getState().user, newToken);
-        
+
         // Retry the original request with the new token
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
@@ -64,7 +59,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
