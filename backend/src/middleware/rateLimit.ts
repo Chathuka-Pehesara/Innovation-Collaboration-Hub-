@@ -7,7 +7,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { redisClient } from '../services/cacheService';
-import prisma from '../prismaClient';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 interface RateLimitOptions {
   windowMs: number;

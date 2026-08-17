@@ -6,7 +6,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { ZodTypeAny, ZodError } from 'zod';
-import prisma from '../prismaClient';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export const validate = (schema: ZodTypeAny) => {
   return async (req: Request, res: Response, next: NextFunction) => {
