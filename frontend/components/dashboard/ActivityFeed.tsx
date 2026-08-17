@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Brain, FolderPlus, Lightbulb } from 'lucide-react';
+import { Users, Brain, FolderPlus, Lightbulb, LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
-
 export interface ActivityItem {
   id: number | string;
   type: string;
@@ -11,7 +10,7 @@ export interface ActivityItem {
   action: string;
   time?: string;
   timestamp?: string | number | Date;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   color: string;
   glow: string;
   bg: string;
