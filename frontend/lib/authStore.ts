@@ -33,6 +33,8 @@ const getInitialAuth = () => {
 
 const initialAuth = getInitialAuth();
 
+let initPromise: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: initialAuth.user,
   token: null, // Token strictly maintained in-memory only (Rule 20 pass)
@@ -61,14 +63,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeSession: async () => {
     // Called once on high-level app wrappers to secure token on reload silently bridging via Secure HttpOnly cookie
     if (typeof window === 'undefined') return;
-    try {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const API_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
-      const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
-      get().setAuth(get().user, data.accessToken);
-    } catch (e) {
-      // If silent refresh cookie expired, flush user shell rendering state.
-      get().logout();
+    
+    if (initPromise) {
+      return initPromise;
     }
+
+    initPromise = (async () => {
+      try {
+        const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const API_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
+        get().setAuth(get().user, data.accessToken);
+      } catch (e) {
+        // If silent refresh cookie expired, flush user shell rendering state.
+        get().logout();
+      } finally {
+        initPromise = null;
+      }
+    })();
+
+    return initPromise;
   }
 }));

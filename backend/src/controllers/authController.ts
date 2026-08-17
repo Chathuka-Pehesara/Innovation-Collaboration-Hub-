@@ -26,7 +26,7 @@ const generateAccessToken = (userId: string, role: string) =>
   jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
 
 const generateRefreshToken = (userId: string) =>
-  jwt.sign({ userId }, JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d` });
+  jwt.sign({ userId, jti: crypto.randomUUID() }, JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_TOKEN_EXPIRY_DAYS}d` });
 
 // ─── POST /auth/register ─────────────────────────────────────────────────────
 
