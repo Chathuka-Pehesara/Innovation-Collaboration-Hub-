@@ -192,7 +192,7 @@ export default function ExplorePage() {
           <select 
             value={selectedCategory} 
             onChange={handleCategoryChange}
-            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none bg-[#161822] cursor-pointer"
+            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none cursor-pointer"
           >
             <option value="">All Categories</option>
             {categories.map(cat => (
@@ -202,7 +202,7 @@ export default function ExplorePage() {
           <select 
             value={selectedStatus} 
             onChange={handleStatusChange}
-            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none bg-[#161822] cursor-pointer"
+            className="glass-input text-sm px-4 py-2.5 w-full md:w-48 appearance-none cursor-pointer"
           >
             <option value="">All Statuses</option>
             <option value="DRAFT">Draft</option>
@@ -243,14 +243,14 @@ export default function ExplorePage() {
                   </p>
 
                   {/* Category & Badges */}
-                  <div className="flex flex-wrap gap-1.5 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {proj.category && (
-                      <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/10 text-[10px] font-semibold">
+                      <span className="px-2 py-1 rounded-md bg-blue-50 text-blue-600 border border-blue-600/20 text-[10px] font-bold uppercase tracking-wider">
                         {proj.category.name}
                       </span>
                     )}
                     {proj.tags?.slice(0, 3).map((t) => (
-                      <span key={t.tag.name} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/10 text-[10px]">
+                      <span key={t.tag.name} className="px-2 py-1 rounded-md bg-blue-50 text-blue-600 border border-blue-600/20 text-[10px] font-semibold">
                         #{t.tag.name}
                       </span>
                     ))}
@@ -258,20 +258,20 @@ export default function ExplorePage() {
                 </div>
 
                 {/* Card Footer */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/5">
-                  <span className="text-[10px] text-gray-500">
-                    Team size: <strong>{proj.teamSize}</strong>
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-4 border-t border-slate-200">
+                  <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
+                    Team size: <strong className="text-gray-100">{proj.teamSize}</strong>
                   </span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => handleOpenEvaluation(proj)}
-                      className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center cursor-pointer"
+                      className="text-[11px] font-bold text-blue-600 hover:opacity-80 transition-opacity bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-600/20"
                     >
                       Analyze Idea
                     </button>
                     <Link
                       href={`/projects/${proj.id}`}
-                      className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors flex items-center cursor-pointer"
+                      className="text-[11px] font-bold text-blue-600 hover:opacity-80 transition-opacity bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-600/20"
                     >
                       View Details &rarr;
                     </Link>
