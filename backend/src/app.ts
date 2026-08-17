@@ -22,6 +22,13 @@ import { errorHandler } from './middleware/errorHandler';
 // Initialize Express app
 const app: Express = express();
 
+import crypto from 'crypto';
+app.use((req: Request, res: Response, next: NextFunction) => {
+  (req as any).id = crypto.randomUUID();
+  res.setHeader('X-Request-Id', (req as any).id);
+  next();
+});
+
 // Security Middleware
 const isProd = process.env.NODE_ENV === 'production';
 
