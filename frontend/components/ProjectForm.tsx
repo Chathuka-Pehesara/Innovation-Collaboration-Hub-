@@ -45,7 +45,7 @@ export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }
   const [description, setDescription] = useState(initialData.description || '');
   const [categoryId, setCategoryId] = useState(initialData.categoryId || '');
   const [status, setStatus] = useState(initialData.status || 'Draft');
-  const [teamSize, setTeamSize] = useState(initialData.teamSize || 1);
+  const [teamSize, setTeamSize] = useState<number | string>(initialData.teamSize || 1);
   const [tagsInput, setTagsInput] = useState<string[]>(
     initialData.tags ? initialData.tags.map((t) => t.tag.name) : []
   );
@@ -133,7 +133,7 @@ export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }
       description,
       categoryId: categoryId || null,
       status,
-      teamSize,
+      teamSize: typeof teamSize === 'string' ? parseInt(teamSize) || 1 : teamSize,
       tags: tagsInput,
       skills: skillsInput
     });
@@ -207,9 +207,9 @@ export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }
             onChange={(e) => { setCategoryId(e.target.value); setErrors(prev => ({...prev, categoryId: ''})); }}
             className={`w-full glass-input px-4 py-2 ${errors.categoryId ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
           >
-            <option value="" className="bg-[#1C1F2E]">Select Category</option>
+            <option value="" className="bg-[var(--panel-bg)] text-[var(--text-primary)]">Select Category</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id} className="bg-[#1C1F2E]">{c.name}</option>
+              <option key={c.id} value={c.id} className="bg-[var(--panel-bg)] text-[var(--text-primary)]">{c.name}</option>
             ))}
           </select>
           {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>}
@@ -222,10 +222,10 @@ export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }
             onChange={(e) => setStatus(e.target.value)}
             className="w-full glass-input px-4 py-2"
           >
-            <option value="Draft" className="bg-[#1C1F2E]">Draft</option>
-            <option value="Open" className="bg-[#1C1F2E]">Open</option>
-            <option value="In Progress" className="bg-[#1C1F2E]">In Progress</option>
-            <option value="Completed" className="bg-[#1C1F2E]">Completed</option>
+            <option value="Draft" className="bg-[var(--panel-bg)] text-[var(--text-primary)]">Draft</option>
+            <option value="Open" className="bg-[var(--panel-bg)] text-[var(--text-primary)]">Open</option>
+            <option value="In Progress" className="bg-[var(--panel-bg)] text-[var(--text-primary)]">In Progress</option>
+            <option value="Completed" className="bg-[var(--panel-bg)] text-[var(--text-primary)]">Completed</option>
           </select>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function ProjectForm({ initialData = {}, onSubmit, isSubmitting }
             type="number"
             min="1"
             value={teamSize}
-            onChange={(e) => setTeamSize(parseInt(e.target.value))}
+            onChange={(e) => setTeamSize(e.target.value === '' ? '' : parseInt(e.target.value))}
             className="w-full glass-input px-4 py-2"
             placeholder="e.g., 4"
           />
