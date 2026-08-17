@@ -7,7 +7,7 @@ export default function AuthInitializer() {
   useEffect(() => {
     (async () => {
       try {
-        await useAuthStore.getState().initAuth();
+        await useAuthStore.getState().initializeSession();
       } catch (e) {
         // swallow to avoid unhandled promise rejections; initAuth handles redirect on 401/403
       }

@@ -23,7 +23,14 @@ import { errorHandler } from './middleware/errorHandler';
 const app: Express = express();
 
 // Security Middleware
-app.use(helmet());
+const isProd = process.env.NODE_ENV === 'production';
+
+// Production: Strict CSP, HSTS, secure headers
+// Development: Disabled CSP (debug-friendly), disabled HSTS (doesn't break localhost HTTP)
+app.use(helmet({
+  contentSecurityPolicy: isProd ? undefined : false,
+  hsts: isProd ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false,
+}));
 
 // CORS Configuration
 app.use(cors({
