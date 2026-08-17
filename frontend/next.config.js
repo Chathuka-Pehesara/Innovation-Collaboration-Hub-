@@ -6,7 +6,7 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data: https://res.cloudinary.com https://lh3.googleusercontent.com;
+  img-src 'self' blob: data: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com;
   media-src 'self';
   connect-src 'self' http://localhost:5000 ws://localhost:5000 wss://localhost:5000 ${process.env.NEXT_PUBLIC_API_URL || ''};
   font-src 'self' data:;
@@ -59,6 +59,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
       },
     ],
   },
