@@ -182,7 +182,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
     if (token) {
       let decodedUserId = 'unknown';
-      try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { }
+      try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch(e) { /* empty */ }
 
       await prisma.refreshToken.deleteMany({ where: { token } });
 
@@ -221,7 +221,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     } catch (err: any) {
       if (err.name === 'TokenExpiredError') {
         let decodedUserId = 'unknown';
-        try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { }
+        try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch(e) { /* empty */ }
 
         // 🛡️ SOC Security Event: Session Expired (caught by JWT boundary)
         prisma.threatLog.create({
