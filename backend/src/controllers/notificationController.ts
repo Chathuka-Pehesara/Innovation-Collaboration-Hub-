@@ -1,10 +1,16 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import * as notificationService from '../services/notificationService';
+import { AuthRequest } from '../middleware/auth';
 
 // GET /notifications/:userId
-export const getNotifications = async (req: Request, res: Response, next: NextFunction) => {
+export const getNotifications = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
+
+    if (req.user?.userId !== userId && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Cannot access other users\' notifications' });
+    }
+
     const notifications = await notificationService.getUserNotifications(userId);
     res.json(notifications);
   } catch (error) {
@@ -13,9 +19,14 @@ export const getNotifications = async (req: Request, res: Response, next: NextFu
 };
 
 // PUT /notifications/:userId/:notifId/read
-export const markRead = async (req: Request, res: Response, next: NextFunction) => {
+export const markRead = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId, notifId } = req.params;
+
+    if (req.user?.userId !== userId && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Cannot modify other users\' notifications' });
+    }
+
     const notification = await notificationService.markNotificationAsRead(userId, notifId);
     res.json(notification);
   } catch (error) {
@@ -24,9 +35,14 @@ export const markRead = async (req: Request, res: Response, next: NextFunction) 
 };
 
 // PUT /notifications/:userId/read-all
-export const markAllRead = async (req: Request, res: Response, next: NextFunction) => {
+export const markAllRead = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId } = req.params;
+
+    if (req.user?.userId !== userId && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden: Cannot modify other users\' notifications' });
+    }
+
     await notificationService.markAllNotificationsAsRead(userId);
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
@@ -35,7 +51,7 @@ export const markAllRead = async (req: Request, res: Response, next: NextFunctio
 };
 
 // POST /notifications/trigger
-export const triggerNotification = async (req: Request, res: Response, next: NextFunction) => {
+export const triggerNotification = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { userId, type, title, message, referenceId } = req.body;
 
@@ -56,3 +72,4 @@ export const triggerNotification = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+
