@@ -1,21 +1,20 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import * as chatService from '../services/chatService';
+import { AuthRequest } from '../middleware/auth';
 
-// Helper to determine active userId from auth context or fallbacks for testing
-const getUserId = (req: Request): string => {
-  const user = (req as any).user;
-  if (user?.id || user?.userId) {
-    return user.id || user.userId;
-  }
-  const headerUserId = req.headers['x-user-id'] || req.query.userId;
-  if (headerUserId) return headerUserId as string;
-  return 'user_123'; // Default fallback
+// Helper to determine active userId strictly from authenticated user context
+const getUserId = (req: AuthRequest): string | undefined => {
+  return req.user?.userId;
 };
 
 // GET /chats/team/:teamId/messages
-export const getTeamMessages = async (req: Request, res: Response, next: NextFunction) => {
+export const getTeamMessages = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
     const { teamId } = req.params;
     const { limit = '50', before } = req.query;
 
@@ -30,9 +29,13 @@ export const getTeamMessages = async (req: Request, res: Response, next: NextFun
 };
 
 // POST /chats/team/:teamId/messages
-export const sendTeamMessage = async (req: Request, res: Response, next: NextFunction) => {
+export const sendTeamMessage = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
     const { teamId } = req.params;
     const { content } = req.body;
 
@@ -49,9 +52,13 @@ export const sendTeamMessage = async (req: Request, res: Response, next: NextFun
 };
 
 // GET /chats/dm/:userId/messages
-export const getDMMessages = async (req: Request, res: Response, next: NextFunction) => {
+export const getDMMessages = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const activeUserId = getUserId(req);
+    if (!activeUserId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
     const targetUserId = req.params.userId;
     const { limit = '50', before } = req.query;
 
@@ -66,9 +73,13 @@ export const getDMMessages = async (req: Request, res: Response, next: NextFunct
 };
 
 // POST /chats/dm/:userId/messages
-export const sendDMMessage = async (req: Request, res: Response, next: NextFunction) => {
+export const sendDMMessage = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const activeUserId = getUserId(req);
+    if (!activeUserId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
     const targetUserId = req.params.userId;
     const { content } = req.body;
 
@@ -85,9 +96,13 @@ export const sendDMMessage = async (req: Request, res: Response, next: NextFunct
 };
 
 // POST /chats/:chatId/files
-export const uploadChatFile = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadChatFile = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = getUserId(req);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Authentication required' });
+    }
+
     const { chatId } = req.params;
 
     if (!(req as any).file) {
@@ -105,3 +120,4 @@ export const uploadChatFile = async (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+

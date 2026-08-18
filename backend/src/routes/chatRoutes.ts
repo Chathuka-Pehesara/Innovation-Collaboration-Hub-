@@ -9,8 +9,12 @@ import {
   sendDMMessage,
   uploadChatFile
 } from '../controllers/chatController';
+import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
+
+// Mount authenticate middleware on all chat routes
+router.use(authenticate);
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -42,3 +46,4 @@ router.post('/dm/:userId/messages', sendDMMessage);
 router.post('/:chatId/files', upload.single('file'), uploadChatFile);
 
 export default router;
+
