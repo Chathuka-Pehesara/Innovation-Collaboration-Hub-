@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Twitter, Github, Linkedin, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import { Github, Coffee, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 
 export default function Footer() {
@@ -31,8 +31,26 @@ export default function Footer() {
               Launch campus initiatives, assemble multidisciplinary squads with AI skills compatibility, and build tomorrow's solutions together in an immersive ecosystem.
             </p>
             <div className="flex items-center gap-4 pt-4">
-              {[Twitter, Github, Linkedin].map((Icon, idx) => (
-                <a key={idx} href="#" className="w-12 h-12 rounded-xl bg-[var(--surface-elevated)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-white hover:bg-gradient-to-br hover:from-[var(--accent-primary)] hover:to-[var(--accent-secondary)] hover:border-transparent transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_25px_var(--accent-primary-glow)] relative overflow-hidden group/social">
+              {[
+                {
+                  icon: Github,
+                  href: 'https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-',
+                  label: 'GitHub',
+                },
+                {
+                  icon: Coffee,
+                  href: 'https://buymeacoffee.com/ich.com',
+                  label: 'Buy Me a Coffee',
+                },
+              ].map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-12 h-12 rounded-xl bg-[var(--surface-elevated)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-white hover:bg-gradient-to-br hover:from-[var(--accent-primary)] hover:to-[var(--accent-secondary)] hover:border-transparent transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_25px_var(--accent-primary-glow)] relative overflow-hidden group/social"
+                >
                   <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 -translate-x-full group-hover/social:translate-x-full transition-transform duration-700" />
                   <Icon size={20} className="relative z-10" />
                 </a>
