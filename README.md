@@ -173,7 +173,7 @@ Thank you to all our amazing contributors! Here is the live status of their PR c
 | :--- | :--- | :---: | :--- |
 | <img src="https://github.com/adipa-coding.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [adipa-coding](https://github.com/adipa-coding) | **15** | ![Advanced Developer](badges/adipa-coding.svg) |
 | <img src="https://github.com/Chathuka-Pehesara.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Chathuka-Pehesara](https://github.com/Chathuka-Pehesara) | **12** | ![Advanced Developer](badges/Chathuka-Pehesara.svg) |
-| <img src="https://github.com/ArchanaPanchali.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [ArchanaPanchali](https://github.com/ArchanaPanchali) | **5** | ![Named Developer](badges/ArchanaPanchali.svg) |
+| <img src="https://github.com/ArchanaPanchali.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [ArchanaPanchali](https://github.com/ArchanaPanchali) | **10** | ![Advanced Developer](badges/ArchanaPanchali.svg) |
 | <img src="https://github.com/devbykushan.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [devbykushan](https://github.com/devbykushan) | **4** | ![Contributor](badges/devbykushan.svg) |
 | <img src="https://github.com/it24103570.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [it24103570](https://github.com/it24103570) | **4** | ![Contributor](badges/it24103570.svg) |
 | <img src="https://github.com/Vikumd34.png?size=40" width="40" height="40" style="border-radius:50%;" /> | [Vikumd34](https://github.com/Vikumd34) | **4** | ![Contributor](badges/Vikumd34.svg) |
