@@ -38,6 +38,7 @@ export const upload = multer({
 // ─── Shared select for public profile ──────────────────────────────────────
 const PUBLIC_PROFILE_SELECT = {
   id: true,
+  username: true,
   name: true,
   email: true,
   specialization: true,

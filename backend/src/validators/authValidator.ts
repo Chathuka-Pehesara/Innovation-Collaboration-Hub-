@@ -28,6 +28,7 @@ const strongPassword = z
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address').max(150, 'Email is too long'),
+    username: z.string().min(3, 'Username must be at least 3 characters').max(50, 'Username is too long').regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain alphanumeric characters, underscores, and hyphens').optional(),
     password: strongPassword,
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
     specialization: specializationEnum,

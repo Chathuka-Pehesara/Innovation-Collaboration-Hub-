@@ -28,6 +28,7 @@ async function main() {
     },
     create: {
       email,
+      username: 'admin',
       name: 'Super Admin',
       role: 'admin',
       isVerified: true,
