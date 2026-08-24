@@ -9,7 +9,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 import { verifyPoW } from '../security/powService';
@@ -63,7 +63,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         password: hashed,
         name,
         specialization,
-        role: role || 'student',
+        role: role ? (typeof role === 'string' ? (role.toUpperCase() as Role) : role) : Role.STUDENT,
         verificationToken,
       },
       select: { id: true, email: true, username: true, name: true, specialization: true, role: true },
@@ -588,7 +588,7 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
           username: finalUsername,
           name,
           password: placeholderPassword,
-          role: 'student',
+          role: Role.STUDENT,
           isVerified: true,
           avatarUrl: picture || null,
           specialization: null, // Set to null to trigger first-time onboard selection
@@ -773,7 +773,7 @@ export const githubAuthCallback = async (req: Request, res: Response, next: Next
           username: finalUsername,
           name: name || login,
           password: placeholderPassword,
-          role: 'student',
+          role: Role.STUDENT,
           isVerified: true,
           avatarUrl: avatar_url || null,
           githubUrl: html_url || null,

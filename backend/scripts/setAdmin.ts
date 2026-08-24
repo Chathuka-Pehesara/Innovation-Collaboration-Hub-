@@ -1,5 +1,4 @@
-/// <reference types="node" />
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -26,7 +25,7 @@ async function main() {
   const updatedUser = await prisma.user.update({
     where: { email: emailLower },
     data: {
-      role: 'admin',
+      role: Role.ADMIN,
     },
   });
 

@@ -226,12 +226,31 @@ model Notification {
 
 // ─── Profile Management Models ──────────────────────────────────────────────
 
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
 model User {
   id                   String            @id @default(uuid())
   email                String            @unique
   username             String            @unique
   name                 String
-  role                 String            @default("student") // student, mentor, admin
+  role                 Role              @default(STUDENT)
   password             String            // encrypted
   bio                  String?           @db.Text
   specialization       String?           // AI, IT, Cybersecurity, Networking, Other
@@ -281,14 +300,14 @@ model RefreshToken {
 }
 
 model UserSkill {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   skillId   String
-  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  level     String   @default("Beginner") // Beginner, Intermediate, Advanced
-  score     Int      @default(0)
-  addedAt   DateTime @default(now())
+  skill     Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  level     SkillLevel @default(BEGINNER)
+  score     Int        @default(0)
+  addedAt   DateTime   @default(now())
 
   @@unique([userId, skillId])
 }
@@ -322,7 +341,7 @@ model Badge {
   name        String      @unique // e.g., "React Novice", "Java Expert"
   description String?
   icon        String?     // e.g. a lucide icon name or emoji
-  tier        String      @default("Bronze") // Bronze, Silver, Gold, Platinum
+  tier        BadgeTier   @default(BRONZE)
   users       UserBadge[]
 }
 

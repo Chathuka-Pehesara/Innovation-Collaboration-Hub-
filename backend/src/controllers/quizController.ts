@@ -1,7 +1,5 @@
-/* eslint-disable */
-// @ts-nocheck
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SkillLevel, BadgeTier } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -108,7 +106,7 @@ export const evaluateQuiz = async (req: Request, res: Response, next: NextFuncti
           data: {
             userId,
             skillId,
-            level: 'Beginner',
+            level: SkillLevel.BEGINNER,
             score: newScore
           }
         });
@@ -118,11 +116,11 @@ export const evaluateQuiz = async (req: Request, res: Response, next: NextFuncti
     // Award Badges based on newScore
     const badgeEarned = [];
     if (passed) {
-      const tiers = [
-        { tier: 'Platinum', threshold: 100, icon: 'Award' },
-        { tier: 'Gold', threshold: 75, icon: 'Star' },
-        { tier: 'Silver', threshold: 50, icon: 'Shield' },
-        { tier: 'Bronze', threshold: 25, icon: 'Medal' }
+      const tiers: { tier: BadgeTier; threshold: number; icon: string }[] = [
+        { tier: BadgeTier.PLATINUM, threshold: 100, icon: 'Award' },
+        { tier: BadgeTier.GOLD, threshold: 75, icon: 'Star' },
+        { tier: BadgeTier.SILVER, threshold: 50, icon: 'Shield' },
+        { tier: BadgeTier.BRONZE, threshold: 25, icon: 'Medal' }
       ];
 
       for (const t of tiers) {

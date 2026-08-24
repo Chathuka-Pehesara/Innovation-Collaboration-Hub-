@@ -5,14 +5,18 @@
  */
 
 import { z } from 'zod';
+import { Role } from '@prisma/client';
 
 const specializationEnum = z.enum(['IT', 'Cybersecurity', 'AI', 'Networking'], {
   errorMap: () => ({ message: 'Specialization must be IT, Cybersecurity, AI, or Networking' }),
 });
 
-const roleEnum = z.enum(['student', 'admin'], {
-  errorMap: () => ({ message: 'Role must be student or admin' }),
-});
+const roleEnum = z.preprocess(
+  (val) => (typeof val === 'string' ? val.toUpperCase() : val),
+  z.nativeEnum(Role, {
+    errorMap: () => ({ message: 'Role must be STUDENT, MENTOR, or ADMIN' }),
+  })
+);
 
 /**
  * Password strength: min 8 chars, at least one uppercase, one number, one special character.
@@ -32,7 +36,7 @@ export const registerSchema = z.object({
     password: strongPassword,
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name is too long'),
     specialization: specializationEnum,
-    role: roleEnum.optional().default('student'),
+    role: roleEnum.optional().default(Role.STUDENT),
   }).strict(), // Reject any unaccounted fields
 });
 
