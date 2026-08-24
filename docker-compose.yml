@@ -106,7 +106,8 @@ services:
     ports:
       - "5555:5555"
     environment:
-      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/innovation_hub?schema=public}
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/innovation_hub?schema=public
+      - DIRECT_URL=postgresql://postgres:password@postgres:5432/innovation_hub?schema=public
     depends_on:
       postgres:
         condition: service_healthy

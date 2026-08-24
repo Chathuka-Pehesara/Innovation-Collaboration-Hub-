@@ -32,12 +32,22 @@ const generateRefreshToken = (userId: string) =>
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password, name, specialization, role } = req.body;
+    const { email, password, name, specialization, role, username } = req.body;
 
-    // Check duplicate
+    // Check duplicate email
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return res.status(409).json({ message: 'An account with this email already exists.' });
+    }
+
+    const baseUsername = (username && username.trim()) || email.split('@')[0].toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+    let finalUsername = baseUsername;
+    const existingUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+    if (existingUsername) {
+      if (username) {
+        return res.status(409).json({ message: 'Username is already taken.' });
+      }
+      finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
     }
 
     // Hash password (bcrypt, 12 salt rounds)
@@ -49,13 +59,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const user = await prisma.user.create({
       data: {
         email,
+        username: finalUsername,
         password: hashed,
         name,
         specialization,
         role: role || 'student',
         verificationToken,
       },
-      select: { id: true, email: true, name: true, specialization: true, role: true },
+      select: { id: true, email: true, username: true, name: true, specialization: true, role: true },
     });
 
     // Send verification email
@@ -565,9 +576,16 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
     if (!user) {
       isNewUser = true;
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      let finalUsername = baseUsername;
+      const existingUserWithUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+      if (existingUserWithUsername) {
+        finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
+      }
       user = await prisma.user.create({
         data: {
           email,
+          username: finalUsername,
           name,
           password: placeholderPassword,
           role: 'student',
@@ -743,9 +761,16 @@ export const githubAuthCallback = async (req: Request, res: Response, next: Next
     if (!user) {
       isNewUser = true;
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      const baseUsername = (login || email.split('@')[0]).toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      let finalUsername = baseUsername;
+      const existingUserWithUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+      if (existingUserWithUsername) {
+        finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
+      }
       user = await prisma.user.create({
         data: {
           email,
+          username: finalUsername,
           name: name || login,
           password: placeholderPassword,
           role: 'student',
