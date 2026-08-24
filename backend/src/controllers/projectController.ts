@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ProjectStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -35,7 +35,7 @@ export const getProjects = async (req: Request, res: Response, next: NextFunctio
     
     const whereClause: any = {};
     if (category) whereClause.categoryId = category;
-    if (status) whereClause.status = status;
+    if (status) whereClause.status = typeof status === 'string' ? (status.toUpperCase() as ProjectStatus) : status;
     if (search) {
       whereClause.OR = [
         { title: { contains: search as string } },
@@ -245,9 +245,10 @@ export const updateProjectStatus = async (req: Request, res: Response, next: Nex
     }
 
     const { status } = req.body;
+    const normalizedStatus = status ? (typeof status === 'string' ? (status.toUpperCase() as ProjectStatus) : status) : undefined;
     const project = await prisma.project.update({
       where: { id: projectId },
-      data: { status }
+      data: { status: normalizedStatus }
     });
     res.json(project);
   } catch (error) {

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TeamRole } from '@prisma/client';
 import { getIo } from '../socket/chatSocket';
 import * as notificationService from './notificationService';
 
@@ -19,8 +19,8 @@ export const ensureTeamAndMembership = async (teamId: string, userId: string): P
       project = await prisma.project.create({
         data: {
           id: `project_${teamId}`,
-          title: 'Team Workspace Project',
-          description: 'Automatically created for team workspace chat',
+          title: `Project ${teamId}`,
+          description: `Auto-generated project for team ${teamId}`,
           ownerId: userId
         }
       });
@@ -45,7 +45,7 @@ export const ensureTeamAndMembership = async (teamId: string, userId: string): P
       data: {
         teamId,
         userId,
-        role: 'MEMBER'
+        role: TeamRole.MEMBER
       }
     });
   }

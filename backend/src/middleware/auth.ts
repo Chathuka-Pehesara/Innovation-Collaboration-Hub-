@@ -43,8 +43,9 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
  * Usage: authorize('admin') or authorize('student', 'admin')
  */
 export const authorize = (...roles: string[]) => {
+  const normalizedRoles = roles.map(r => r.toUpperCase());
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user || !normalizedRoles.includes(req.user.role?.toUpperCase())) {
       return res.status(403).json({ message: 'You do not have permission to perform this action.' });
     }
     next();

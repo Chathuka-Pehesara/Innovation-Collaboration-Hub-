@@ -7,7 +7,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, SkillLevel, BadgeTier } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
@@ -345,10 +345,11 @@ export const addSkill = async (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     // Upsert the UserSkill join record
+    const normalizedLevel = level ? (typeof level === 'string' ? (level.toUpperCase() as SkillLevel) : level) : SkillLevel.BEGINNER;
     const userSkill = await prisma.userSkill.upsert({
       where: { userId_skillId: { userId: id, skillId: skill.id } },
-      update: { level },
-      create: { userId: id, skillId: skill.id, level },
+      update: { level: normalizedLevel },
+      create: { userId: id, skillId: skill.id, level: normalizedLevel },
       include: { skill: { select: { id: true, name: true } } },
     });
 
@@ -520,16 +521,16 @@ export const submitPortfolioProject = async (req: AuthRequest, res: Response, ne
           });
         } else {
           await prisma.userSkill.create({
-            data: { userId: id, skillId: skill.id, level: 'Beginner', score: newScore }
+            data: { userId: id, skillId: skill.id, level: SkillLevel.BEGINNER, score: newScore }
           });
         }
 
         // Check badge thresholds
-        const tiers = [
-          { tier: 'Platinum', threshold: 100, icon: 'Award' },
-          { tier: 'Gold', threshold: 75, icon: 'Star' },
-          { tier: 'Silver', threshold: 50, icon: 'Shield' },
-          { tier: 'Bronze', threshold: 25, icon: 'Medal' }
+        const tiers: { tier: BadgeTier; threshold: number; icon: string }[] = [
+          { tier: BadgeTier.PLATINUM, threshold: 100, icon: 'Award' },
+          { tier: BadgeTier.GOLD, threshold: 75, icon: 'Star' },
+          { tier: BadgeTier.SILVER, threshold: 50, icon: 'Shield' },
+          { tier: BadgeTier.BRONZE, threshold: 25, icon: 'Medal' }
         ];
 
         for (const t of tiers) {
@@ -725,7 +726,7 @@ export const searchStudents = async (req: Request, res: Response, next: NextFunc
     const skip = (pageNum - 1) * pageSize;
 
     const where: any = {
-      role: 'student',
+      role: Role.STUDENT,
       ...(q && {
         name: { contains: q, mode: 'insensitive' },
       }),

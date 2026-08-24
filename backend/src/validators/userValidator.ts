@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { SkillLevel } from '@prisma/client';
 
 // ─── Update Profile ──────────────────────────────────────────────────────────
 export const updateProfileSchema = z.object({
@@ -25,7 +26,10 @@ export const addSkillSchema = z
   .object({
     skillId: z.string().uuid().optional(),
     skillName: z.string().min(1).max(60).optional(),
-    level: z.enum(['Beginner', 'Intermediate', 'Advanced']).default('Beginner'),
+    level: z.preprocess(
+      (val) => (typeof val === 'string' ? val.toUpperCase() : val),
+      z.nativeEnum(SkillLevel).default(SkillLevel.BEGINNER)
+    ),
   })
   .refine((data) => data.skillId || data.skillName, {
     message: 'Provide either skillId or skillName.',

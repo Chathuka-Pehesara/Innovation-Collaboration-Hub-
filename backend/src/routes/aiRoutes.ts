@@ -11,7 +11,7 @@ import {
   generateFromKeywords,
   extractSkills
 } from '../services/aiService';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -90,7 +90,7 @@ router.get('/find-teammates', async (req: Request, res: Response, next: NextFunc
     const dbUsers = await prisma.user.findMany({
       where: {
         id: { not: user.userId },
-        role: 'student'
+        role: Role.STUDENT
       },
       take: limit,
       orderBy: { xp: 'desc' }, // Recommend highly active users

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ThreatType, ThreatSeverity } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -22,8 +22,18 @@ export const getThreatLogs = async (req: Request, res: Response) => {
 export const seedThreats = async (req: Request, res: Response) => {
     try {
         const ips = ['192.168.1.5', '10.0.0.9', '45.33.22.11', '8.8.8.8', '172.16.0.4', '140.23.4.1', '80.0.2.1'];
-        const types = ['HONEYPOT', 'BRUTE_FORCE', 'INVALID_POW', 'SQL_INJECTION_ATTEMPT'];
-        const severities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+        const types: ThreatType[] = [
+            ThreatType.HONEYPOT,
+            ThreatType.BRUTE_FORCE,
+            ThreatType.INVALID_POW,
+            ThreatType.SQL_INJECTION_ATTEMPT
+        ];
+        const severities: ThreatSeverity[] = [
+            ThreatSeverity.LOW,
+            ThreatSeverity.MEDIUM,
+            ThreatSeverity.HIGH,
+            ThreatSeverity.CRITICAL
+        ];
 
         const newThreats = [];
         for (let i = 0; i < 5; i++) {

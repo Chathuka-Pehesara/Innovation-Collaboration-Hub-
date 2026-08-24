@@ -31,11 +31,25 @@ model Skill {
   assessments SkillAssessment[]
 }
 
+enum ProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
 model Project {
   id          String         @id @default(uuid())
   title       String
   description String
-  status      String         @default("Draft")
+  status      ProjectStatus  @default(DRAFT)
   categoryId  String?
   category    Category?      @relation(fields: [categoryId], references: [id])
   ownerId     String
@@ -105,42 +119,58 @@ model Team {
   chat        Chat?
 }
 
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum TeamInviteType {
+  INVITE
+  APPLICATION
+}
+
 model TeamMember {
   id          String   @id @default(uuid())
   teamId      String
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId      String   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        String   @default("MEMBER") // LEAD, MEMBER
+  role        TeamRole @default(MEMBER)
   joinedAt    DateTime @default(now())
 
   @@unique([teamId, userId])
 }
 
 model TeamInvite {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId      String   
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
-  type        String   @default("INVITE") // INVITE, APPLICATION
-  createdAt   DateTime @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      TeamInviteStatus @default(PENDING)
+  type        TeamInviteType   @default(INVITE)
+  createdAt   DateTime         @default(now())
 
   @@unique([teamId, userId])
 }
 
 model Task {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
   title       String
   description String?
-  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
-  assigneeId  String?  // User ID
-  assignee    User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      TaskStatus @default(TODO)
+  assigneeId  String?    // User ID
+  assignee    User?      @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Resource {
@@ -212,26 +242,52 @@ model MessageReceipt {
   @@unique([messageId, userId])
 }
 
+enum NotificationType {
+  TEAM_MESSAGE
+  DM_MESSAGE
+  SYSTEM
+  TEAM_INVITE
+}
+
 model Notification {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // "TEAM_MESSAGE", "DM_MESSAGE", "SYSTEM"
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
   title       String
   message     String
-  referenceId String?  // ID of the Chat/Team related to the notification
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  referenceId String?          // ID of the Chat/Team related to the notification
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
 }
 
 // ─── Profile Management Models ──────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
 
 model User {
   id                   String            @id @default(uuid())
   email                String            @unique
   username             String            @unique
   name                 String
-  role                 String            @default("student") // student, mentor, admin
+  role                 Role              @default(STUDENT)
   password             String            // encrypted
   bio                  String?           @db.Text
   specialization       String?           // AI, IT, Cybersecurity, Networking, Other
@@ -281,14 +337,14 @@ model RefreshToken {
 }
 
 model UserSkill {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   skillId   String
-  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  level     String   @default("Beginner") // Beginner, Intermediate, Advanced
-  score     Int      @default(0)
-  addedAt   DateTime @default(now())
+  skill     Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  level     SkillLevel @default(BEGINNER)
+  score     Int        @default(0)
+  addedAt   DateTime   @default(now())
 
   @@unique([userId, skillId])
 }
@@ -322,7 +378,7 @@ model Badge {
   name        String      @unique // e.g., "React Novice", "Java Expert"
   description String?
   icon        String?     // e.g. a lucide icon name or emoji
-  tier        String      @default("Bronze") // Bronze, Silver, Gold, Platinum
+  tier        BadgeTier   @default(BRONZE)
   users       UserBadge[]
 }
 
@@ -339,12 +395,33 @@ model UserBadge {
 
 // ─── Security Models ──────────────────────────────────────────────
 
+enum ThreatType {
+  HONEYPOT
+  BRUTE_FORCE
+  INVALID_POW
+  RATE_LIMIT_EXCEEDED
+  MALFORMED_REQUEST
+  INVALID_INPUT
+  SESSION_CREATED
+  SESSION_REVOKED
+  SESSION_EXPIRED
+  SUSPICIOUS_SESSION
+  SQL_INJECTION_ATTEMPT
+}
+
+enum ThreatSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model ThreatLog {
-  id        String   @id @default(uuid())
-  ip        String?
-  type      String   // e.g., HONEYPOT, BRUTE_FORCE, INVALID_POW
-  severity  String   // e.g., LOW, MEDIUM, HIGH, CRITICAL
+  id          String         @id @default(uuid())
+  ip          String?
+  type        ThreatType
+  severity    ThreatSeverity
   fingerprint String?
-  metadata  String?  @db.Text // JSON string for extra data
-  createdAt DateTime @default(now())
+  metadata    String?        @db.Text // JSON string for extra data
+  createdAt   DateTime       @default(now())
 }
