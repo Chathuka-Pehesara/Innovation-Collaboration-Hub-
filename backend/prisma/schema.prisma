@@ -119,27 +119,43 @@ model Team {
   chat        Chat?
 }
 
+enum TeamRole {
+  LEAD
+  MEMBER
+}
+
+enum TeamInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum TeamInviteType {
+  INVITE
+  APPLICATION
+}
+
 model TeamMember {
   id          String   @id @default(uuid())
   teamId      String
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId      String   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        String   @default("MEMBER") // LEAD, MEMBER
+  role        TeamRole @default(MEMBER)
   joinedAt    DateTime @default(now())
 
   @@unique([teamId, userId])
 }
 
 model TeamInvite {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   userId      String   
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
-  type        String   @default("INVITE") // INVITE, APPLICATION
-  createdAt   DateTime @default(now())
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      TeamInviteStatus @default(PENDING)
+  type        TeamInviteType   @default(INVITE)
+  createdAt   DateTime         @default(now())
 
   @@unique([teamId, userId])
 }
