@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TaskStatus } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 
 const prisma = new PrismaClient();
@@ -212,9 +212,10 @@ export const updateTask = async (req: AuthRequest, res: Response, next: NextFunc
       return;
     }
 
+    const normalizedStatus = status ? (typeof status === 'string' ? (status.toUpperCase() as TaskStatus) : status) : undefined;
     const task = await prisma.task.update({
       where: { id: req.params.taskId },
-      data: { status, assigneeId, title, description }
+      data: { status: normalizedStatus, assigneeId, title, description }
     });
 
     await logActivity(task.teamId, `Updated task: ${task.title}`, userId);

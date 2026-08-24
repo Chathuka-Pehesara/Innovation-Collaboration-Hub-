@@ -31,11 +31,25 @@ model Skill {
   assessments SkillAssessment[]
 }
 
+enum ProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
 model Project {
   id          String         @id @default(uuid())
   title       String
   description String
-  status      String         @default("Draft")
+  status      ProjectStatus  @default(DRAFT)
   categoryId  String?
   category    Category?      @relation(fields: [categoryId], references: [id])
   ownerId     String
@@ -131,16 +145,16 @@ model TeamInvite {
 }
 
 model Task {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   teamId      String
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
   title       String
   description String?
-  status      String   @default("TODO") // TODO, IN_PROGRESS, DONE
-  assigneeId  String?  // User ID
-  assignee    User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      TaskStatus @default(TODO)
+  assigneeId  String?    // User ID
+  assignee    User?      @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Resource {
