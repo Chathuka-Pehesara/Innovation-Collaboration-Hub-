@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, NotificationType } from '@prisma/client';
 import nodemailer from 'nodemailer';
 import { getIo, isUserOnline } from '../socket/chatSocket';
 
@@ -64,15 +64,16 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 // POST /notifications/trigger / Internal creation
 export const createNotification = async (
   userId: string,
-  type: string,
+  type: NotificationType | string,
   title: string,
   message: string,
   referenceId?: string
 ) => {
+  const normalizedType = typeof type === 'string' ? (type.toUpperCase() as NotificationType) : type;
   const notification = await prisma.notification.create({
     data: {
       userId,
-      type,
+      type: normalizedType,
       title,
       message,
       referenceId: referenceId || null

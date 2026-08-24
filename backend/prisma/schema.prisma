@@ -242,16 +242,23 @@ model MessageReceipt {
   @@unique([messageId, userId])
 }
 
+enum NotificationType {
+  TEAM_MESSAGE
+  DM_MESSAGE
+  SYSTEM
+  TEAM_INVITE
+}
+
 model Notification {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // "TEAM_MESSAGE", "DM_MESSAGE", "SYSTEM"
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
   title       String
   message     String
-  referenceId String?  // ID of the Chat/Team related to the notification
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  referenceId String?          // ID of the Chat/Team related to the notification
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
 }
 
 // ─── Profile Management Models ──────────────────────────────────────────────
@@ -388,12 +395,33 @@ model UserBadge {
 
 // ─── Security Models ──────────────────────────────────────────────
 
+enum ThreatType {
+  HONEYPOT
+  BRUTE_FORCE
+  INVALID_POW
+  RATE_LIMIT_EXCEEDED
+  MALFORMED_REQUEST
+  INVALID_INPUT
+  SESSION_CREATED
+  SESSION_REVOKED
+  SESSION_EXPIRED
+  SUSPICIOUS_SESSION
+  SQL_INJECTION_ATTEMPT
+}
+
+enum ThreatSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 model ThreatLog {
-  id        String   @id @default(uuid())
-  ip        String?
-  type      String   // e.g., HONEYPOT, BRUTE_FORCE, INVALID_POW
-  severity  String   // e.g., LOW, MEDIUM, HIGH, CRITICAL
+  id          String         @id @default(uuid())
+  ip          String?
+  type        ThreatType
+  severity    ThreatSeverity
   fingerprint String?
-  metadata  String?  @db.Text // JSON string for extra data
-  createdAt DateTime @default(now())
+  metadata    String?        @db.Text // JSON string for extra data
+  createdAt   DateTime       @default(now())
 }
