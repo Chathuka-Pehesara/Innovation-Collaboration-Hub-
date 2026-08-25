@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Twitter, Github, Linkedin, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import { Github, Twitter, Linkedin, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 
 export default function Footer() {
@@ -31,8 +31,31 @@ export default function Footer() {
               Launch campus initiatives, assemble multidisciplinary squads with AI skills compatibility, and build tomorrow's solutions together in an immersive ecosystem.
             </p>
             <div className="flex items-center gap-4 pt-4">
-              {[Twitter, Github, Linkedin].map((Icon, idx) => (
-                <a key={idx} href="#" className="w-12 h-12 rounded-xl bg-[var(--surface-elevated)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-white hover:bg-gradient-to-br hover:from-[var(--accent-primary)] hover:to-[var(--accent-secondary)] hover:border-transparent transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_25px_var(--accent-primary-glow)] relative overflow-hidden group/social">
+              {[
+                {
+                  icon: Twitter,
+                  href: 'https://twitter.com',
+                  label: 'Twitter',
+                },
+                {
+                  icon: Github,
+                  href: 'https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-',
+                  label: 'GitHub',
+                },
+                {
+                  icon: Linkedin,
+                  href: 'https://linkedin.com',
+                  label: 'LinkedIn',
+                },
+              ].map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-12 h-12 rounded-xl bg-[var(--surface-elevated)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-secondary)] hover:text-white hover:bg-gradient-to-br hover:from-[var(--accent-primary)] hover:to-[var(--accent-secondary)] hover:border-transparent transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_25px_var(--accent-primary-glow)] relative overflow-hidden group/social"
+                >
                   <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/40 to-white/0 -translate-x-full group-hover/social:translate-x-full transition-transform duration-700" />
                   <Icon size={20} className="relative z-10" />
                 </a>
@@ -40,18 +63,21 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links / Platform */}
           <div className="md:col-span-3 space-y-6">
             <h4 className="text-[var(--text-primary)] font-bold tracking-widest uppercase text-xs flex items-center gap-2 drop-shadow-sm">
               <Sparkles size={14} className="text-[var(--accent-secondary)] animate-pulse" /> Platform
             </h4>
-            <ul className="space-y-4">
+            <ul className="space-y-3.5">
             {[
+              { name: 'Dashboard', href: '/dashboard' },
               { name: 'Explore Projects', href: '/explore' },
               { name: 'Find Innovators', href: '/students' },
-              { name: 'Leaderboard', href: '/leaderboard' },
               { name: 'Team Matching', href: '/match' },
+              { name: 'AI Mentorship', href: '/messages' },
+              { name: 'Leaderboard', href: '/leaderboard' },
               { name: 'Contributors', href: '/contributors' },
+              { name: 'Settings', href: '/settings' },
             ].map((item) => (
               <li key={item.name}>
                 <Link href={item.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all duration-300 inline-flex items-center gap-3 group/link hover:translate-x-2 font-medium">
@@ -86,15 +112,16 @@ export default function Footer() {
         <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--text-secondary)] font-medium">
           <span suppressHydrationWarning>&copy; {new Date().getFullYear()} Innovation Hub. All rights reserved.</span>
           <Link href="/contributors" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4 text-[var(--accent-secondary)] font-bold">Contributors</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
-          </div>
-          <div className="flex items-center gap-2.5 px-5 py-2 bg-green-500/10 border border-green-500/20 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] transition-shadow">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" />
-            <span className="text-xs font-bold tracking-wider text-green-500 uppercase">All Systems Operational</span>
-          </div>
+          <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
+          <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
+        </div>
+        <div className="flex items-center gap-2.5 px-5 py-2 bg-green-500/10 border border-green-500/20 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] transition-shadow">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" />
+          <span className="text-xs font-bold tracking-wider text-green-500 uppercase">All Systems Operational</span>
         </div>
       </div>
-    </footer>
+    </div>
+  </footer>
   );
 }
+
