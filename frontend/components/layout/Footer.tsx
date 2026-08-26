@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Coffee, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import { Github, Twitter, Linkedin, Mail, ArrowRight, Sparkles } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 
 export default function Footer() {
@@ -33,14 +33,19 @@ export default function Footer() {
             <div className="flex items-center gap-4 pt-4">
               {[
                 {
+                  icon: Twitter,
+                  href: 'https://twitter.com',
+                  label: 'Twitter',
+                },
+                {
                   icon: Github,
                   href: 'https://github.com/Chathuka-Pehesara/Innovation-Collaboration-Hub-',
                   label: 'GitHub',
                 },
                 {
-                  icon: Coffee,
-                  href: 'https://buymeacoffee.com/ich.com',
-                  label: 'Buy Me a Coffee',
+                  icon: Linkedin,
+                  href: 'https://linkedin.com',
+                  label: 'LinkedIn',
                 },
               ].map(({ icon: Icon, href, label }) => (
                 <a
@@ -58,18 +63,21 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links / Platform */}
           <div className="md:col-span-3 space-y-6">
             <h4 className="text-[var(--text-primary)] font-bold tracking-widest uppercase text-xs flex items-center gap-2 drop-shadow-sm">
               <Sparkles size={14} className="text-[var(--accent-secondary)] animate-pulse" /> Platform
             </h4>
-            <ul className="space-y-4">
+            <ul className="space-y-3.5">
             {[
+              { name: 'Dashboard', href: '/dashboard' },
               { name: 'Explore Projects', href: '/explore' },
               { name: 'Find Innovators', href: '/students' },
-              { name: 'Leaderboard', href: '/leaderboard' },
               { name: 'Team Matching', href: '/match' },
+              { name: 'AI Mentorship', href: '/messages' },
+              { name: 'Leaderboard', href: '/leaderboard' },
               { name: 'Contributors', href: '/contributors' },
+              { name: 'Settings', href: '/settings' },
             ].map((item) => (
               <li key={item.name}>
                 <Link href={item.href} className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all duration-300 inline-flex items-center gap-3 group/link hover:translate-x-2 font-medium">
@@ -104,15 +112,16 @@ export default function Footer() {
         <div className="flex flex-wrap justify-center gap-6 text-xs text-[var(--text-secondary)] font-medium">
           <span suppressHydrationWarning>&copy; {new Date().getFullYear()} Innovation Hub. All rights reserved.</span>
           <Link href="/contributors" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4 text-[var(--accent-secondary)] font-bold">Contributors</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
-          </div>
-          <div className="flex items-center gap-2.5 px-5 py-2 bg-green-500/10 border border-green-500/20 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] transition-shadow">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" />
-            <span className="text-xs font-bold tracking-wider text-green-500 uppercase">All Systems Operational</span>
-          </div>
+          <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Privacy Policy</Link>
+          <Link href="#" className="hover:text-[var(--text-primary)] transition-colors hover:underline underline-offset-4">Terms of Service</Link>
+        </div>
+        <div className="flex items-center gap-2.5 px-5 py-2 bg-green-500/10 border border-green-500/20 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.1)] hover:shadow-[0_0_20px_rgba(34,197,94,0.2)] transition-shadow">
+          <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" />
+          <span className="text-xs font-bold tracking-wider text-green-500 uppercase">All Systems Operational</span>
         </div>
       </div>
-    </footer>
+    </div>
+  </footer>
   );
 }
+
