@@ -73,12 +73,12 @@ export const rateLimiter = (options: RateLimitOptions) => {
             severity,
             fingerprint: req.body?.email ? 'email_target' : 'ip_flood',
             metadata: JSON.stringify({
+              eventType: 'RATE_LIMIT_EXCEEDED',
+              severity,
               endpoint: req.originalUrl,
-              method: req.method,
-              keyPrefix,
-              attempts: count,
-              allowed: max,
-              actionTaken: 'HTTP 429 TEMP_BLOCK'
+              timestamp: new Date().toISOString(),
+              requestId: String(Date.now()),
+              actionTaken: 'TEMPORARY_RATE_LIMIT'
             }),
           }
         }).catch((e: any) => console.error('[ThreatLog] Rate Limit Log Failed', e));

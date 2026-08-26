@@ -22,6 +22,13 @@ import { errorHandler } from './middleware/errorHandler';
 // Initialize Express app
 const app: Express = express();
 
+import crypto from 'crypto';
+app.use((req: Request, res: Response, next: NextFunction) => {
+  (req as any).id = crypto.randomUUID();
+  res.setHeader('X-Request-Id', (req as any).id);
+  next();
+});
+
 // Security Middleware
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -43,9 +50,9 @@ app.use(cors({
 // Request Logging
 app.use(morgan('combined'));
 
-// Body Parsing Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Body Parsing Middleware (Restricted to 1mb globally to prevent memory exhaustion DoS)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Static Files (for uploads)
 app.use('/uploads', express.static('uploads'));

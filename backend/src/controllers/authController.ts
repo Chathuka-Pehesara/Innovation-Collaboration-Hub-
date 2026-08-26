@@ -9,7 +9,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import axios from 'axios';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService';
 import { verifyPoW } from '../security/powService';
@@ -32,12 +32,22 @@ const generateRefreshToken = (userId: string) =>
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password, name, specialization, role } = req.body;
+    const { email, password, name, specialization, role, username } = req.body;
 
-    // Check duplicate
+    // Check duplicate email
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return res.status(409).json({ message: 'An account with this email already exists.' });
+    }
+
+    const baseUsername = (username && username.trim()) || email.split('@')[0].toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+    let finalUsername = baseUsername;
+    const existingUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+    if (existingUsername) {
+      if (username) {
+        return res.status(409).json({ message: 'Username is already taken.' });
+      }
+      finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
     }
 
     // Hash password (bcrypt, 12 salt rounds)
@@ -49,13 +59,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const user = await prisma.user.create({
       data: {
         email,
+        username: finalUsername,
         password: hashed,
         name,
         specialization,
-        role: role || 'student',
+        role: role ? (typeof role === 'string' ? (role.toUpperCase() as Role) : role) : Role.STUDENT,
         verificationToken,
       },
-      select: { id: true, email: true, name: true, specialization: true, role: true },
+      select: { id: true, email: true, username: true, name: true, specialization: true, role: true },
     });
 
     // Send verification email
@@ -79,7 +90,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Honeypot check
     if (website && website.trim() !== '') {
       await prisma.threatLog.create({
-        data: { ip: req.ip || 'Unknown', type: 'HONEYPOT', severity: 'CRITICAL', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+        data: {
+          ip: req.ip || 'Unknown', type: 'HONEYPOT', severity: 'CRITICAL', fingerprint: fingerprint || null, metadata: JSON.stringify({
+            eventType: 'HONEYPOT', severity: 'CRITICAL', endpoint: req.originalUrl, timestamp: new Date().toISOString(), requestId: String(Date.now()), actionTaken: 'HTTP_403_BLOCK'
+          })
+        }
       });
       return res.status(403).json({ message: 'Bot detected by honeypot.' });
     }
@@ -92,7 +107,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const isValidPow = verifyPoW(email, Number(powTimestamp), powNonce);
     if (!isValidPow) {
       await prisma.threatLog.create({
-        data: { ip: req.ip || 'Unknown', type: 'INVALID_POW', severity: 'MEDIUM', fingerprint: fingerprint || null, metadata: JSON.stringify({ email, powNonce }) }
+        data: {
+          ip: req.ip || 'Unknown', type: 'INVALID_POW', severity: 'MEDIUM', fingerprint: fingerprint || null, metadata: JSON.stringify({
+            eventType: 'INVALID_POW', severity: 'MEDIUM', endpoint: req.originalUrl, timestamp: new Date().toISOString(), requestId: String(Date.now()), actionTaken: 'HTTP_403_BLOCK'
+          })
+        }
       });
       return res.status(403).json({ message: `Proof of work failed or expired.` });
     }
@@ -100,7 +119,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       await prisma.threatLog.create({
-        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+        data: {
+          ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({
+            eventType: 'BRUTE_FORCE', severity: 'HIGH', endpoint: req.originalUrl, timestamp: new Date().toISOString(), requestId: String(Date.now()), actionTaken: 'HTTP_401_REJECT'
+          })
+        }
       });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -108,7 +131,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       await prisma.threatLog.create({
-        data: { ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({ email }) }
+        data: {
+          ip: req.ip || 'Unknown', type: 'BRUTE_FORCE', severity: 'HIGH', fingerprint: fingerprint || null, metadata: JSON.stringify({
+            eventType: 'BRUTE_FORCE', severity: 'HIGH', endpoint: req.originalUrl, timestamp: new Date().toISOString(), requestId: String(Date.now()), actionTaken: 'HTTP_401_REJECT'
+          })
+        }
       });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -147,7 +174,14 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         type: 'SESSION_CREATED',
         severity: 'LOW',
         fingerprint: fingerprint || 'sys_auth',
-        metadata: JSON.stringify({ userId: user.id, method: 'password', device: req.headers['user-agent']?.substring(0, 50) })
+        metadata: JSON.stringify({
+          eventType: 'SESSION_CREATED',
+          severity: 'LOW',
+          endpoint: req.originalUrl,
+          timestamp: new Date().toISOString(),
+          requestId: String(Date.now()),
+          actionTaken: 'GRANTED'
+        })
       }
     }).catch((e: any) => console.error('[ThreatLog] Failed to log session creation', e));
 
@@ -182,7 +216,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
     if (token) {
       let decodedUserId = 'unknown';
-      try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch(e) { /* empty */ }
+      try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { /* empty */ }
 
       await prisma.refreshToken.deleteMany({ where: { token } });
 
@@ -190,10 +224,17 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
       prisma.threatLog.create({
         data: {
           ip: req.ip || 'Unknown',
-          type: 'LOGOUT',
+          type: 'SESSION_REVOKED',
           severity: 'LOW',
           fingerprint: 'sys_auth',
-          metadata: JSON.stringify({ userId: decodedUserId })
+          metadata: JSON.stringify({
+            eventType: 'SESSION_REVOKED',
+            severity: 'LOW',
+            endpoint: req.originalUrl,
+            timestamp: new Date().toISOString(),
+            requestId: String(Date.now()),
+            actionTaken: 'REVOKE_TOKENS'
+          })
         }
       }).catch((e: any) => console.error('[ThreatLog] Failed to log logout', e));
     }
@@ -221,7 +262,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     } catch (err: any) {
       if (err.name === 'TokenExpiredError') {
         let decodedUserId = 'unknown';
-        try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch(e) { /* empty */ }
+        try { const decoded: any = jwt.decode(token); decodedUserId = decoded?.userId || 'unknown'; } catch (e) { /* empty */ }
 
         // 🛡️ SOC Security Event: Session Expired (caught by JWT boundary)
         prisma.threatLog.create({
@@ -230,7 +271,14 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
             type: 'SESSION_EXPIRED',
             severity: 'LOW',
             fingerprint: 'sys_auth',
-            metadata: JSON.stringify({ userId: decodedUserId, reason: 'jwt_expired' })
+            metadata: JSON.stringify({
+              eventType: 'SESSION_EXPIRED',
+              severity: 'LOW',
+              endpoint: req.originalUrl,
+              timestamp: new Date().toISOString(),
+              requestId: String(Date.now()),
+              actionTaken: 'HTTP_401'
+            })
           }
         }).catch((e: any) => console.error(e));
       }
@@ -248,7 +296,31 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
             type: 'SESSION_EXPIRED',
             severity: 'LOW',
             fingerprint: 'sys_auth',
-            metadata: JSON.stringify({ userId: payload.userId, reason: 'db_expired' })
+            metadata: JSON.stringify({
+              eventType: 'SESSION_EXPIRED',
+              severity: 'LOW',
+              endpoint: req.originalUrl,
+              timestamp: new Date().toISOString(),
+              requestId: String(Date.now()),
+              actionTaken: 'HTTP_401'
+            })
+          }
+        }).catch((e: any) => console.error(e));
+        // 🛡️ SOC Security Event: Suspicious Session
+        prisma.threatLog.create({
+          data: {
+            ip: req.ip || 'Unknown',
+            type: 'SUSPICIOUS_SESSION',
+            severity: 'HIGH',
+            fingerprint: 'sys_auth',
+            metadata: JSON.stringify({
+              eventType: 'SUSPICIOUS_SESSION',
+              severity: 'HIGH',
+              endpoint: req.originalUrl,
+              timestamp: new Date().toISOString(),
+              requestId: String(Date.now()),
+              actionTaken: 'HTTP_401_BLOCK'
+            })
           }
         }).catch((e: any) => console.error(e));
       }
@@ -504,12 +576,19 @@ export const googleAuthCallback = async (req: Request, res: Response, next: Next
     if (!user) {
       isNewUser = true;
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      const baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      let finalUsername = baseUsername;
+      const existingUserWithUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+      if (existingUserWithUsername) {
+        finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
+      }
       user = await prisma.user.create({
         data: {
           email,
+          username: finalUsername,
           name,
           password: placeholderPassword,
-          role: 'student',
+          role: Role.STUDENT,
           isVerified: true,
           avatarUrl: picture || null,
           specialization: null, // Set to null to trigger first-time onboard selection
@@ -682,12 +761,19 @@ export const githubAuthCallback = async (req: Request, res: Response, next: Next
     if (!user) {
       isNewUser = true;
       const placeholderPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
+      const baseUsername = (login || email.split('@')[0]).toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      let finalUsername = baseUsername;
+      const existingUserWithUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
+      if (existingUserWithUsername) {
+        finalUsername = `${baseUsername}_${crypto.randomBytes(3).toString('hex')}`;
+      }
       user = await prisma.user.create({
         data: {
           email,
+          username: finalUsername,
           name: name || login,
           password: placeholderPassword,
-          role: 'student',
+          role: Role.STUDENT,
           isVerified: true,
           avatarUrl: avatar_url || null,
           githubUrl: html_url || null,

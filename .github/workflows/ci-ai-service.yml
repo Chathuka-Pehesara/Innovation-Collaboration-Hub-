@@ -2,9 +2,11 @@ name: AI Service CI
 
 on:
   push:
+    branches: ['**']
     paths:
       - 'ai-service/**'
   pull_request:
+    branches: ['**']
     paths:
       - 'ai-service/**'
 

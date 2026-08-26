@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, TaskStatus, TeamRole, TeamInviteStatus, TeamInviteType } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 
 const prisma = new PrismaClient();
@@ -34,7 +34,7 @@ export const createTeam = async (req: AuthRequest, res: Response, next: NextFunc
 
     // Make the creator the LEAD
     await prisma.teamMember.create({
-      data: { teamId: team.id, userId, role: 'LEAD' }
+      data: { teamId: team.id, userId, role: TeamRole.LEAD }
     });
 
     await logActivity(team.id, 'Team Created', userId);
@@ -83,8 +83,8 @@ export const sendInvite = async (req: AuthRequest, res: Response, next: NextFunc
       data: {
         teamId: req.params.id,
         userId,
-        type: 'INVITE',
-        status: 'PENDING'
+        type: TeamInviteType.INVITE,
+        status: TeamInviteStatus.PENDING
       }
     });
 
@@ -114,16 +114,16 @@ export const applyToTeam = async (req: AuthRequest, res: Response, next: NextFun
     });
 
     if (existing) {
-      if (existing.status === 'PENDING') {
+      if (existing.status === TeamInviteStatus.PENDING) {
         res.status(400).json({ error: 'Application already exists' });
         return;
-      } else if (existing.status === 'ACCEPTED') {
+      } else if (existing.status === TeamInviteStatus.ACCEPTED) {
         res.status(400).json({ error: 'You are already a member' });
         return;
-      } else if (existing.status === 'DECLINED') {
+      } else if (existing.status === TeamInviteStatus.DECLINED) {
         const updated = await prisma.teamInvite.update({
           where: { id: existing.id },
-          data: { status: 'PENDING', type: 'APPLICATION' }
+          data: { status: TeamInviteStatus.PENDING, type: TeamInviteType.APPLICATION }
         });
         await logActivity(req.params.id, `${actorId} requested to join the team again`, actorId);
         res.status(200).json(updated);
@@ -135,8 +135,8 @@ export const applyToTeam = async (req: AuthRequest, res: Response, next: NextFun
       data: {
         teamId: req.params.id,
         userId: actorId,
-        type: 'APPLICATION',
-        status: 'PENDING'
+        type: TeamInviteType.APPLICATION,
+        status: TeamInviteStatus.PENDING
       }
     });
 
@@ -161,15 +161,16 @@ export const respondToInvite = async (req: AuthRequest, res: Response, next: Nex
       return;
     }
     const inviteId = req.params.inviteId;
+    const normalizedStatus = status ? (typeof status === 'string' ? (status.toUpperCase() as TeamInviteStatus) : status) : undefined;
 
     const invite = await prisma.teamInvite.update({
       where: { id: inviteId },
-      data: { status }
+      data: { status: normalizedStatus }
     });
 
-    if (status === 'ACCEPTED') {
+    if (normalizedStatus === TeamInviteStatus.ACCEPTED) {
       await prisma.teamMember.create({
-        data: { teamId: invite.teamId, userId: invite.userId, role: 'MEMBER' }
+        data: { teamId: invite.teamId, userId: invite.userId, role: TeamRole.MEMBER }
       });
       await logActivity(invite.teamId, `User ${invite.userId} joined the team`, invite.userId);
     } else {
@@ -212,9 +213,10 @@ export const updateTask = async (req: AuthRequest, res: Response, next: NextFunc
       return;
     }
 
+    const normalizedStatus = status ? (typeof status === 'string' ? (status.toUpperCase() as TaskStatus) : status) : undefined;
     const task = await prisma.task.update({
       where: { id: req.params.taskId },
-      data: { status, assigneeId, title, description }
+      data: { status: normalizedStatus, assigneeId, title, description }
     });
 
     await logActivity(task.teamId, `Updated task: ${task.title}`, userId);
@@ -305,11 +307,12 @@ export const updateMemberRole = async (req: AuthRequest, res: Response, next: Ne
       return;
     }
 
+    const normalizedRole = role ? (typeof role === 'string' ? (role.toUpperCase() as TeamRole) : role) : undefined;
     const member = await prisma.teamMember.update({
       where: { 
         teamId_userId: { teamId: req.params.id, userId: req.params.userId } 
       },
-      data: { role }
+      data: { role: normalizedRole }
     });
 
     await logActivity(req.params.id, `Updated ${req.params.userId}'s role to ${role}`, actorId);
